@@ -276,7 +276,8 @@ namespace MagRail
                 info.Show(PortTitle(aimBlock, aimPort) + ": " + Loc.T(busy ? "MagRail_Linker_AimBusy" : "MagRail_Linker_AimFree"));
                 return;
             }
-            if (aimSpan != null)
+            // The aimed span may have just been deleted (RMB) or lost its partner.
+            if (aimSpan != null && aimSpan.Bound)
             {
                 string text = Loc.T(aimSpan.IsRail ? "MagRail_Mode_Rail" : "MagRail_Mode_Prototype") + ", " + CurveText(Network.CurveOf(aimSpan));
                 if (aimSpan.Record.WantRail && aimSpan.Problem != null)
