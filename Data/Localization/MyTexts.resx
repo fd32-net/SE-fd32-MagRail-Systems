@@ -33,6 +33,90 @@
   <data name="Description_MagRail_Switch" xml:space="preserve">
     <value>One entry, three branches: left, centre, right.</value>
   </data>
+  <data name="MagRail_Term_Section" xml:space="preserve">
+    <value>Track block</value>
+  </data>
+  <data name="MagRail_Term_Locked" xml:space="preserve">
+    <value>Rail</value>
+  </data>
+  <data name="MagRail_Term_Locked_Tip" xml:space="preserve">
+    <value>Locked: the rail is built and its height and head stay as they are. Unlocked: the rail can be adjusted.</value>
+  </data>
+  <data name="MagRail_Term_LockedOn" xml:space="preserve">
+    <value>Locked</value>
+  </data>
+  <data name="MagRail_Term_LockedOff" xml:space="preserve">
+    <value>Unlocked</value>
+  </data>
+  <data name="MagRail_Term_Height" xml:space="preserve">
+    <value>Rail height</value>
+  </data>
+  <data name="MagRail_Term_Height_Tip" xml:space="preserve">
+    <value>Height of the rail above the bottom of the block. Only an unlocked block can change it.</value>
+  </data>
+  <data name="MagRail_Term_Standard" xml:space="preserve">
+    <value>(standard)</value>
+  </data>
+  <data name="MagRail_Unit_m" xml:space="preserve">
+    <value>{0} m</value>
+  </data>
+  <data name="MagRail_Term_Yaw" xml:space="preserve">
+    <value>Head: turn</value>
+  </data>
+  <data name="MagRail_Term_Yaw_Tip" xml:space="preserve">
+    <value>Direction of the rail. + = to the right.</value>
+  </data>
+  <data name="MagRail_Term_Pitch" xml:space="preserve">
+    <value>Head: slope</value>
+  </data>
+  <data name="MagRail_Term_Pitch_Tip" xml:space="preserve">
+    <value>+ = the front end up.</value>
+  </data>
+  <data name="MagRail_Term_Roll" xml:space="preserve">
+    <value>Head: bank</value>
+  </data>
+  <data name="MagRail_Term_Roll_Tip" xml:space="preserve">
+    <value>+ = the right side down.</value>
+  </data>
+  <data name="MagRail_Term_ResetHead" xml:space="preserve">
+    <value>Reset head</value>
+  </data>
+  <data name="MagRail_Term_ResetHead_Tip" xml:space="preserve">
+    <value>Turn, slope and bank back to 0.</value>
+  </data>
+  <data name="MagRail_Term_Branch" xml:space="preserve">
+    <value>Branch</value>
+  </data>
+  <data name="MagRail_Term_Branch_Tip" xml:space="preserve">
+    <value>Where a train coming from the entry goes.</value>
+  </data>
+  <data name="MagRail_Branch_Left" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="MagRail_Branch_Center" xml:space="preserve">
+    <value>Center</value>
+  </data>
+  <data name="MagRail_Branch_Right" xml:space="preserve">
+    <value>Right</value>
+  </data>
+  <data name="MagRail_Act_HeightUp" xml:space="preserve">
+    <value>Rail height +</value>
+  </data>
+  <data name="MagRail_Act_HeightDown" xml:space="preserve">
+    <value>Rail height -</value>
+  </data>
+  <data name="MagRail_Act_BranchLeft" xml:space="preserve">
+    <value>Branch: left</value>
+  </data>
+  <data name="MagRail_Act_BranchCenter" xml:space="preserve">
+    <value>Branch: center</value>
+  </data>
+  <data name="MagRail_Act_BranchRight" xml:space="preserve">
+    <value>Branch: right</value>
+  </data>
+  <data name="MagRail_Act_BranchNext" xml:space="preserve">
+    <value>Branch: next</value>
+  </data>
   <data name="MagRail_Loc_Loaded" xml:space="preserve">
     <value>1</value>
   </data>

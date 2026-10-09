@@ -33,4 +33,88 @@
   <data name="Description_MagRail_Switch" xml:space="preserve">
     <value>Один вход, три ветки: левая, прямая, правая.</value>
   </data>
+  <data name="MagRail_Term_Section" xml:space="preserve">
+    <value>Блок пути</value>
+  </data>
+  <data name="MagRail_Term_Locked" xml:space="preserve">
+    <value>Рельс</value>
+  </data>
+  <data name="MagRail_Term_Locked_Tip" xml:space="preserve">
+    <value>Закреплён: рельс построен, высота и голова не меняются. Свободен: рельс можно настраивать.</value>
+  </data>
+  <data name="MagRail_Term_LockedOn" xml:space="preserve">
+    <value>Закреплён</value>
+  </data>
+  <data name="MagRail_Term_LockedOff" xml:space="preserve">
+    <value>Свободен</value>
+  </data>
+  <data name="MagRail_Term_Height" xml:space="preserve">
+    <value>Высота рельса</value>
+  </data>
+  <data name="MagRail_Term_Height_Tip" xml:space="preserve">
+    <value>Высота рельса над дном блока. Меняется только у свободного блока.</value>
+  </data>
+  <data name="MagRail_Term_Standard" xml:space="preserve">
+    <value>(стандарт)</value>
+  </data>
+  <data name="MagRail_Unit_m" xml:space="preserve">
+    <value>{0} м</value>
+  </data>
+  <data name="MagRail_Term_Yaw" xml:space="preserve">
+    <value>Голова: поворот</value>
+  </data>
+  <data name="MagRail_Term_Yaw_Tip" xml:space="preserve">
+    <value>Направление рельса. + = вправо.</value>
+  </data>
+  <data name="MagRail_Term_Pitch" xml:space="preserve">
+    <value>Голова: уклон</value>
+  </data>
+  <data name="MagRail_Term_Pitch_Tip" xml:space="preserve">
+    <value>+ = передний конец вверх.</value>
+  </data>
+  <data name="MagRail_Term_Roll" xml:space="preserve">
+    <value>Голова: крен</value>
+  </data>
+  <data name="MagRail_Term_Roll_Tip" xml:space="preserve">
+    <value>+ = правая сторона вниз.</value>
+  </data>
+  <data name="MagRail_Term_ResetHead" xml:space="preserve">
+    <value>Сбросить голову</value>
+  </data>
+  <data name="MagRail_Term_ResetHead_Tip" xml:space="preserve">
+    <value>Поворот, уклон и крен обратно в 0.</value>
+  </data>
+  <data name="MagRail_Term_Branch" xml:space="preserve">
+    <value>Ветка</value>
+  </data>
+  <data name="MagRail_Term_Branch_Tip" xml:space="preserve">
+    <value>Куда идёт поезд, въехавший со входа.</value>
+  </data>
+  <data name="MagRail_Branch_Left" xml:space="preserve">
+    <value>Левая</value>
+  </data>
+  <data name="MagRail_Branch_Center" xml:space="preserve">
+    <value>Прямая</value>
+  </data>
+  <data name="MagRail_Branch_Right" xml:space="preserve">
+    <value>Правая</value>
+  </data>
+  <data name="MagRail_Act_HeightUp" xml:space="preserve">
+    <value>Высота рельса +</value>
+  </data>
+  <data name="MagRail_Act_HeightDown" xml:space="preserve">
+    <value>Высота рельса -</value>
+  </data>
+  <data name="MagRail_Act_BranchLeft" xml:space="preserve">
+    <value>Ветка: левая</value>
+  </data>
+  <data name="MagRail_Act_BranchCenter" xml:space="preserve">
+    <value>Ветка: прямая</value>
+  </data>
+  <data name="MagRail_Act_BranchRight" xml:space="preserve">
+    <value>Ветка: правая</value>
+  </data>
+  <data name="MagRail_Act_BranchNext" xml:space="preserve">
+    <value>Ветка: следующая</value>
+  </data>
 </root>
