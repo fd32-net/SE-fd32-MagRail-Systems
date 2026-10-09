@@ -57,7 +57,9 @@ namespace MagRail
         // Cache of TrackNetwork.CurveOf.
         public SpanCurve Curve;
         public int CurveOwnerRevision = -1, CurvePartnerRevision = -1, CurveTick;
-        public bool CurveInGrid;
+        public object CurveGrid;
+        // Cache of TrackNetwork.LayoutOf (for the current Curve).
+        public TrackLayout Layout;
 
         public Span(TrackBlockLogic owner, SpanRecord record)
         {

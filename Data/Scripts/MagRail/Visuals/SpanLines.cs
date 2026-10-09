@@ -5,13 +5,13 @@ namespace MagRail
 {
     public enum LineStyle
     {
-        Rail,       // thick steel line (until the track pieces of stage 3)
+        Rail,       // thick steel line (a rail whose track pieces are not all placed yet)
         Prototype,  // laid span: thin solid line coloured by curvature, ticks along the rail's up (bank)
         Preview,    // Rail Linker while laying: dashed, coloured by curvature, no ticks
     }
 
-    // Spans as lines, seen by everyone (clients). A span that should be a rail but cannot be one gets
-    // a red cross in the middle.
+    // Spans as lines, seen by everyone (clients): prototypes, and rails until their track pieces are
+    // placed. A span that should be a rail but cannot be one gets a red cross in the middle.
     public static class SpanLines
     {
         const double DrawRange = 3000;
@@ -19,13 +19,13 @@ namespace MagRail
         const int TickSamples = 10;         // an up tick every ~2.5 m
         static readonly Color Steel = new Color(175, 185, 200);
 
-        public static void DrawAll(TrackNetwork network)
+        public static void DrawAll(TrackNetwork network, TrackPieces pieces)
         {
             Vector3D camera = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
             for (int i = 0; i < network.Spans.Count; i++)
             {
                 Span s = network.Spans[i];
-                if (!s.Bound)
+                if (!s.Bound || (s.IsRail && pieces.Complete(s)))
                     continue;
                 SpanCurve c = network.CurveOf(s);
                 MatrixD frame = TrackNetwork.FrameMatrix(s);

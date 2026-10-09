@@ -271,25 +271,37 @@ namespace MagRail
             return InGridFrame(s) ? s.Owner.Block.CubeGrid.WorldMatrix : MatrixD.Identity;
         }
 
-        // The span's curve, rebuilt when a block's rail moved (settings) or, between two grids that
-        // are not both static, every few ticks.
+        // The span's curve, rebuilt when a block's rail moved (settings), the blocks changed grids (merge,
+        // split) or, between two grids that are not both static, every few ticks.
         public SpanCurve CurveOf(Span s)
         {
             if (!s.Bound)
                 return null;
             bool inGrid = InGridFrame(s);
+            object grid = inGrid ? s.Owner.Block.CubeGrid : null;
             bool moving = !inGrid && !(s.Owner.Block.CubeGrid.IsStatic && s.Partner.Block.CubeGrid.IsStatic);
             if (s.Curve != null && s.CurveOwnerRevision == s.Owner.Revision && s.CurvePartnerRevision == s.Partner.Revision
-                && s.CurveInGrid == inGrid && !(moving && tick - s.CurveTick >= MovingCurveTicks))
+                && s.CurveGrid == grid && !(moving && tick - s.CurveTick >= MovingCurveTicks))
                 return s.Curve;
             s.Curve = inGrid
                 ? SpanCurve.Build(s.Owner.PortGridLocal(s.OwnerPort), s.Partner.PortGridLocal(s.PartnerPort))
                 : SpanCurve.Build(s.Owner.PortWorld(s.OwnerPort), s.Partner.PortWorld(s.PartnerPort));
             s.CurveOwnerRevision = s.Owner.Revision;
             s.CurvePartnerRevision = s.Partner.Revision;
-            s.CurveInGrid = inGrid;
+            s.CurveGrid = grid;
             s.CurveTick = tick;
             return s.Curve;
+        }
+
+        // How the span is laid from track pieces (for its current curve).
+        public TrackLayout LayoutOf(Span s)
+        {
+            SpanCurve c = CurveOf(s);
+            if (c == null)
+                return null;
+            if (s.Layout == null || s.Layout.Curve != c)
+                s.Layout = TrackLayout.Build(c);
+            return s.Layout;
         }
 
         // ---- changes (server; a client sends a request instead) ----

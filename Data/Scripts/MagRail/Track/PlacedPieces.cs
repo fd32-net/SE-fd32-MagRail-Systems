@@ -1,0 +1,58 @@
+using VRage.Game.Entity;
+using VRageMath;
+
+namespace MagRail
+{
+    // The piece entities one manager (TrackPieces, TrackCollision) placed for one span, valid for one
+    // layout and one parent; a new curve or a grid turning static/dynamic starts them over.
+    public class PlacedPieces
+    {
+        public readonly Span Span;
+        public TrackLayout Layout;
+        public MyEntity Parent;     // the moving grid the pieces are children of, or null
+        public MatrixD Frame;       // the span's frame when the layout was taken
+        public MyEntity[] Entities;
+        public int Stamp;
+        public double Distance;
+
+        public PlacedPieces(Span span)
+        {
+            Span = span;
+        }
+
+        public void Take(TrackLayout layout, MyEntity parent, MatrixD frame, int count)
+        {
+            if (layout == Layout && parent == Parent)
+                return;
+            Clear();
+            Layout = layout;
+            Parent = parent;
+            Frame = frame;
+            Entities = new MyEntity[count];
+        }
+
+        public int Count
+        {
+            get
+            {
+                int n = 0;
+                if (Entities != null)
+                    for (int i = 0; i < Entities.Length; i++)
+                        if (Entities[i] != null)
+                            n++;
+                return n;
+            }
+        }
+
+        public void Clear()
+        {
+            if (Entities == null)
+                return;
+            for (int i = 0; i < Entities.Length; i++)
+            {
+                PieceEntities.Remove(Entities[i]);
+                Entities[i] = null;
+            }
+        }
+    }
+}

@@ -123,6 +123,9 @@
   <data name="MagRail_Linker_Curve" xml:space="preserve">
     <value>{0} m, min. radius {1} m</value>
   </data>
+  <data name="MagRail_Linker_Straight" xml:space="preserve">
+    <value>{0} m, straight</value>
+  </data>
   <data name="MagRail_Linker_AimFree" xml:space="preserve">
     <value>free</value>
   </data>
@@ -200,6 +203,12 @@
   </data>
   <data name="MagRail_Cmd_Summary" xml:space="preserve">
     <value>{0} track blocks; spans: {1} rail, {2} prototype, {3} waiting for a block</value>
+  </data>
+  <data name="MagRail_Cmd_Pieces" xml:space="preserve">
+    <value>Track pieces: {0} shown, {1} with collision (near players)</value>
+  </data>
+  <data name="MagRail_Cmd_Straight" xml:space="preserve">
+    <value>straight</value>
   </data>
   <data name="MagRail_Loc_Loaded" xml:space="preserve">
     <value>1</value>

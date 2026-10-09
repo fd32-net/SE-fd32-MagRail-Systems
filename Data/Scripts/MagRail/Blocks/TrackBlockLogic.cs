@@ -26,11 +26,6 @@ namespace MagRail
         static readonly Guid SettingsGuid = new Guid("444da85b-4de9-4530-8b2a-10d8f75d9c76");
         static readonly Guid SpansGuid = new Guid("b0b3f1c2-6f7e-4d84-9a51-2c8e7d3f4a60");
 
-        // Collision layers of the rail part (MyPhysics.CollisionLayers): static body on stations,
-        // kinematic body following the grid elsewhere.
-        const int StaticLayer = 13;
-        const int KinematicLayer = 15;
-
         class PortDef
         {
             public string Name;
@@ -348,8 +343,8 @@ namespace MagRail
         }
 
         // Rebuilt on every move: moves are rare (settings changes) and a static body does not follow
-        // its entity. On a moving grid the kinematic body follows the part's world matrix, which the
-        // game then has to keep up to date.
+        // its entity. On a moving grid the part has no collision (see PieceEntities: it would hit the
+        // ship); it only keeps its world matrix up to date.
         void RebuildPartPhysics()
         {
             if (part.Physics != null)
@@ -359,13 +354,12 @@ namespace MagRail
             }
             if (partOnStatic)
             {
-                part.InitModelPhysics(RigidBodyFlag.RBF_STATIC, StaticLayer);
+                part.InitModelPhysics(RigidBodyFlag.RBF_STATIC, PieceEntities.StaticLayer);
             }
             else
             {
                 part.NeedsWorldMatrix = true;
                 Block.NeedsWorldMatrix = true;
-                part.InitModelPhysics(RigidBodyFlag.RBF_KINEMATIC, KinematicLayer);
             }
         }
     }

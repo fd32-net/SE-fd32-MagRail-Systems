@@ -123,6 +123,9 @@
   <data name="MagRail_Linker_Curve" xml:space="preserve">
     <value>{0} м, мин. радиус {1} м</value>
   </data>
+  <data name="MagRail_Linker_Straight" xml:space="preserve">
+    <value>{0} м, прямой</value>
+  </data>
   <data name="MagRail_Linker_AimFree" xml:space="preserve">
     <value>свободен</value>
   </data>
@@ -200,5 +203,11 @@
   </data>
   <data name="MagRail_Cmd_Summary" xml:space="preserve">
     <value>{0} блоков пути; пролёты: {1} рельс, {2} прототип, {3} ждут блок</value>
+  </data>
+  <data name="MagRail_Cmd_Pieces" xml:space="preserve">
+    <value>Куски пути: {0} видно, {1} с коллизией (рядом с игроками)</value>
+  </data>
+  <data name="MagRail_Cmd_Straight" xml:space="preserve">
+    <value>прямой</value>
   </data>
 </root>

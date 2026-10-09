@@ -5,7 +5,7 @@ using VRageMath;
 
 namespace MagRail
 {
-    // Chat command /magrail: counts of track blocks and spans, then the spans nearest to the camera.
+    // Chat command /magrail: counts of track blocks, spans and track pieces, then the spans nearest to the camera.
     public static class Commands
     {
         const int Listed = 8;
@@ -33,6 +33,8 @@ namespace MagRail
                 nearest.Add(s);
             }
             MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Summary", network.Blocks.Count, rail, prototype, unbound));
+            MagRailSession session = MagRailSession.Instance;
+            MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Pieces", session.Pieces.EntityCount, session.Collision.EntityCount));
 
             Vector3D camera = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
             nearest.Sort((a, b) => Distance(network, a, camera).CompareTo(Distance(network, b, camera)));
@@ -44,9 +46,13 @@ namespace MagRail
                 sb.Clear();
                 sb.Append(s.Owner.Block.CustomName).Append(' ').Append(s.Record.OwnerPort).Append(" — ")
                     .Append(s.Partner.Block.CustomName).Append(' ').Append(s.Record.PartnerPort).Append(": ")
-                    .Append(c.Length.ToString("0.0")).Append(" m, R ")
-                    .Append(double.IsInfinity(c.MinRadius) ? "∞" : c.MinRadius.ToString("0.0")).Append(" m, ")
-                    .Append(Loc.T(s.IsRail ? "MagRail_Mode_Rail" : "MagRail_Mode_Prototype"));
+                    .Append(c.Length.ToString("0.0")).Append(" m, ");
+                // The game font has no infinity sign.
+                if (double.IsInfinity(c.MinRadius))
+                    sb.Append(Loc.T("MagRail_Cmd_Straight"));
+                else
+                    sb.Append("R ").Append(c.MinRadius.ToString("0.0")).Append(" m");
+                sb.Append(", ").Append(Loc.T(s.IsRail ? "MagRail_Mode_Rail" : "MagRail_Mode_Prototype"));
                 if (s.Record.WantRail && s.Problem != null)
                     sb.Append(" (").Append(Loc.T(s.Problem)).Append(')');
                 MyAPIGateway.Utilities.ShowMessage("MagRail", sb.ToString());

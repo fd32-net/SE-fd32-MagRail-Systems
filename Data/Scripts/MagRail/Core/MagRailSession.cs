@@ -8,11 +8,13 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.4.1";
+        public const string Version = "V0.5.0";
 
         public static MagRailSession Instance { get; private set; }
 
         public TrackNetwork Network { get; private set; }
+        public TrackCollision Collision { get; private set; }
+        public TrackPieces Pieces { get; private set; }     // null on a dedicated server
 
         int tick;
         bool client;
@@ -22,12 +24,15 @@ namespace MagRail
         {
             Instance = this;
             Network = new TrackNetwork();
+            Collision = new TrackCollision();
             client = !MyAPIGateway.Utilities.IsDedicated;
             Loc.Load(ModContext != null ? ModContext.ModPath : null);
+            PieceEntities.Load(ModContext.ModPath);
             Net.Load();
             if (client)
             {
                 linker = new RailLinker();
+                Pieces = new TrackPieces();
                 MyAPIGateway.Entities.OnEntityAdd += RailLinker.HideInHand;
                 MyAPIGateway.Utilities.MessageEntered += Commands.OnMessage;
             }
@@ -43,6 +48,9 @@ namespace MagRail
                 MyAPIGateway.Utilities.MessageEntered -= Commands.OnMessage;
             }
             Network.Clear();
+            Collision.Clear();
+            if (Pieces != null)
+                Pieces.Clear();
             Log.Clear();
             Instance = null;
         }
@@ -53,8 +61,13 @@ namespace MagRail
             {
                 tick++;
                 Network.Update();
-                if (client && tick % 60 == 0)
-                    Loc.CheckReload();
+                Collision.Update(Network);
+                if (client)
+                {
+                    Pieces.Update(Network);
+                    if (tick % 60 == 0)
+                        Loc.CheckReload();
+                }
             }
             catch (Exception e)
             {
@@ -82,7 +95,7 @@ namespace MagRail
                 return;
             try
             {
-                SpanLines.DrawAll(Network);
+                SpanLines.DrawAll(Network, Pieces);
                 linker.DrawFrame();
             }
             catch (Exception e)

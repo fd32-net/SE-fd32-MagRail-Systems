@@ -290,8 +290,10 @@ namespace MagRail
 
         static string CurveText(SpanCurve c)
         {
-            string radius = double.IsInfinity(c.MinRadius) ? "∞" : c.MinRadius.ToString("0.0");
-            return Loc.F("MagRail_Linker_Curve", c.Length.ToString("0.0"), radius);
+            // The game font has no infinity sign.
+            if (double.IsInfinity(c.MinRadius))
+                return Loc.F("MagRail_Linker_Straight", c.Length.ToString("0.0"));
+            return Loc.F("MagRail_Linker_Curve", c.Length.ToString("0.0"), c.MinRadius.ToString("0.0"));
         }
 
         static string PortTitle(TrackBlockLogic block, int port)
