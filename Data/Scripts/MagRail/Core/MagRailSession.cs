@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Sandbox.ModAPI;
 using VRage.Game.Components;
 
@@ -9,43 +8,43 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.3.0";
+        public const string Version = "V0.4.0";
 
         public static MagRailSession Instance { get; private set; }
 
+        public TrackNetwork Network { get; private set; }
+
         int tick;
-        readonly Dictionary<long, TrackBlockLogic> trackBlocks = new Dictionary<long, TrackBlockLogic>();
+        bool client;
+        RailLinker linker;
 
         public override void LoadData()
         {
             Instance = this;
+            Network = new TrackNetwork();
+            client = !MyAPIGateway.Utilities.IsDedicated;
             Loc.Load(ModContext != null ? ModContext.ModPath : null);
             Net.Load();
+            if (client)
+            {
+                linker = new RailLinker();
+                MyAPIGateway.Entities.OnEntityAdd += RailLinker.HideInHand;
+                MyAPIGateway.Utilities.MessageEntered += Commands.OnMessage;
+            }
             Log.Info(Version + " loaded (" + (MyAPIGateway.Session.IsServer ? "server" : "client") + ")");
         }
 
         protected override void UnloadData()
         {
             Net.Unload();
-            trackBlocks.Clear();
+            if (client)
+            {
+                MyAPIGateway.Entities.OnEntityAdd -= RailLinker.HideInHand;
+                MyAPIGateway.Utilities.MessageEntered -= Commands.OnMessage;
+            }
+            Network.Clear();
             Log.Clear();
             Instance = null;
-        }
-
-        public void Register(TrackBlockLogic logic)
-        {
-            trackBlocks[logic.Block.EntityId] = logic;
-        }
-
-        public void Unregister(TrackBlockLogic logic)
-        {
-            trackBlocks.Remove(logic.Block.EntityId);
-        }
-
-        public TrackBlockLogic FindTrackBlock(long entityId)
-        {
-            TrackBlockLogic logic;
-            return trackBlocks.TryGetValue(entityId, out logic) ? logic : null;
         }
 
         public override void UpdateAfterSimulation()
@@ -53,12 +52,42 @@ namespace MagRail
             try
             {
                 tick++;
-                if (tick % 60 == 0)
+                Network.Update();
+                if (client && tick % 60 == 0)
                     Loc.CheckReload();
             }
             catch (Exception e)
             {
                 Log.Error("Session.UpdateAfterSimulation", e);
+            }
+        }
+
+        public override void HandleInput()
+        {
+            if (!client)
+                return;
+            try
+            {
+                linker.HandleInput();
+            }
+            catch (Exception e)
+            {
+                Log.Error("Session.HandleInput", e);
+            }
+        }
+
+        public override void Draw()
+        {
+            if (!client || MyAPIGateway.Session.Camera == null)
+                return;
+            try
+            {
+                SpanLines.DrawAll(Network);
+                linker.DrawFrame();
+            }
+            catch (Exception e)
+            {
+                Log.Error("Session.Draw", e);
             }
         }
     }

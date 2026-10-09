@@ -36,18 +36,6 @@
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Track block</value>
   </data>
-  <data name="MagRail_Term_Locked" xml:space="preserve">
-    <value>Rail</value>
-  </data>
-  <data name="MagRail_Term_Locked_Tip" xml:space="preserve">
-    <value>Locked: the rail is built and its height and head stay as they are. Unlocked: the rail can be adjusted.</value>
-  </data>
-  <data name="MagRail_Term_LockedOn" xml:space="preserve">
-    <value>Locked</value>
-  </data>
-  <data name="MagRail_Term_LockedOff" xml:space="preserve">
-    <value>Unlocked</value>
-  </data>
   <data name="MagRail_Term_Height" xml:space="preserve">
     <value>Rail height</value>
   </data>
@@ -116,6 +104,102 @@
   </data>
   <data name="MagRail_Act_BranchNext" xml:space="preserve">
     <value>Branch: next</value>
+  </data>
+  <data name="MagRail_Term_LockedNote" xml:space="preserve">
+    <value>A rail (not a prototype) ends at this block: switch it to prototype with the Rail Linker to change height or head.</value>
+  </data>
+  <data name="DisplayName_Item_MagRail_RailLinker" xml:space="preserve">
+    <value>Rail Linker</value>
+  </data>
+  <data name="Description_Item_MagRail_RailLinker" xml:space="preserve">
+    <value>Lays maglev spans between track blocks and switches them between prototype and rail.</value>
+  </data>
+  <data name="MagRail_Linker_Hint" xml:space="preserve">
+    <value>LMB port → port: lay span · LMB span: prototype/rail · RMB: cancel / pick up end / delete span · Shift+RMB port: delete block's spans</value>
+  </data>
+  <data name="MagRail_Linker_From" xml:space="preserve">
+    <value>From {0}</value>
+  </data>
+  <data name="MagRail_Linker_Curve" xml:space="preserve">
+    <value>{0} m, min. radius {1} m</value>
+  </data>
+  <data name="MagRail_Linker_AimFree" xml:space="preserve">
+    <value>free</value>
+  </data>
+  <data name="MagRail_Linker_AimBusy" xml:space="preserve">
+    <value>span laid (RMB: pick up the end)</value>
+  </data>
+  <data name="MagRail_Linker_Linked" xml:space="preserve">
+    <value>Span laid (prototype)</value>
+  </data>
+  <data name="MagRail_Linker_Started" xml:space="preserve">
+    <value>Span from {0}: aim at the other port</value>
+  </data>
+  <data name="MagRail_Linker_PortBusy" xml:space="preserve">
+    <value>This port already has a span (RMB picks its end up)</value>
+  </data>
+  <data name="MagRail_Linker_Cancelled" xml:space="preserve">
+    <value>Span cancelled</value>
+  </data>
+  <data name="MagRail_Linker_PickedUp" xml:space="preserve">
+    <value>End picked up: aim at a new port</value>
+  </data>
+  <data name="MagRail_Linker_Deleted" xml:space="preserve">
+    <value>Span deleted</value>
+  </data>
+  <data name="MagRail_Linker_BlockCleared" xml:space="preserve">
+    <value>Spans of the block deleted</value>
+  </data>
+  <data name="MagRail_Linker_ToRail" xml:space="preserve">
+    <value>Span → rail</value>
+  </data>
+  <data name="MagRail_Linker_ToPrototype" xml:space="preserve">
+    <value>Span → prototype</value>
+  </data>
+  <data name="MagRail_Linker_RailWaits" xml:space="preserve">
+    <value>rail as soon as possible: {0}</value>
+  </data>
+  <data name="MagRail_Mode_Rail" xml:space="preserve">
+    <value>Rail</value>
+  </data>
+  <data name="MagRail_Mode_Prototype" xml:space="preserve">
+    <value>Prototype</value>
+  </data>
+  <data name="MagRail_Problem_SameBlock" xml:space="preserve">
+    <value>both ports are on one block</value>
+  </data>
+  <data name="MagRail_Problem_PortBusy" xml:space="preserve">
+    <value>the port already has a span</value>
+  </data>
+  <data name="MagRail_Problem_Grids" xml:space="preserve">
+    <value>blocks must be on stations or on one grid</value>
+  </data>
+  <data name="MagRail_Problem_Short" xml:space="preserve">
+    <value>span too short (under 2.5 m)</value>
+  </data>
+  <data name="MagRail_Problem_Damaged" xml:space="preserve">
+    <value>a block is damaged</value>
+  </data>
+  <data name="MagRail_Port_port_a" xml:space="preserve">
+    <value>end A</value>
+  </data>
+  <data name="MagRail_Port_port_b" xml:space="preserve">
+    <value>end B</value>
+  </data>
+  <data name="MagRail_Port_entry" xml:space="preserve">
+    <value>entry</value>
+  </data>
+  <data name="MagRail_Port_branch_l" xml:space="preserve">
+    <value>left branch</value>
+  </data>
+  <data name="MagRail_Port_branch_c" xml:space="preserve">
+    <value>center branch</value>
+  </data>
+  <data name="MagRail_Port_branch_r" xml:space="preserve">
+    <value>right branch</value>
+  </data>
+  <data name="MagRail_Cmd_Summary" xml:space="preserve">
+    <value>{0} track blocks; spans: {1} rail, {2} prototype, {3} waiting for a block</value>
   </data>
   <data name="MagRail_Loc_Loaded" xml:space="preserve">
     <value>1</value>

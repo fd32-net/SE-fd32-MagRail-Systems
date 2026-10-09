@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <!-- Rail Linker: the cost of the vanilla welder (Position0090_Welder); made in the basic
+       assembler (class Tools) and the assembler (EliteTools), not in survival kits. -->
+  <Blueprints>
+    <Blueprint>
+      <Id>
+        <TypeId>BlueprintDefinition</TypeId>
+        <SubtypeId>MagRail_RailLinker</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_Item_MagRail_RailLinker</DisplayName>
+      <Icon>Textures\Icons\RailLinker.dds</Icon>
+      <Prerequisites>
+        <Item Amount="5" TypeId="Ingot" SubtypeId="Iron" />
+        <Item Amount="3" TypeId="Ingot" SubtypeId="Silicon" />
+        <Item Amount="1" TypeId="Ingot" SubtypeId="Nickel" />
+      </Prerequisites>
+      <Result Amount="1" TypeId="PhysicalGunObject" SubtypeId="MagRail_RailLinker" />
+      <BaseProductionTimeInSeconds>2</BaseProductionTimeInSeconds>
+      <IgnoreEfficiencyMultiplier>true</IgnoreEfficiencyMultiplier>
+      <IsPrimary>true</IsPrimary>
+    </Blueprint>
+  </Blueprints>
+  <BlueprintClassEntries>
+    <Entry Class="Tools" BlueprintSubtypeId="MagRail_RailLinker" />
+    <Entry Class="EliteTools" BlueprintSubtypeId="MagRail_RailLinker" />
+  </BlueprintClassEntries>
+</Definitions>

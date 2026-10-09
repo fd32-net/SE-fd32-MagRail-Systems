@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <PhysicalItems>
+    <!-- Rail Linker hand tool (hand pose in HandItems_MagRail.sbc). Must be a
+         ToolItemDefinition: the HandToolBase entity reads its action lists every 10 frames.
+         No actions. The welder model is for the item dropped on the ground; in hand the
+         script hides it (Tools/RailLinker.cs), so the hand stays empty, palm out.
+         Recipe in Blueprints_MagRail.sbc. -->
+    <PhysicalItem xsi:type="MyObjectBuilder_ToolItemDefinition">
+      <Id>
+        <TypeId>PhysicalGunObject</TypeId>
+        <SubtypeId>MagRail_RailLinker</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_Item_MagRail_RailLinker</DisplayName>
+      <Description>Description_Item_MagRail_RailLinker</Description>
+      <Icon>Textures\Icons\RailLinker.dds</Icon>
+      <Size>
+        <X>0.1</X>
+        <Y>0.1</Y>
+        <Z>0.1</Z>
+      </Size>
+      <Mass>0.1</Mass>
+      <Volume>0.1</Volume>
+      <Model>Models\Weapons\Welder.mwm</Model>
+      <PhysicalMaterial>Metal</PhysicalMaterial>
+      <CanPlayerOrder>false</CanPlayerOrder>
+      <CanPlayerOffer>false</CanPlayerOffer>
+      <HitDistance>0</HitDistance>
+      <DepositAllEnabled>false</DepositAllEnabled>
+    </PhysicalItem>
+  </PhysicalItems>
+</Definitions>

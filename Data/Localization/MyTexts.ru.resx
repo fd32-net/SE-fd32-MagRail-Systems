@@ -36,18 +36,6 @@
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Блок пути</value>
   </data>
-  <data name="MagRail_Term_Locked" xml:space="preserve">
-    <value>Рельс</value>
-  </data>
-  <data name="MagRail_Term_Locked_Tip" xml:space="preserve">
-    <value>Закреплён: рельс построен, высота и голова не меняются. Свободен: рельс можно настраивать.</value>
-  </data>
-  <data name="MagRail_Term_LockedOn" xml:space="preserve">
-    <value>Закреплён</value>
-  </data>
-  <data name="MagRail_Term_LockedOff" xml:space="preserve">
-    <value>Свободен</value>
-  </data>
   <data name="MagRail_Term_Height" xml:space="preserve">
     <value>Высота рельса</value>
   </data>
@@ -116,5 +104,101 @@
   </data>
   <data name="MagRail_Act_BranchNext" xml:space="preserve">
     <value>Ветка: следующая</value>
+  </data>
+  <data name="MagRail_Term_LockedNote" xml:space="preserve">
+    <value>К блоку подходит рельс (не прототип): переведите его в прототип Rail Linker'ом, чтобы менять высоту или голову.</value>
+  </data>
+  <data name="DisplayName_Item_MagRail_RailLinker" xml:space="preserve">
+    <value>Rail Linker</value>
+  </data>
+  <data name="Description_Item_MagRail_RailLinker" xml:space="preserve">
+    <value>Прокладывает пролёты маглева между блоками пути и переключает их между прототипом и рельсом.</value>
+  </data>
+  <data name="MagRail_Linker_Hint" xml:space="preserve">
+    <value>ЛКМ порт → порт: пролёт · ЛКМ по пролёту: прототип/рельс · ПКМ: отмена / поднять конец / удалить пролёт · Shift+ПКМ по порту: удалить пролёты блока</value>
+  </data>
+  <data name="MagRail_Linker_From" xml:space="preserve">
+    <value>От {0}</value>
+  </data>
+  <data name="MagRail_Linker_Curve" xml:space="preserve">
+    <value>{0} м, мин. радиус {1} м</value>
+  </data>
+  <data name="MagRail_Linker_AimFree" xml:space="preserve">
+    <value>свободен</value>
+  </data>
+  <data name="MagRail_Linker_AimBusy" xml:space="preserve">
+    <value>есть пролёт (ПКМ: поднять конец)</value>
+  </data>
+  <data name="MagRail_Linker_Linked" xml:space="preserve">
+    <value>Пролёт проложен (прототип)</value>
+  </data>
+  <data name="MagRail_Linker_Started" xml:space="preserve">
+    <value>Пролёт от {0}: наведите на второй порт</value>
+  </data>
+  <data name="MagRail_Linker_PortBusy" xml:space="preserve">
+    <value>У порта уже есть пролёт (ПКМ поднимает его конец)</value>
+  </data>
+  <data name="MagRail_Linker_Cancelled" xml:space="preserve">
+    <value>Пролёт отменён</value>
+  </data>
+  <data name="MagRail_Linker_PickedUp" xml:space="preserve">
+    <value>Конец поднят: наведите на новый порт</value>
+  </data>
+  <data name="MagRail_Linker_Deleted" xml:space="preserve">
+    <value>Пролёт удалён</value>
+  </data>
+  <data name="MagRail_Linker_BlockCleared" xml:space="preserve">
+    <value>Пролёты блока удалены</value>
+  </data>
+  <data name="MagRail_Linker_ToRail" xml:space="preserve">
+    <value>Пролёт → рельс</value>
+  </data>
+  <data name="MagRail_Linker_ToPrototype" xml:space="preserve">
+    <value>Пролёт → прототип</value>
+  </data>
+  <data name="MagRail_Linker_RailWaits" xml:space="preserve">
+    <value>станет рельсом, когда будет можно: {0}</value>
+  </data>
+  <data name="MagRail_Mode_Rail" xml:space="preserve">
+    <value>Рельс</value>
+  </data>
+  <data name="MagRail_Mode_Prototype" xml:space="preserve">
+    <value>Прототип</value>
+  </data>
+  <data name="MagRail_Problem_SameBlock" xml:space="preserve">
+    <value>оба порта на одном блоке</value>
+  </data>
+  <data name="MagRail_Problem_PortBusy" xml:space="preserve">
+    <value>у порта уже есть пролёт</value>
+  </data>
+  <data name="MagRail_Problem_Grids" xml:space="preserve">
+    <value>блоки должны быть на станциях или на одном гриде</value>
+  </data>
+  <data name="MagRail_Problem_Short" xml:space="preserve">
+    <value>слишком короткий пролёт (меньше 2.5 м)</value>
+  </data>
+  <data name="MagRail_Problem_Damaged" xml:space="preserve">
+    <value>блок повреждён</value>
+  </data>
+  <data name="MagRail_Port_port_a" xml:space="preserve">
+    <value>конец A</value>
+  </data>
+  <data name="MagRail_Port_port_b" xml:space="preserve">
+    <value>конец B</value>
+  </data>
+  <data name="MagRail_Port_entry" xml:space="preserve">
+    <value>вход</value>
+  </data>
+  <data name="MagRail_Port_branch_l" xml:space="preserve">
+    <value>левая ветка</value>
+  </data>
+  <data name="MagRail_Port_branch_c" xml:space="preserve">
+    <value>прямая ветка</value>
+  </data>
+  <data name="MagRail_Port_branch_r" xml:space="preserve">
+    <value>правая ветка</value>
+  </data>
+  <data name="MagRail_Cmd_Summary" xml:space="preserve">
+    <value>{0} блоков пути; пролёты: {1} рельс, {2} прототип, {3} ждут блок</value>
   </data>
 </root>

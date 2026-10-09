@@ -25,8 +25,7 @@ namespace MagRail
         public const int CurrentVersion = 1;
 
         [ProtoMember(1)] public int Version = CurrentVersion;
-        // Locked: the rail is built and its height / head angles cannot change.
-        [ProtoMember(2)] public bool Locked;
+        // 2 was the Locked flag (test builds of V0.3.0): do not reuse.
         // Rail point height relative to the model's standard placement, m.
         [ProtoMember(3)] public float HeightOffset;
         // Free Rail head, degrees: + yaw = turn right, + pitch = nose up, + roll = bank right.
@@ -36,28 +35,22 @@ namespace MagRail
         // 7 was the angle step (test builds of V0.3.0): do not reuse.
         [ProtoMember(8)] public SwitchBranch Branch;
 
-        public static TrackSettings Defaults(TrackKind kind)
-        {
-            // The Free Rail Block is placed unlocked (it is aimed first), the fixed blocks locked.
-            return new TrackSettings { Locked = kind != TrackKind.FreeRail };
-        }
-
         public TrackSettings Copy()
         {
             return new TrackSettings
             {
-                Version = Version, Locked = Locked, HeightOffset = HeightOffset,
+                Version = Version, HeightOffset = HeightOffset,
                 Yaw = Yaw, Pitch = Pitch, Roll = Roll, Branch = Branch,
             };
         }
 
-        // A requested change on top of the current settings: a block that stays locked keeps its
-        // height and head angles.
-        public static TrackSettings Merge(TrackSettings current, TrackSettings requested)
+        // A requested change on top of the current settings: a locked block (a rail span touches it)
+        // keeps its height and head angles.
+        public static TrackSettings Merge(TrackSettings current, TrackSettings requested, bool locked)
         {
             TrackSettings s = requested.Copy();
             s.Version = CurrentVersion;
-            if (current.Locked && requested.Locked)
+            if (locked)
             {
                 s.HeightOffset = current.HeightOffset;
                 s.Yaw = current.Yaw;

@@ -10,6 +10,8 @@
       <RegisteredStorageGuids>
         <!-- Track block settings (TrackBlockLogic) -->
         <guid>444da85b-4de9-4530-8b2a-10d8f75d9c76</guid>
+        <!-- Spans owned by a track block (TrackBlockLogic) -->
+        <guid>b0b3f1c2-6f7e-4d84-9a51-2c8e7d3f4a60</guid>
       </RegisteredStorageGuids>
     </EntityComponent>
   </EntityComponents>

@@ -43,10 +43,11 @@ namespace MagRail
             return logic != null && logic.Kind == kind;
         }
 
+        // Height and head change only while no span in rail mode touches the block.
         static bool CanReshape(IMyTerminalBlock b)
         {
             TrackBlockLogic logic = Logic(b);
-            return logic != null && logic.CanReshape;
+            return logic != null && !logic.IsLocked;
         }
 
         static void Change(IMyTerminalBlock b, Action<TrackSettings> edit)
@@ -82,14 +83,9 @@ namespace MagRail
             label.Label = Loc.Id("MagRail_Term_Section");
             Add(label, IsTrack);
 
-            IMyTerminalControlOnOffSwitch locked = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlOnOffSwitch, IMyUpgradeModule>("MagRail_Locked");
-            locked.Title = Loc.Id("MagRail_Term_Locked");
-            locked.Tooltip = Loc.Id("MagRail_Term_Locked_Tip");
-            locked.OnText = Loc.Id("MagRail_Term_LockedOn");
-            locked.OffText = Loc.Id("MagRail_Term_LockedOff");
-            locked.Getter = b => Logic(b) != null && Logic(b).Settings.Locked;
-            locked.Setter = (b, v) => Change(b, s => s.Locked = v);
-            Add(locked, IsTrack);
+            IMyTerminalControlLabel locked = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlLabel, IMyUpgradeModule>("MagRail_LockedNote");
+            locked.Label = Loc.Id("MagRail_Term_LockedNote");
+            Add(locked, b => IsTrack(b) && !CanReshape(b));
 
             IMyTerminalControlSlider height = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyUpgradeModule>("MagRail_Height");
             height.Title = Loc.Id("MagRail_Term_Height");
