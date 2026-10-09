@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <CategoryClasses>
+    <Category xsi:type="MyObjectBuilder_GuiBlockCategoryDefinition">
+      <Id>
+        <TypeId>GuiBlockCategoryDefinition</TypeId>
+        <SubtypeId />
+      </Id>
+      <DisplayName>DisplayName_MagRail_Category</DisplayName>
+      <Name>MagRail Systems</Name>
+      <SearchBlocks>true</SearchBlocks>
+      <IsBlockCategory>true</IsBlockCategory>
+      <ItemIds>
+        <string>UpgradeModule/MagRail_RailBlock1</string>
+        <string>UpgradeModule/MagRail_RailBlock5</string>
+        <string>UpgradeModule/MagRail_FreeRail</string>
+        <string>UpgradeModule/MagRail_Switch</string>
+      </ItemIds>
+    </Category>
+  </CategoryClasses>
+</Definitions>

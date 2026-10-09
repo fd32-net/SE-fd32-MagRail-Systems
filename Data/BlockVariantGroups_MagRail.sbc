@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <BlockVariantGroups>
+    <!-- The first block is the group icon. -->
+    <BlockVariantGroup>
+      <Id Type="MyObjectBuilder_BlockVariantGroup" Subtype="MagRail_TrackGroup" />
+      <DisplayName>DisplayName_MagRail_TrackGroup</DisplayName>
+      <Description>Description_MagRail_TrackGroup</Description>
+      <Blocks>
+        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock1" />
+        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock5" />
+        <Block Type="UpgradeModule" Subtype="MagRail_FreeRail" />
+        <Block Type="UpgradeModule" Subtype="MagRail_Switch" />
+      </Blocks>
+    </BlockVariantGroup>
+  </BlockVariantGroups>
+</Definitions>

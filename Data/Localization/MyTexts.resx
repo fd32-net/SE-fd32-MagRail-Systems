@@ -1,5 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="DisplayName_MagRail_Category" xml:space="preserve">
+    <value>MagRail Systems</value>
+  </data>
+  <data name="DisplayName_MagRail_TrackGroup" xml:space="preserve">
+    <value>Track Blocks</value>
+  </data>
+  <data name="Description_MagRail_TrackGroup" xml:space="preserve">
+    <value>Blocks that carry the maglev track.</value>
+  </data>
+  <data name="DisplayName_MagRail_RailBlock1" xml:space="preserve">
+    <value>Rail Block 1</value>
+  </data>
+  <data name="Description_MagRail_RailBlock1" xml:space="preserve">
+    <value>Straight rail, 1 block long. Rails placed end to end join by themselves.</value>
+  </data>
+  <data name="DisplayName_MagRail_RailBlock5" xml:space="preserve">
+    <value>Rail Block 5</value>
+  </data>
+  <data name="Description_MagRail_RailBlock5" xml:space="preserve">
+    <value>Straight rail, 5 blocks long. Rails placed end to end join by themselves.</value>
+  </data>
+  <data name="DisplayName_MagRail_FreeRail" xml:space="preserve">
+    <value>Free Rail Block</value>
+  </data>
+  <data name="Description_MagRail_FreeRail" xml:space="preserve">
+    <value>Rail with a turning head: any direction, slope and bank.</value>
+  </data>
+  <data name="DisplayName_MagRail_Switch" xml:space="preserve">
+    <value>Rail Switch</value>
+  </data>
+  <data name="Description_MagRail_Switch" xml:space="preserve">
+    <value>One entry, three branches: left, centre, right.</value>
+  </data>
   <data name="MagRail_Loc_Loaded" xml:space="preserve">
     <value>1</value>
   </data>

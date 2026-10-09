@@ -1,3 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="DisplayName_MagRail_Category" xml:space="preserve">
+    <value>MagRail Systems</value>
+  </data>
+  <data name="DisplayName_MagRail_TrackGroup" xml:space="preserve">
+    <value>Блоки пути</value>
+  </data>
+  <data name="Description_MagRail_TrackGroup" xml:space="preserve">
+    <value>Блоки, на которых держится путь маглева.</value>
+  </data>
+  <data name="DisplayName_MagRail_RailBlock1" xml:space="preserve">
+    <value>Рельс 1</value>
+  </data>
+  <data name="Description_MagRail_RailBlock1" xml:space="preserve">
+    <value>Прямой рельс длиной 1 блок. Рельсы, поставленные торец к торцу, соединяются сами.</value>
+  </data>
+  <data name="DisplayName_MagRail_RailBlock5" xml:space="preserve">
+    <value>Рельс 5</value>
+  </data>
+  <data name="Description_MagRail_RailBlock5" xml:space="preserve">
+    <value>Прямой рельс длиной 5 блоков. Рельсы, поставленные торец к торцу, соединяются сами.</value>
+  </data>
+  <data name="DisplayName_MagRail_FreeRail" xml:space="preserve">
+    <value>Поворотный рельс</value>
+  </data>
+  <data name="Description_MagRail_FreeRail" xml:space="preserve">
+    <value>Рельс с поворотной головой: любое направление, уклон и крен.</value>
+  </data>
+  <data name="DisplayName_MagRail_Switch" xml:space="preserve">
+    <value>Стрелка</value>
+  </data>
+  <data name="Description_MagRail_Switch" xml:space="preserve">
+    <value>Один вход, три ветки: левая, прямая, правая.</value>
+  </data>
 </root>
