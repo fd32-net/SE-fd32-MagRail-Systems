@@ -207,7 +207,7 @@
   <data name="MagRail_Cmd_Pieces" xml:space="preserve">
     <value>Куски пути: {0} видно, {1} с коллизией (рядом с игроками)</value>
   </data>
-  <data name="MagRail_Cmd_Straight" xml:space="preserve">
-    <value>прямой</value>
+  <data name="MagRail_Cmd_Perf" xml:space="preserve">
+    <value>Время мода, мс (среднее / худшее за 10 с): обновление {0} / {1}, рисование {2} / {3}</value>
   </data>
 </root>

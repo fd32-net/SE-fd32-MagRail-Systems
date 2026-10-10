@@ -207,8 +207,8 @@
   <data name="MagRail_Cmd_Pieces" xml:space="preserve">
     <value>Track pieces: {0} shown, {1} with collision (near players)</value>
   </data>
-  <data name="MagRail_Cmd_Straight" xml:space="preserve">
-    <value>straight</value>
+  <data name="MagRail_Cmd_Perf" xml:space="preserve">
+    <value>Mod time, ms (average / worst over 10 s): update {0} / {1}, draw {2} / {3}</value>
   </data>
   <data name="MagRail_Loc_Loaded" xml:space="preserve">
     <value>1</value>

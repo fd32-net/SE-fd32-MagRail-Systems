@@ -14,8 +14,8 @@ using VRageMath;
 namespace MagRail
 {
     // A track block (Rail Block, Free Rail Block, Rail Switch): its settings, its rail part and its ports.
-    // The rail part is the subpart the model's "subpart_" dummy names; the dummy's matrix is the
-    // standard placement. The script moves the part by the height setting (and turns the Free Rail
+    // The rail part is the subpart the model's "subpart_" dummy names (the switch's "subpart_Beam<n>" are
+    // its beam segments, SwitchBeam); the dummy's matrix is the standard placement. The script moves the part by the height setting (and turns the Free Rail
     // head about the rail point = the part's origin) and gives it physics: the game gives subparts none.
     // Ports are the dummies of the part's model: position = rail point, Forward = outwards, Up = rail up.
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_UpgradeModule), false,
@@ -37,6 +37,7 @@ namespace MagRail
             public string Name;
             public Matrix Standard;
             public List<PortDef> Ports;     // null until the part's model was seen
+            public SwitchBeam.Shape Beam;   // Rail Switch
         }
 
         // Per subtype, read from the finished model once.
@@ -54,6 +55,7 @@ namespace MagRail
         MyEntitySubpart part;
         bool partOnStatic;
         bool partDirty;
+        SwitchBeam beam;
 
         static TrackNetwork Network
         {
@@ -104,10 +106,32 @@ namespace MagRail
             try
             {
                 UpdatePart();
+                if (beam != null)
+                    beam.ShowLights(Block.IsFunctional);
             }
             catch (Exception e)
             {
                 Log.Error("TrackBlockLogic.UpdateAfterSimulation100", e);
+            }
+        }
+
+        // Only while the switch beam moves.
+        public override void UpdateAfterSimulation()
+        {
+            try
+            {
+                if (beam != null && beam.Step())
+                {
+                    foreach (MyEntitySubpart segment in beam.Segments)
+                        RebuildPhysics(segment);
+                    beam.ShowLights(Block.IsFunctional);
+                }
+                if (beam == null || !beam.Moving)
+                    NeedsUpdate &= ~MyEntityUpdateEnum.EACH_FRAME;
+            }
+            catch (Exception e)
+            {
+                Log.Error("TrackBlockLogic.UpdateAfterSimulation", e);
             }
         }
 
@@ -281,7 +305,7 @@ namespace MagRail
             Block.Model.GetDummies(dummies);
             foreach (KeyValuePair<string, IMyModelDummy> d in dummies)
             {
-                if (!d.Key.StartsWith("subpart_"))
+                if (!d.Key.StartsWith("subpart_") || d.Key.StartsWith("subpart_Beam"))
                     continue;
                 info = new PartInfo { Name = d.Key.Substring("subpart_".Length), Standard = Matrix.Normalize(d.Value.Matrix) };
                 break;
@@ -306,6 +330,24 @@ namespace MagRail
             dummies.Clear();
             ports.Sort((x, y) => string.CompareOrdinal(x.Name, y.Name));
             info.Ports = ports;
+            info.Beam = BeamShape(ports);
+        }
+
+        // A switch: the entry and every branch port.
+        static SwitchBeam.Shape BeamShape(List<PortDef> ports)
+        {
+            PortDef entry = ports.Find(p => p.Name == "entry");
+            if (entry == null)
+                return null;
+            Matrix[] branches = new Matrix[SwitchBeam.BranchPorts.Length];
+            for (int i = 0; i < branches.Length; i++)
+            {
+                PortDef branch = ports.Find(p => p.Name == SwitchBeam.BranchPorts[i]);
+                if (branch == null)
+                    return null;
+                branches[i] = branch.Local;
+            }
+            return SwitchBeam.ShapeOf(entry.Local, branches);
         }
 
         void UpdatePart()
@@ -321,13 +363,32 @@ namespace MagRail
             bool onStatic = Block.CubeGrid.IsStatic;
             if (sub == part && onStatic == partOnStatic && !partDirty)
                 return;
+            bool samePart = sub == part;
             part = sub;
             partOnStatic = onStatic;
             partDirty = false;
 
             Matrix local = PartMatrix(info);
             part.PositionComp.SetLocalMatrix(ref local);
-            RebuildPartPhysics();
+            RebuildPhysics(part);
+            if (info.Beam == null)
+                return;
+            if (beam == null || !samePart)
+            {
+                beam = new SwitchBeam(info.Beam, (MyEntity)Block, part, local, Settings.Branch);
+            }
+            else
+            {
+                beam.Select(Settings.Branch);
+                beam.Place(local);
+            }
+            beam.ShowLights(Block.IsFunctional);
+            // A moving beam gets its collision when it arrives.
+            if (beam.Moving)
+                NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
+            else
+                foreach (MyEntitySubpart segment in beam.Segments)
+                    RebuildPhysics(segment);
         }
 
         Matrix PartMatrix(PartInfo info)
@@ -342,23 +403,23 @@ namespace MagRail
             return m;
         }
 
-        // Rebuilt on every move: moves are rare (settings changes) and a static body does not follow
-        // its entity. On a moving grid the part has no collision (see PieceEntities: it would hit the
-        // ship); it only keeps its world matrix up to date.
-        void RebuildPartPhysics()
+        // The rail part or a beam segment. Rebuilt on every move: moves are rare (settings changes) and a
+        // static body does not follow its entity. On a moving grid the part has no collision (see
+        // PieceEntities: it would hit the ship); it only keeps its world matrix up to date.
+        void RebuildPhysics(MyEntity e)
         {
-            if (part.Physics != null)
+            if (e.Physics != null)
             {
-                part.Physics.Close();
-                part.Physics = null;
+                e.Physics.Close();
+                e.Physics = null;
             }
             if (partOnStatic)
             {
-                part.InitModelPhysics(RigidBodyFlag.RBF_STATIC, PieceEntities.StaticLayer);
+                e.InitModelPhysics(RigidBodyFlag.RBF_STATIC, PieceEntities.StaticLayer);
             }
             else
             {
-                part.NeedsWorldMatrix = true;
+                e.NeedsWorldMatrix = true;
                 Block.NeedsWorldMatrix = true;
             }
         }

@@ -29,12 +29,17 @@ namespace MagRail
         // Absolute path: a model entity is not a block and does not know the mod's folder.
         public static string Model(int lengthIndex)
         {
-            return modelFolder + "MagRail_Track_" + (int)(TrackLayout.Lengths[lengthIndex] * 100 + 0.5) + ".mwm";
+            return ModelOfLength(TrackLayout.Lengths[lengthIndex]);
         }
 
         public static string CollisionModel
         {
-            get { return Model(0); }
+            get { return ModelOfLength(TrackLayout.CollisionLength); }
+        }
+
+        static string ModelOfLength(double length)
+        {
+            return modelFolder + "MagRail_Track_" + (int)(length * 1000 + 0.5) + ".mwm";
         }
 
         // The span's pieces are children of this grid (null: world entities).

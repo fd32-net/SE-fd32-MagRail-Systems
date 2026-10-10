@@ -8,13 +8,14 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.5.0";
+        public const string Version = "V0.6.0";
 
         public static MagRailSession Instance { get; private set; }
 
         public TrackNetwork Network { get; private set; }
         public TrackCollision Collision { get; private set; }
         public TrackPieces Pieces { get; private set; }     // null on a dedicated server
+        public readonly PerfCounter UpdateTime = new PerfCounter(), DrawTime = new PerfCounter();
 
         int tick;
         bool client;
@@ -59,6 +60,7 @@ namespace MagRail
         {
             try
             {
+                UpdateTime.Start();
                 tick++;
                 Network.Update();
                 Collision.Update(Network);
@@ -68,6 +70,7 @@ namespace MagRail
                     if (tick % 60 == 0)
                         Loc.CheckReload();
                 }
+                UpdateTime.Stop();
             }
             catch (Exception e)
             {
@@ -95,8 +98,10 @@ namespace MagRail
                 return;
             try
             {
+                DrawTime.Start();
                 SpanLines.DrawAll(Network, Pieces);
                 linker.DrawFrame();
+                DrawTime.Stop();
             }
             catch (Exception e)
             {

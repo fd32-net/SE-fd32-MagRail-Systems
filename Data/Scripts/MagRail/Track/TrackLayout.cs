@@ -5,19 +5,21 @@ using VRageMath;
 namespace MagRail
 {
     // How a span in rail mode is laid from track piece models (ModelSource/blocks/TrackPieces.py):
-    // straight pieces along chords of the curve, as long as the curve allows, stretched together to fill
+    // straight pieces along chords of the curve, as long as the curve allows (short in tight curves, so the
+    // bends at the joints stay small enough for the collars to hide), stretched together to fill
     // the span exactly; and for collision, a run of unscaled 2.5 m pieces. Matrices are in the span's
     // frame (see SpanCurve): origin = rail point in the middle of the piece, Forward along the rail, Up.
     public class TrackLayout
     {
-        // Piece model lengths, m (model MagRail_Track_<cm>).
-        public static readonly double[] Lengths = { 2.5, 5, 10, 20, 40 };
+        // Piece model lengths, m (model MagRail_Track_<mm>).
+        public static readonly double[] Lengths = { 0.625, 1.25, 2.5, 5, 10, 20, 40 };
         public const double CollisionLength = 2.5;
         // A chord stays this close to the curve (sag L^2 / 8R), m.
         const double SagTolerance = 0.04;
-        // The rail's up turns at most this much over one piece (twist, vertical bends): the collars of the
-        // piece models hide about 4 degrees between neighbours.
-        static readonly double MaxUpTurnCos = Math.Cos(MathHelper.ToRadians(3));
+        // The rail turns at most this much over one piece, both its direction (= the bend at a joint) and its
+        // up (twist): the collars of the piece models hide about 4 degrees between neighbours. Tighter than
+        // about 12 m radius even the shortest piece bends more.
+        static readonly double MaxTurnCos = Math.Cos(MathHelper.ToRadians(3));
 
         public readonly SpanCurve Curve;
         public readonly List<int> Models = new List<int>();             // index into Lengths
@@ -74,7 +76,7 @@ namespace MagRail
             for (int i = Index(c, s0), last = Math.Min(Index(c, s1) + 1, c.Pos.Count - 1); i <= last; i++)
                 if (allowed[i] < length)
                     return false;
-            return Vector3D.Dot(UpAt(c, s0), UpAt(c, s1)) >= MaxUpTurnCos;
+            return Vector3D.Dot(TanAt(c, s0), TanAt(c, s1)) >= MaxTurnCos && Vector3D.Dot(UpAt(c, s0), UpAt(c, s1)) >= MaxTurnCos;
         }
 
         // Piece from arc length a to b: on the chord, up = the mean of the ends' ups; modelLength > 0
@@ -119,6 +121,12 @@ namespace MagRail
         {
             int i = Index(c, s);
             return Vector3D.Lerp(c.Pos[i], c.Pos[i + 1], Fraction(c, i, s));
+        }
+
+        static Vector3D TanAt(SpanCurve c, double s)
+        {
+            int i = Index(c, s);
+            return Vector3D.Normalize(Vector3D.Lerp(c.Tan[i], c.Tan[i + 1], Fraction(c, i, s)));
         }
 
         static Vector3D UpAt(SpanCurve c, double s)
