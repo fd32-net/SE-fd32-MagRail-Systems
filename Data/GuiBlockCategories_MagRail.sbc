@@ -43,6 +43,9 @@
         <string>UpgradeModule/MagRail_RailBlock5</string>
         <string>UpgradeModule/MagRail_FreeRail</string>
         <string>UpgradeModule/MagRail_Switch</string>
+        <string>MotorSuspension/MagRail_HoverLarge</string>
+        <string>MotorSuspension/MagRail_HoverSmall</string>
+        <string>MotorSuspension/MagRail_HoverMini</string>
       </ItemIds>
     </Category>
   </CategoryClasses>

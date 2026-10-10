@@ -33,6 +33,30 @@
   <data name="Description_MagRail_Switch" xml:space="preserve">
     <value>One entry, three branches: left, centre, right.</value>
   </data>
+  <data name="DisplayName_MagRail_EngineGroup" xml:space="preserve">
+    <value>Hover Engines</value>
+  </data>
+  <data name="Description_MagRail_EngineGroup" xml:space="preserve">
+    <value>Engines that hold a train over the rail.</value>
+  </data>
+  <data name="DisplayName_MagRail_HoverLarge" xml:space="preserve">
+    <value>Hover Engine</value>
+  </data>
+  <data name="Description_MagRail_HoverLarge" xml:space="preserve">
+    <value>Holds the train over the rail. Mount it under the wagon. Placeholder model; no physics yet.</value>
+  </data>
+  <data name="DisplayName_MagRail_HoverSmall" xml:space="preserve">
+    <value>Hover Engine</value>
+  </data>
+  <data name="Description_MagRail_HoverSmall" xml:space="preserve">
+    <value>Holds the train over the rail. Mount it under the wagon. Placeholder model; no physics yet.</value>
+  </data>
+  <data name="DisplayName_MagRail_HoverMini" xml:space="preserve">
+    <value>Hover Engine Mini 3x1</value>
+  </data>
+  <data name="Description_MagRail_HoverMini" xml:space="preserve">
+    <value>Small hover engine for light small-grid trains. Placeholder model; no physics yet.</value>
+  </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Track block</value>
   </data>
@@ -178,7 +202,7 @@
     <value>blocks must be on stations or on one grid</value>
   </data>
   <data name="MagRail_Problem_Short" xml:space="preserve">
-    <value>span too short (under 2.5 m)</value>
+    <value>span too short (under 0.3 m)</value>
   </data>
   <data name="MagRail_Problem_Damaged" xml:space="preserve">
     <value>a block is damaged</value>
@@ -209,6 +233,33 @@
   </data>
   <data name="MagRail_Cmd_Perf" xml:space="preserve">
     <value>Mod time, ms (average / worst over 10 s): update {0} / {1}, draw {2} / {3}</value>
+  </data>
+  <data name="MagRail_Debug_EnginesOn" xml:space="preserve">
+    <value>Engine lines on: green = rail captured, yellow = found but too far or tilted</value>
+  </data>
+  <data name="MagRail_Debug_EnginesOff" xml:space="preserve">
+    <value>Engine lines off</value>
+  </data>
+  <data name="MagRail_Debug_GhostOn" xml:space="preserve">
+    <value>Ghost cursor runs at {0} m/s (/magrail cursor off stops it)</value>
+  </data>
+  <data name="MagRail_Debug_GhostOff" xml:space="preserve">
+    <value>Ghost cursor stopped</value>
+  </data>
+  <data name="MagRail_Debug_NoRail" xml:space="preserve">
+    <value>No rail where you look (spans in rail mode and track blocks, up to 150 m)</value>
+  </data>
+  <data name="MagRail_Debug_GhostLost" xml:space="preserve">
+    <value>Ghost cursor: the rail under it is gone</value>
+  </data>
+  <data name="MagRail_Debug_OnSpan" xml:space="preserve">
+    <value>Ghost: span {0} / {1} m</value>
+  </data>
+  <data name="MagRail_Debug_OnLane" xml:space="preserve">
+    <value>Ghost: {0}, {1} → {2}, {3} / {4} m</value>
+  </data>
+  <data name="MagRail_Debug_DeadEnd" xml:space="preserve">
+    <value>dead end, turning back</value>
   </data>
   <data name="MagRail_Loc_Loaded" xml:space="preserve">
     <value>1</value>

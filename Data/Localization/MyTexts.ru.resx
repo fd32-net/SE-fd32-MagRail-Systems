@@ -33,6 +33,30 @@
   <data name="Description_MagRail_Switch" xml:space="preserve">
     <value>Один вход, три ветки: левая, прямая, правая.</value>
   </data>
+  <data name="DisplayName_MagRail_EngineGroup" xml:space="preserve">
+    <value>Двигатели парения</value>
+  </data>
+  <data name="Description_MagRail_EngineGroup" xml:space="preserve">
+    <value>Двигатели, которые держат поезд над рельсом.</value>
+  </data>
+  <data name="DisplayName_MagRail_HoverLarge" xml:space="preserve">
+    <value>Двигатель парения</value>
+  </data>
+  <data name="Description_MagRail_HoverLarge" xml:space="preserve">
+    <value>Держит поезд над рельсом. Ставится под вагон. Модель-заглушка; физики пока нет.</value>
+  </data>
+  <data name="DisplayName_MagRail_HoverSmall" xml:space="preserve">
+    <value>Двигатель парения</value>
+  </data>
+  <data name="Description_MagRail_HoverSmall" xml:space="preserve">
+    <value>Держит поезд над рельсом. Ставится под вагон. Модель-заглушка; физики пока нет.</value>
+  </data>
+  <data name="DisplayName_MagRail_HoverMini" xml:space="preserve">
+    <value>Двигатель парения мини 3x1</value>
+  </data>
+  <data name="Description_MagRail_HoverMini" xml:space="preserve">
+    <value>Малый двигатель парения для лёгких поездов на малой сетке. Модель-заглушка; физики пока нет.</value>
+  </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Блок пути</value>
   </data>
@@ -178,7 +202,7 @@
     <value>блоки должны быть на станциях или на одном гриде</value>
   </data>
   <data name="MagRail_Problem_Short" xml:space="preserve">
-    <value>слишком короткий пролёт (меньше 2.5 м)</value>
+    <value>слишком короткий пролёт (меньше 0.3 м)</value>
   </data>
   <data name="MagRail_Problem_Damaged" xml:space="preserve">
     <value>блок повреждён</value>
@@ -209,5 +233,32 @@
   </data>
   <data name="MagRail_Cmd_Perf" xml:space="preserve">
     <value>Время мода, мс (среднее / худшее за 10 с): обновление {0} / {1}, рисование {2} / {3}</value>
+  </data>
+  <data name="MagRail_Debug_EnginesOn" xml:space="preserve">
+    <value>Линии двигателей включены: зелёная — рельс захвачен, жёлтая — найден, но далеко или под углом</value>
+  </data>
+  <data name="MagRail_Debug_EnginesOff" xml:space="preserve">
+    <value>Линии двигателей выключены</value>
+  </data>
+  <data name="MagRail_Debug_GhostOn" xml:space="preserve">
+    <value>Призрак бежит со скоростью {0} м/с (/magrail cursor off — стоп)</value>
+  </data>
+  <data name="MagRail_Debug_GhostOff" xml:space="preserve">
+    <value>Призрак остановлен</value>
+  </data>
+  <data name="MagRail_Debug_NoRail" xml:space="preserve">
+    <value>Там, куда вы смотрите, нет рельса (пролёты-рельсы и блоки пути, до 150 м)</value>
+  </data>
+  <data name="MagRail_Debug_GhostLost" xml:space="preserve">
+    <value>Призрак: рельс под ним пропал</value>
+  </data>
+  <data name="MagRail_Debug_OnSpan" xml:space="preserve">
+    <value>Призрак: пролёт {0} / {1} м</value>
+  </data>
+  <data name="MagRail_Debug_OnLane" xml:space="preserve">
+    <value>Призрак: {0}, {1} → {2}, {3} / {4} м</value>
+  </data>
+  <data name="MagRail_Debug_DeadEnd" xml:space="preserve">
+    <value>тупик, разворот</value>
   </data>
 </root>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
@@ -11,7 +12,8 @@ namespace MagRail
     // The server changes spans; clients ask it (Net) and mirror the owner's store it sends back.
     public class TrackNetwork
     {
-        public const double MinSpanLength = 2.5;
+        // Shorter than this the track pieces cannot be laid (the shortest piece squeezed to half its length).
+        public const double MinSpanLength = 0.3;
         // Curves of spans between two moving grids follow them at this rate (ticks).
         const int MovingCurveTicks = 10;
 
@@ -21,6 +23,15 @@ namespace MagRail
         readonly List<Span> scratch = new List<Span>();
         bool unresolved;
         int tick;
+
+        // Changes with every change of blocks, spans or rail geometry (the track index rebuilds).
+        public int Version { get; private set; }
+        public readonly TrackIndex Index = new TrackIndex();
+
+        public void Touch()
+        {
+            Version++;
+        }
 
         public ICollection<TrackBlockLogic> Blocks
         {
@@ -66,6 +77,7 @@ namespace MagRail
         public void Register(TrackBlockLogic block)
         {
             blocks[block.Block.EntityId] = block;
+            Version++;
             AddOwnedSpans(block);
             Resolve();
         }
@@ -73,6 +85,7 @@ namespace MagRail
         public void Unregister(TrackBlockLogic block)
         {
             blocks.Remove(block.Block.EntityId);
+            Version++;
             for (int i = spans.Count - 1; i >= 0; i--)
             {
                 Span s = spans[i];
@@ -165,6 +178,7 @@ namespace MagRail
                 }
                 s.Partner = partner;
                 s.PartnerPort = partnerPort;
+                Version++;
                 s.Curve = null;
                 byPort[PortKey(s.Owner, s.OwnerPort)] = s;
                 byPort[PortKey(partner, partnerPort)] = s;
@@ -180,6 +194,7 @@ namespace MagRail
                 s.Owner.SpanStore.Spans.Remove(s.Record);
                 s.Owner.SaveSpans();
                 spans.Remove(s);
+                Version++;
             }
             scratch.Clear();
             TrackTerminal.Refresh();
@@ -187,6 +202,7 @@ namespace MagRail
 
         void Unbind(Span s)
         {
+            Version++;
             if (s.Partner != null)
             {
                 byPort.Remove(PortKey(s.Owner, s.OwnerPort));
@@ -257,6 +273,48 @@ namespace MagRail
             if (SpanAt(a, aPort) != null || SpanAt(b, bPort) != null)
                 return "MagRail_Problem_PortBusy";
             return GridsOrLengthProblem(a, aPort, b, bPort);
+        }
+
+        // ---- joints ----
+
+        // Joint tolerance: port points this close, facing each other within this angle.
+        const double JointDistance = 0.5;
+        static readonly double JointFacingCos = -Math.Cos(MathHelper.ToRadians(15));
+        readonly List<TrackIndex.Entry> jointScratch = new List<TrackIndex.Entry>();
+
+        // A fixed block whose port meets this one end to end (on any grid), not computed ahead: found when a
+        // train gets there. A port with a span has no joint.
+        public bool FindJoint(TrackBlockLogic block, int port, out TrackBlockLogic other, out int otherPort)
+        {
+            other = null;
+            otherPort = -1;
+            if (!block.IsJointPort(port) || SpanAt(block, port) != null)
+                return false;
+            MatrixD p = block.PortWorld(port);
+            double best = JointDistance;
+            jointScratch.Clear();
+            Index.Query(this, p.Translation, JointDistance, jointScratch);
+            for (int i = 0; i < jointScratch.Count; i++)
+            {
+                TrackBlockLogic b = jointScratch[i].Block;
+                if (b == null || b == block || !b.Rideable)
+                    continue;
+                for (int q = 0; q < b.PortCount; q++)
+                {
+                    if (!b.IsJointPort(q) || SpanAt(b, q) != null)
+                        continue;
+                    MatrixD m = b.PortWorld(q);
+                    double d = Vector3D.Distance(m.Translation, p.Translation);
+                    if (d <= best && Vector3D.Dot(m.Forward, p.Forward) <= JointFacingCos)
+                    {
+                        best = d;
+                        other = b;
+                        otherPort = q;
+                    }
+                }
+            }
+            jointScratch.Clear();
+            return other != null;
         }
 
         // ---- geometry ----
@@ -391,6 +449,7 @@ namespace MagRail
             blocks.Clear();
             spans.Clear();
             byPort.Clear();
+            Index.Clear();
         }
     }
 }

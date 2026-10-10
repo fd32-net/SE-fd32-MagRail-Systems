@@ -24,9 +24,22 @@ namespace MagRail
         // a, b: port matrices in the span's frame (Translation = rail point, Forward = outwards, Up).
         public static SpanCurve Build(MatrixD a, MatrixD b)
         {
+            return Build(a.Translation, a.Forward, a.Up, b.Translation, -b.Forward, b.Up);
+        }
+
+        // Rail inside a block from one of its ports to another (same port matrices): it starts inwards
+        // and leaves through the second port.
+        public static SpanCurve Lane(MatrixD from, MatrixD to)
+        {
+            return Build(from.Translation, -from.Forward, from.Up, to.Translation, to.Forward, to.Up);
+        }
+
+        // From p0 leaving along t0 to p3 arriving along t3.
+        static SpanCurve Build(Vector3D p0, Vector3D t0, Vector3D up0, Vector3D p3, Vector3D t3, Vector3D up3)
+        {
             SpanCurve c = new SpanCurve();
-            Vector3D p0 = a.Translation, p3 = b.Translation;
-            Vector3D t0 = Vector3D.Normalize(a.Forward), t3 = -Vector3D.Normalize(b.Forward);
+            t0 = Vector3D.Normalize(t0);
+            t3 = Vector3D.Normalize(t3);
             double h = ArcHandle(Vector3D.Distance(p0, p3), t0, t3);
             Vector3D c1 = p0 + t0 * h, c2 = p3 - t3 * h;
 
@@ -58,14 +71,14 @@ namespace MagRail
 
             // Parallel transport of A's up along the tangents, then the remaining twist to B's up
             // spread evenly over the length.
-            Vector3D up = Reject(a.Up, c.Tan[0]);
+            Vector3D up = Reject(up0, c.Tan[0]);
             for (int i = 0; i <= n; i++)
             {
                 if (i > 0)
                     up = Reject(up, c.Tan[i]);
                 c.Up.Add(up);
             }
-            Vector3D target = Reject(b.Up, c.Tan[n]);
+            Vector3D target = Reject(up3, c.Tan[n]);
             double twist = Math.Atan2(Vector3D.Dot(Vector3D.Cross(c.Up[n], target), c.Tan[n]), Vector3D.Dot(c.Up[n], target));
             for (int i = 0; i <= n; i++)
             {
@@ -83,6 +96,47 @@ namespace MagRail
             }
             c.Bounds = new BoundingSphereD(box.Center, box.HalfExtents.Length());
             return c;
+        }
+
+        // ---- sampling by arc length (linear between the table's samples) ----
+
+        // Sample i with S[i] <= s < S[i + 1] (the last segment for s >= Length).
+        public int Index(double s)
+        {
+            int lo = 0, hi = S.Count - 2;
+            while (lo < hi)
+            {
+                int mid = (lo + hi + 1) / 2;
+                if (S[mid] <= s)
+                    lo = mid;
+                else
+                    hi = mid - 1;
+            }
+            return lo;
+        }
+
+        public double Fraction(int i, double s)
+        {
+            double d = S[i + 1] - S[i];
+            return d > 1e-9 ? MathHelper.Clamp((s - S[i]) / d, 0, 1) : 0;
+        }
+
+        public Vector3D PosAt(double s)
+        {
+            int i = Index(s);
+            return Vector3D.Lerp(Pos[i], Pos[i + 1], Fraction(i, s));
+        }
+
+        public Vector3D TanAt(double s)
+        {
+            int i = Index(s);
+            return Vector3D.Normalize(Vector3D.Lerp(Tan[i], Tan[i + 1], Fraction(i, s)));
+        }
+
+        public Vector3D UpAt(double s)
+        {
+            int i = Index(s);
+            return Vector3D.Normalize(Vector3D.Lerp(Up[i], Up[i + 1], Fraction(i, s)));
         }
 
         // Handle length that makes the Bezier follow a circular arc between the two tangents:

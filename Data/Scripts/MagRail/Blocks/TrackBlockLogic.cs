@@ -52,6 +52,10 @@ namespace MagRail
         public int Revision { get; private set; }
 
         bool registered;
+        // Where the track index last saw the block: a grid split/merge or a grid turning static moves it.
+        IMyCubeGrid indexedGrid;
+        bool indexedStatic;
+        List<TrackLane> lanes;
         MyEntitySubpart part;
         bool partOnStatic;
         bool partDirty;
@@ -90,6 +94,8 @@ namespace MagRail
                 UpdatePart();
                 Network.Register(this);
                 registered = true;
+                indexedGrid = Block.CubeGrid;
+                indexedStatic = Block.CubeGrid.IsStatic;
                 TrackTerminal.Create();
                 NeedsUpdate |= MyEntityUpdateEnum.EACH_100TH_FRAME;
             }
@@ -108,6 +114,12 @@ namespace MagRail
                 UpdatePart();
                 if (beam != null)
                     beam.ShowLights(Block.IsFunctional);
+                if (registered && (Block.CubeGrid != indexedGrid || Block.CubeGrid.IsStatic != indexedStatic))
+                {
+                    indexedGrid = Block.CubeGrid;
+                    indexedStatic = Block.CubeGrid.IsStatic;
+                    Network.Touch();
+                }
             }
             catch (Exception e)
             {
@@ -191,6 +203,8 @@ namespace MagRail
             Block.Storage = Block.Storage ?? new MyModStorageComponent();
             Block.Storage[SettingsGuid] = Settings.Encode();
             Revision++;
+            if (registered)
+                Network.Touch();
             partDirty = true;
             UpdatePart();
             TrackTerminal.Refresh();
@@ -287,8 +301,71 @@ namespace MagRail
 
         public MatrixD PortWorld(int port)
         {
+            return PortBlockLocal(port) * Block.WorldMatrix;
+        }
+
+        public MatrixD PortBlockLocal(int port)
+        {
             PartInfo info = GetPartInfo();
-            return (MatrixD)(info.Ports[port].Local * PartMatrix(info)) * Block.WorldMatrix;
+            return (MatrixD)(info.Ports[port].Local * PartMatrix(info));
+        }
+
+        // Joints (fixed blocks end to end) only on ports in line with the grid: rail block ports, the switch
+        // entry and its straight branch. The Free Rail head turns; the L/R branches leave at an angle.
+        public bool IsJointPort(int port)
+        {
+            string name = PortName(port);
+            return Kind == TrackKind.Rail || name == "entry" || name == SwitchBeam.BranchPorts[(int)SwitchBranch.Center];
+        }
+
+        // ---- lanes (the rail inside the block) ----
+
+        // From the entry to each branch on a switch, else between the two ports; empty until the ports are known.
+        public List<TrackLane> Lanes
+        {
+            get
+            {
+                if (lanes != null || !PortsKnown)
+                    return lanes ?? noLanes;
+                lanes = new List<TrackLane>();
+                int entry = PortIndex("entry");
+                if (entry >= 0)
+                {
+                    for (int i = 0; i < PortCount; i++)
+                        if (i != entry)
+                            lanes.Add(new TrackLane(this, entry, i));
+                }
+                else if (PortCount == 2)
+                {
+                    lanes.Add(new TrackLane(this, 0, 1));
+                }
+                return lanes;
+            }
+        }
+
+        static readonly List<TrackLane> noLanes = new List<TrackLane>();
+
+        // The lane a train takes coming in through a port: from the switch entry the selected branch, from a
+        // branch back to the entry.
+        public TrackLane LaneFrom(int port)
+        {
+            List<TrackLane> list = Lanes;
+            int target = -1;
+            if (Kind == TrackKind.Switch && port == PortIndex("entry"))
+                target = PortIndex(SwitchBeam.BranchPorts[(int)Settings.Branch]);
+            for (int i = 0; i < list.Count; i++)
+            {
+                TrackLane lane = list[i];
+                if (target >= 0 ? lane.To == target : lane.From == port || lane.To == port)
+                    return lane;
+            }
+            return null;
+        }
+
+        // Carries trains: built far enough to work, with its rail part known.
+        public bool Rideable
+        {
+            get { return registered && Block.IsFunctional && PortsKnown; }
         }
 
         // ---- rail part ----

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sandbox.ModAPI;
 using VRage.Game.Components;
 
@@ -8,13 +9,14 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.6.0";
+        public const string Version = "V0.7.0";
 
         public static MagRailSession Instance { get; private set; }
 
         public TrackNetwork Network { get; private set; }
         public TrackCollision Collision { get; private set; }
         public TrackPieces Pieces { get; private set; }     // null on a dedicated server
+        public readonly List<HoverEngineLogic> Engines = new List<HoverEngineLogic>();
         public readonly PerfCounter UpdateTime = new PerfCounter(), DrawTime = new PerfCounter();
 
         int tick;
@@ -50,6 +52,8 @@ namespace MagRail
             }
             Network.Clear();
             Collision.Clear();
+            Engines.Clear();
+            TrackDebug.Clear();
             if (Pieces != null)
                 Pieces.Clear();
             Log.Clear();
@@ -67,6 +71,7 @@ namespace MagRail
                 if (client)
                 {
                     Pieces.Update(Network);
+                    TrackDebug.Update();
                     if (tick % 60 == 0)
                         Loc.CheckReload();
                 }
@@ -101,6 +106,7 @@ namespace MagRail
                 DrawTime.Start();
                 SpanLines.DrawAll(Network, Pieces);
                 linker.DrawFrame();
+                TrackDebug.DrawFrame(this);
                 DrawTime.Stop();
             }
             catch (Exception e)

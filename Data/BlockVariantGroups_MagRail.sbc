@@ -13,5 +13,15 @@
         <Block Type="UpgradeModule" Subtype="MagRail_Switch" />
       </Blocks>
     </BlockVariantGroup>
+    <BlockVariantGroup>
+      <Id Type="MyObjectBuilder_BlockVariantGroup" Subtype="MagRail_EngineGroup" />
+      <DisplayName>DisplayName_MagRail_EngineGroup</DisplayName>
+      <Description>Description_MagRail_EngineGroup</Description>
+      <Blocks>
+        <Block Type="MotorSuspension" Subtype="MagRail_HoverLarge" />
+        <Block Type="MotorSuspension" Subtype="MagRail_HoverSmall" />
+        <Block Type="MotorSuspension" Subtype="MagRail_HoverMini" />
+      </Blocks>
+    </BlockVariantGroup>
   </BlockVariantGroups>
 </Definitions>

@@ -298,9 +298,15 @@ namespace MagRail
 
         static string PortTitle(TrackBlockLogic block, int port)
         {
+            return block.Block.CustomName + " · " + PortLabel(block, port);
+        }
+
+        // The port's name for players (the dummy name if there is no translation).
+        public static string PortLabel(TrackBlockLogic block, int port)
+        {
             string key = "MagRail_Port_" + block.PortName(port);
             string name = Loc.T(key);
-            return block.Block.CustomName + " · " + (name == key ? block.PortName(port) : name);
+            return name == key ? block.PortName(port) : name;
         }
 
         // ---- drawing (every frame) ----
