@@ -43,19 +43,19 @@
     <value>Двигатель парения</value>
   </data>
   <data name="Description_MagRail_HoverLarge" xml:space="preserve">
-    <value>Держит поезд над рельсом. Ставится под вагон. Модель-заглушка; физики пока нет.</value>
+    <value>Держит поезд над рельсом. Ставится под вагон. Модель-заглушка.</value>
   </data>
   <data name="DisplayName_MagRail_HoverSmall" xml:space="preserve">
     <value>Двигатель парения</value>
   </data>
   <data name="Description_MagRail_HoverSmall" xml:space="preserve">
-    <value>Держит поезд над рельсом. Ставится под вагон. Модель-заглушка; физики пока нет.</value>
+    <value>Держит поезд над рельсом. Ставится под вагон. Модель-заглушка.</value>
   </data>
   <data name="DisplayName_MagRail_HoverMini" xml:space="preserve">
     <value>Двигатель парения мини 3x1</value>
   </data>
   <data name="Description_MagRail_HoverMini" xml:space="preserve">
-    <value>Малый двигатель парения для лёгких поездов на малой сетке. Модель-заглушка; физики пока нет.</value>
+    <value>Малый двигатель парения для лёгких поездов на малой сетке. Модель-заглушка.</value>
   </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Блок пути</value>
@@ -260,5 +260,101 @@
   </data>
   <data name="MagRail_Debug_DeadEnd" xml:space="preserve">
     <value>тупик, разворот</value>
+  </data>
+  <data name="MagRail_Debug_Body" xml:space="preserve">
+    <value>{0}: удержание {1}% · поворот {2}% · толчки извне {3} м/с, {4} рад/с за тик</value>
+  </data>
+  <data name="MagRail_Debug_Drops" xml:space="preserve">
+    <value>срывов {0}</value>
+  </data>
+  <data name="MagRail_Log_Started" xml:space="preserve">
+    <value>Запись хода начата: {0} (/magrail log ещё раз — стоп; не дольше 10 минут)</value>
+  </data>
+  <data name="MagRail_Log_Stopped" xml:space="preserve">
+    <value>Запись хода остановлена</value>
+  </data>
+  <data name="MagRail_Log_Limit" xml:space="preserve">
+    <value>Запись хода остановлена (10 минут)</value>
+  </data>
+  <data name="MagRail_Log_ServerOnly" xml:space="preserve">
+    <value>Запись хода работает только в одиночной игре</value>
+  </data>
+  <data name="MagRail_Log_Mark" xml:space="preserve">
+    <value>Отметка записана</value>
+  </data>
+  <data name="MagRail_Log_Off" xml:space="preserve">
+    <value>Запись хода выключена (/magrail log)</value>
+  </data>
+  <data name="MagRail_Cmd_Rides" xml:space="preserve">
+    <value>Двигатели парения: {0} на {1} гридах; физика поездов {2} / {3} мс</value>
+  </data>
+  <data name="MagRail_EngineTerm_Section" xml:space="preserve">
+    <value>Двигатель MagRail</value>
+  </data>
+  <data name="MagRail_EngineTerm_Height" xml:space="preserve">
+    <value>Высота парения</value>
+  </data>
+  <data name="MagRail_EngineTerm_Height_Tip" xml:space="preserve">
+    <value>Высота опорной точки (центр блока + смещения) над точкой рельса. Стандарт 2.5 м (малая сетка 1.2 м).</value>
+  </data>
+  <data name="MagRail_EngineTerm_Hold" xml:space="preserve">
+    <value>Жёсткость удержания</value>
+  </data>
+  <data name="MagRail_EngineTerm_Hold_Tip" xml:space="preserve">
+    <value>Насколько сильно двигатель возвращает свою точку на место над рельсом. 1x — стандарт; больше — жёстче, меньше — мягче.</value>
+  </data>
+  <data name="MagRail_EngineTerm_Offsets" xml:space="preserve">
+    <value>Смещение опорной точки</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetRight" xml:space="preserve">
+    <value>Смещение вправо</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetRight_Tip" xml:space="preserve">
+    <value>Сдвигает точку, которая держится над рельсом, вправо от блока (минус — влево).</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetForward" xml:space="preserve">
+    <value>Смещение вперёд</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetForward_Tip" xml:space="preserve">
+    <value>Сдвигает точку, которая держится над рельсом, вперёд от блока (минус — назад).</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetUp" xml:space="preserve">
+    <value>Смещение вверх</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetUp_Tip" xml:space="preserve">
+    <value>Сдвигает точку, которая держится над рельсом, вверх (минус — вниз).</value>
+  </data>
+  <data name="MagRail_Engine_State_Off" xml:space="preserve">
+    <value>Рельс: двигатель выключен или повреждён</value>
+  </data>
+  <data name="MagRail_Engine_State_NoRail" xml:space="preserve">
+    <value>Рельс: рядом нет</value>
+  </data>
+  <data name="MagRail_Engine_State_Far" xml:space="preserve">
+    <value>Рельс: найден, далеко (высота парения ±4 м)</value>
+  </data>
+  <data name="MagRail_Engine_State_Tilted" xml:space="preserve">
+    <value>Рельс: найден, двигатель стоит не той стороной</value>
+  </data>
+  <data name="MagRail_Engine_State_TrackEnd" xml:space="preserve">
+    <value>Рельс: двигатель за концом пути</value>
+  </data>
+  <data name="MagRail_Engine_State_Held" xml:space="preserve">
+    <value>Рельс: держит</value>
+  </data>
+  <data name="MagRail_Engine_Info_Hold" xml:space="preserve">
+    <value>Сила удержания: {0}</value>
+  </data>
+  <data name="MagRail_Engine_Info_Grid" xml:space="preserve">
+    <value>Грид: двигателей {0}, вместе {1}; масса {2} т</value>
+  </data>
+  <data name="MagRail_Engine_Info_Weight" xml:space="preserve">
+    <value>; вес {0} ({1}% удержания)</value>
+  </data>
+  <data name="MagRail_Unit_kN" xml:space="preserve">
+    <value>{0} кН</value>
+  </data>
+  <data name="MagRail_Unit_MN" xml:space="preserve">
+    <value>{0} МН</value>
   </data>
 </root>

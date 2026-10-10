@@ -6,10 +6,14 @@ using VRage.Game.Components;
 namespace MagRail
 {
     // Entry point of the mod: owns the systems and the order they run in each tick.
-    [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
+    // Priority 500: session components run by ascending priority (ties by type name), MySector (800) runs all block
+    // logic and other mods default to 1000. The rail hold writes grid velocities first, so whatever runs after us
+    // (coupling scripts, other mods, block logic) and the physics step's constraints have the last word: the rail
+    // is a force, not the master of the train.
+    [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.7.0";
+        public const string Version = "V0.8.0";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -17,7 +21,8 @@ namespace MagRail
         public TrackCollision Collision { get; private set; }
         public TrackPieces Pieces { get; private set; }     // null on a dedicated server
         public readonly List<HoverEngineLogic> Engines = new List<HoverEngineLogic>();
-        public readonly PerfCounter UpdateTime = new PerfCounter(), DrawTime = new PerfCounter();
+        public readonly Rides Rides = new Rides();
+        public readonly PerfCounter UpdateTime = new PerfCounter(), DrawTime = new PerfCounter(), RideTime = new PerfCounter();
 
         int tick;
         bool client;
@@ -53,11 +58,28 @@ namespace MagRail
             Network.Clear();
             Collision.Clear();
             Engines.Clear();
+            Rides.Clear();
             TrackDebug.Clear();
+            RideLog.Stop();
             if (Pieces != null)
                 Pieces.Clear();
             Log.Clear();
             Instance = null;
+        }
+
+        // Trains on the rail: before the physics step (the hold cancels gravity up front).
+        public override void UpdateBeforeSimulation()
+        {
+            try
+            {
+                RideTime.Start();
+                Rides.Update(Engines);
+                RideTime.Stop();
+            }
+            catch (Exception e)
+            {
+                Log.Error("Session.UpdateBeforeSimulation", e);
+            }
         }
 
         public override void UpdateAfterSimulation()

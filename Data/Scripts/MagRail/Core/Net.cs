@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ProtoBuf;
 using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
 
 namespace MagRail
 {
@@ -14,6 +15,8 @@ namespace MagRail
         UnlinkRequest = 4,      // client -> server: delete the span on owner Block's Port
         ModeRequest = 5,        // client -> server: span on owner Block's Port to rail (Flag) / prototype
         Spans = 6,              // server -> clients: an owner block's spans
+        EngineSettingsRequest = 7,  // client -> server: a player changed a hover engine's settings
+        EngineSettings = 8,         // server -> clients: the engine settings the server applied
     }
 
     [ProtoContract]
@@ -27,6 +30,7 @@ namespace MagRail
         [ProtoMember(6)] public string Port2;
         [ProtoMember(7)] public bool Flag;
         [ProtoMember(8)] public SpanStore Spans;
+        [ProtoMember(9)] public EngineSettings Engine;
     }
 
     // The mod's network channel. The server decides; clients send requests and apply what the
@@ -73,6 +77,16 @@ namespace MagRail
             ToClients(new Packet { Type = PacketType.Settings, Block = logic.Block.EntityId, Settings = logic.Settings });
         }
 
+        public static void SendEngineSettingsRequest(HoverEngineLogic engine, EngineSettings settings)
+        {
+            ToServer(new Packet { Type = PacketType.EngineSettingsRequest, Block = engine.Block.EntityId, Engine = settings });
+        }
+
+        public static void BroadcastEngineSettings(HoverEngineLogic engine)
+        {
+            ToClients(new Packet { Type = PacketType.EngineSettings, Block = engine.Block.EntityId, Engine = engine.Settings });
+        }
+
         public static void SendLinkRequest(TrackBlockLogic a, string aPort, TrackBlockLogic b, string bPort)
         {
             ToServer(new Packet { Type = PacketType.LinkRequest, Block = a.Block.EntityId, Port = aPort, Block2 = b.Block.EntityId, Port2 = bPort });
@@ -100,6 +114,11 @@ namespace MagRail
                 Packet p = MyAPIGateway.Utilities.SerializeFromBinary<Packet>(data);
                 if (p == null)
                     return;
+                if (p.Type == PacketType.EngineSettingsRequest || p.Type == PacketType.EngineSettings)
+                {
+                    ReceiveEngine(p, sender, fromServer);
+                    return;
+                }
                 TrackNetwork network = MagRailSession.Instance.Network;
                 TrackBlockLogic logic = network.Find(p.Block);
                 if (logic == null)
@@ -164,6 +183,25 @@ namespace MagRail
                 case PacketType.Spans:
                     network.ReplaceOwnerSpans(logic, p.Spans ?? new SpanStore { SelfId = logic.Block.EntityId });
                     break;
+            }
+        }
+
+        static void ReceiveEngine(Packet p, ulong sender, bool fromServer)
+        {
+            IMyEntity entity;
+            HoverEngineLogic engine = MyAPIGateway.Entities.TryGetEntityById(p.Block, out entity) && entity.GameLogic != null
+                ? entity.GameLogic.GetAs<HoverEngineLogic>() : null;
+            if (engine == null || engine.Settings == null || p.Engine == null)
+                return;
+            if (IsServer)
+            {
+                IMyPlayer player = FindPlayer(sender);
+                if (p.Type == PacketType.EngineSettingsRequest && player != null && engine.Block.HasPlayerAccess(player.IdentityId))
+                    engine.ApplyRequest(p.Engine);
+            }
+            else if (fromServer && p.Type == PacketType.EngineSettings)
+            {
+                engine.SetSettings(p.Engine.Clamped());
             }
         }
 

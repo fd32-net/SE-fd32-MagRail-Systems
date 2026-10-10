@@ -43,19 +43,19 @@
     <value>Hover Engine</value>
   </data>
   <data name="Description_MagRail_HoverLarge" xml:space="preserve">
-    <value>Holds the train over the rail. Mount it under the wagon. Placeholder model; no physics yet.</value>
+    <value>Holds the train over the rail. Mount it under the wagon. Placeholder model.</value>
   </data>
   <data name="DisplayName_MagRail_HoverSmall" xml:space="preserve">
     <value>Hover Engine</value>
   </data>
   <data name="Description_MagRail_HoverSmall" xml:space="preserve">
-    <value>Holds the train over the rail. Mount it under the wagon. Placeholder model; no physics yet.</value>
+    <value>Holds the train over the rail. Mount it under the wagon. Placeholder model.</value>
   </data>
   <data name="DisplayName_MagRail_HoverMini" xml:space="preserve">
     <value>Hover Engine Mini 3x1</value>
   </data>
   <data name="Description_MagRail_HoverMini" xml:space="preserve">
-    <value>Small hover engine for light small-grid trains. Placeholder model; no physics yet.</value>
+    <value>Small hover engine for light small-grid trains. Placeholder model.</value>
   </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Track block</value>
@@ -260,6 +260,102 @@
   </data>
   <data name="MagRail_Debug_DeadEnd" xml:space="preserve">
     <value>dead end, turning back</value>
+  </data>
+  <data name="MagRail_Debug_Body" xml:space="preserve">
+    <value>{0}: hold {1}% · turn {2}% · outside push {3} m/s, {4} rad/s per tick</value>
+  </data>
+  <data name="MagRail_Debug_Drops" xml:space="preserve">
+    <value>drops {0}</value>
+  </data>
+  <data name="MagRail_Log_Started" xml:space="preserve">
+    <value>Ride log started: {0} (/magrail log again stops it; 10 minutes at most)</value>
+  </data>
+  <data name="MagRail_Log_Stopped" xml:space="preserve">
+    <value>Ride log stopped</value>
+  </data>
+  <data name="MagRail_Log_Limit" xml:space="preserve">
+    <value>Ride log stopped (10 minutes)</value>
+  </data>
+  <data name="MagRail_Log_ServerOnly" xml:space="preserve">
+    <value>The ride log works in single player only</value>
+  </data>
+  <data name="MagRail_Log_Mark" xml:space="preserve">
+    <value>Mark written</value>
+  </data>
+  <data name="MagRail_Log_Off" xml:space="preserve">
+    <value>The ride log is off (/magrail log)</value>
+  </data>
+  <data name="MagRail_Cmd_Rides" xml:space="preserve">
+    <value>Hover engines: {0} on {1} grids; train physics {2} / {3} ms</value>
+  </data>
+  <data name="MagRail_EngineTerm_Section" xml:space="preserve">
+    <value>MagRail engine</value>
+  </data>
+  <data name="MagRail_EngineTerm_Height" xml:space="preserve">
+    <value>Hover height</value>
+  </data>
+  <data name="MagRail_EngineTerm_Height_Tip" xml:space="preserve">
+    <value>Height of the guide point (block centre + offsets) over the rail point. Standard 2.5 m (small grid 1.2 m).</value>
+  </data>
+  <data name="MagRail_EngineTerm_Hold" xml:space="preserve">
+    <value>Hold stiffness</value>
+  </data>
+  <data name="MagRail_EngineTerm_Hold_Tip" xml:space="preserve">
+    <value>How hard the engine pulls its point back over the rail. 1x standard; more = stiffer, less = softer.</value>
+  </data>
+  <data name="MagRail_EngineTerm_Offsets" xml:space="preserve">
+    <value>Guide point offset</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetRight" xml:space="preserve">
+    <value>Offset right</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetRight_Tip" xml:space="preserve">
+    <value>Moves the point held over the rail to the block's right (negative = left).</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetForward" xml:space="preserve">
+    <value>Offset forward</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetForward_Tip" xml:space="preserve">
+    <value>Moves the point held over the rail to the block's front (negative = back).</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetUp" xml:space="preserve">
+    <value>Offset up</value>
+  </data>
+  <data name="MagRail_EngineTerm_OffsetUp_Tip" xml:space="preserve">
+    <value>Moves the point held over the rail up (negative = down).</value>
+  </data>
+  <data name="MagRail_Engine_State_Off" xml:space="preserve">
+    <value>Rail: engine off or damaged</value>
+  </data>
+  <data name="MagRail_Engine_State_NoRail" xml:space="preserve">
+    <value>Rail: none nearby</value>
+  </data>
+  <data name="MagRail_Engine_State_Far" xml:space="preserve">
+    <value>Rail: found, too far (hover height ±4 m)</value>
+  </data>
+  <data name="MagRail_Engine_State_Tilted" xml:space="preserve">
+    <value>Rail: found, engine not upright to it</value>
+  </data>
+  <data name="MagRail_Engine_State_TrackEnd" xml:space="preserve">
+    <value>Rail: past the end of the track</value>
+  </data>
+  <data name="MagRail_Engine_State_Held" xml:space="preserve">
+    <value>Rail: held</value>
+  </data>
+  <data name="MagRail_Engine_Info_Hold" xml:space="preserve">
+    <value>Hold force: {0}</value>
+  </data>
+  <data name="MagRail_Engine_Info_Grid" xml:space="preserve">
+    <value>Grid: {0} engines, {1} together; mass {2} t</value>
+  </data>
+  <data name="MagRail_Engine_Info_Weight" xml:space="preserve">
+    <value>; weight {0} ({1}% of the hold)</value>
+  </data>
+  <data name="MagRail_Unit_kN" xml:space="preserve">
+    <value>{0} kN</value>
+  </data>
+  <data name="MagRail_Unit_MN" xml:space="preserve">
+    <value>{0} MN</value>
   </data>
   <data name="MagRail_Loc_Loaded" xml:space="preserve">
     <value>1</value>

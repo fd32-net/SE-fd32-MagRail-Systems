@@ -26,6 +26,8 @@ namespace MagRail
     {
         const double Window = 10;       // local projection looks this far around S, m
         const int MaxHops = 64;         // pieces crossed by one Advance
+        // A point further than this past the end of a piece is not over it: such a piece is not captured.
+        public const double PastEnd = 0.5;
         // Capture on a switch: a branch that is not selected must be this much nearer to win. Where the
         // branches still overlap (near the entry) the selected one is taken; at the far end they are 0.8 m apart.
         const double SelectedBranchBonus = 0.5;
@@ -63,6 +65,15 @@ namespace MagRail
             Dir = -Dir;
         }
 
+        public void CopyFrom(TrackCursor other)
+        {
+            Span = other.Span;
+            Lane = other.Lane;
+            S = other.S;
+            Dir = other.Dir;
+            DeadEnd = other.DeadEnd;
+        }
+
         // ---- the piece of track under the cursor ----
 
         public SpanCurve Curve
@@ -93,22 +104,39 @@ namespace MagRail
         // ---- projection ----
 
         // The rail point nearest to pos within maxDistance: near the cursor's place first, else anywhere (then
-        // the cursor faces along `forward`). False: no rail that close; the cursor is reset.
-        public bool TryProject(Vector3D pos, Vector3D forward, double maxDistance, double lateral, out TrackSample sample)
+        // the cursor faces along `forward`; rails on ignoreGrid are not captured). Past the end of the track the
+        // cursor moves to another rail only within switchDistance (default maxDistance). False: no rail that
+        // close; the cursor is reset.
+        public bool TryProject(Vector3D pos, Vector3D forward, double maxDistance, double lateral, out TrackSample sample,
+            IMyCubeGrid ignoreGrid = null, double switchDistance = -1)
         {
             if (Valid && Rideable)
             {
                 ProjectLocal(pos, lateral);
-                sample = Sample(pos, lateral);
-                if (sample.Distance <= maxDistance)
-                    return true;
+                // Past the end of the track: maybe over another rail now (backing off a rail onto a lower one).
+                if (!DeadEnd || !Capture(pos, switchDistance >= 0 ? switchDistance : maxDistance, ignoreGrid))
+                {
+                    sample = Sample(pos, lateral);
+                    if (sample.Distance <= maxDistance)
+                        return true;
+                }
+                else
+                {
+                    return Captured(pos, forward, maxDistance, lateral, out sample);
+                }
             }
-            if (!Capture(pos, maxDistance))
+            if (!Capture(pos, maxDistance, ignoreGrid))
             {
                 Reset();
                 sample = new TrackSample();
                 return false;
             }
+            return Captured(pos, forward, maxDistance, lateral, out sample);
+        }
+
+        // After a capture: face along `forward`, then the projection with the lateral offset.
+        bool Captured(Vector3D pos, Vector3D forward, double maxDistance, double lateral, out TrackSample sample)
+        {
             if (Vector3D.Dot(Vector3D.TransformNormal(Curve.TanAt(S), Frame), forward) < 0)
                 Dir = -1;
             ProjectLocal(pos, lateral);
@@ -144,8 +172,9 @@ namespace MagRail
             }
         }
 
-        // The nearest rideable rail to pos anywhere (centre lines); false if none within maxDistance.
-        bool Capture(Vector3D pos, double maxDistance)
+        // The nearest rideable rail to pos anywhere (centre lines) that pos is over (not past its end); false if
+        // none within maxDistance. The cursor is left as it was when nothing is found.
+        bool Capture(Vector3D pos, double maxDistance, IMyCubeGrid ignoreGrid)
         {
             double best = maxDistance;
             Span bestSpan = null;
@@ -159,7 +188,7 @@ namespace MagRail
                 double d2, s;
                 if (e.Block != null)
                 {
-                    if (!e.Block.Rideable)
+                    if (!e.Block.Rideable || e.Block.Block.CubeGrid == ignoreGrid)
                         continue;
                     Vector3D local = ToLocal(pos, e.Block.Block.WorldMatrix);
                     List<TrackLane> lanes = e.Block.Lanes;
@@ -168,6 +197,8 @@ namespace MagRail
                     {
                         SpanCurve c = lanes[k].Curve;
                         s = Nearest(c, local, 0, 0, c.Pos.Count - 1, out d2);
+                        if (IsPastEnd(c, local, s))
+                            continue;
                         double d = Math.Sqrt(d2) + (selected != null && lanes[k] != selected ? SelectedBranchBonus : 0);
                         if (d < best)
                         {
@@ -179,11 +210,12 @@ namespace MagRail
                     }
                     continue;
                 }
-                if (!e.Span.Bound || !e.Span.IsRail)
+                if (!e.Span.Bound || !e.Span.IsRail || (TrackNetwork.InGridFrame(e.Span) && e.Span.Owner.Block.CubeGrid == ignoreGrid))
                     continue;
                 SpanCurve curve = Network.CurveOf(e.Span);
-                s = Nearest(curve, ToLocal(pos, TrackNetwork.FrameMatrix(e.Span)), 0, e.First, Math.Min(e.Last, curve.Pos.Count - 1), out d2);
-                if (Math.Sqrt(d2) < best)
+                Vector3D spanLocal = ToLocal(pos, TrackNetwork.FrameMatrix(e.Span));
+                s = Nearest(curve, spanLocal, 0, e.First, Math.Min(e.Last, curve.Pos.Count - 1), out d2);
+                if (Math.Sqrt(d2) < best && !IsPastEnd(curve, spanLocal, s))
                 {
                     best = Math.Sqrt(d2);
                     bestSpan = e.Span;
@@ -199,6 +231,15 @@ namespace MagRail
             S = bestS;
             Dir = 1;
             return true;
+        }
+
+        // The nearest point s is an end of the curve and `local` lies beyond it.
+        static bool IsPastEnd(SpanCurve c, Vector3D local, double s)
+        {
+            int last = c.Pos.Count - 1;
+            if (s >= c.Length - 1e-6)
+                return Vector3D.Dot(local - c.Pos[last], c.Tan[last]) > PastEnd;
+            return s <= 1e-6 && Vector3D.Dot(local - c.Pos[0], c.Tan[0]) < -PastEnd;
         }
 
         // Arc length of the point of samples first..last nearest to `local`, the polyline moved sideways by side
