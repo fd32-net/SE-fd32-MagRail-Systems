@@ -11,6 +11,8 @@ namespace MagRail
         public TrackLayout Layout;
         public MyEntity Parent;     // the moving grid the pieces are children of, or null
         public MatrixD Frame;       // the span's frame when the layout was taken
+        public Vector3 Color;       // colour mask HSV and skin of the pieces (TrackPieces)
+        public string Skin = "";
         public MyEntity[] Entities;
         public int Stamp;
         public double Distance;
@@ -42,6 +44,19 @@ namespace MagRail
                             n++;
                 return n;
             }
+        }
+
+        // Repaints the placed pieces and the ones still to come.
+        public void Paint(Vector3 color, string skin)
+        {
+            bool newSkin = skin != Skin;
+            Color = color;
+            Skin = skin;
+            if (Entities == null)
+                return;
+            for (int i = 0; i < Entities.Length; i++)
+                if (Entities[i] != null)
+                    PieceEntities.Paint(Entities[i], color, skin, newSkin);
         }
 
         public void Clear()

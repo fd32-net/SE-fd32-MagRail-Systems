@@ -19,6 +19,7 @@ namespace MagRail
         public readonly List<double> Curvature = new List<double>();  // 1 / radius
         public double Length;
         public double MinRadius = double.PositiveInfinity;
+        public double TwistRate;    // rad per metre: the up turning about the rail, even over the span
         public BoundingSphereD Bounds;
 
         // a, b: port matrices in the span's frame (Translation = rail point, Forward = outwards, Up).
@@ -80,6 +81,7 @@ namespace MagRail
             }
             Vector3D target = Reject(up3, c.Tan[n]);
             double twist = Math.Atan2(Vector3D.Dot(Vector3D.Cross(c.Up[n], target), c.Tan[n]), Vector3D.Dot(c.Up[n], target));
+            c.TwistRate = c.Length > 1e-6 ? Math.Abs(twist) / c.Length : 0;
             for (int i = 0; i <= n; i++)
             {
                 double angle = c.Length > 1e-6 ? twist * c.S[i] / c.Length : 0;

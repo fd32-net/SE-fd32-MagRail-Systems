@@ -139,7 +139,7 @@
     <value>Прокладывает пролёты маглева между блоками пути и переключает их между прототипом и рельсом.</value>
   </data>
   <data name="MagRail_Linker_Hint" xml:space="preserve">
-    <value>ЛКМ порт → порт: пролёт · ЛКМ по пролёту: прототип/рельс · ПКМ: отмена / поднять конец / удалить пролёт · Shift+ПКМ по порту: удалить пролёты блока</value>
+    <value>ЛКМ порт → порт: пролёт · ЛКМ по пролёту: прототип/рельс · ПКМ: отмена / поднять конец / удалить пролёт · Shift+ПКМ по порту: удалить пролёты блока · СКМ по пролёту: покрасить (цвет и скин из P)</value>
   </data>
   <data name="MagRail_Linker_From" xml:space="preserve">
     <value>От {0}</value>
@@ -287,6 +287,9 @@
   </data>
   <data name="MagRail_Cmd_Rides" xml:space="preserve">
     <value>Двигатели парения: {0} на {1} гридах; физика поездов {2} / {3} мс</value>
+  </data>
+  <data name="MagRail_Cmd_Skin" xml:space="preserve">
+    <value>Скин постройки: {0}; цвет HSV {1}; прочитан за {2} мс</value>
   </data>
   <data name="MagRail_EngineTerm_Section" xml:space="preserve">
     <value>Двигатель MagRail</value>

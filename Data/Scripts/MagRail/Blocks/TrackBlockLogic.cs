@@ -449,7 +449,11 @@ namespace MagRail
             part.PositionComp.SetLocalMatrix(ref local);
             RebuildPhysics(part);
             if (info.Beam == null)
+            {
+                if (!MyAPIGateway.Utilities.IsDedicated)
+                    part.SetEmissiveParts("Emissive", PieceEntities.GlowColor, 1f);
                 return;
+            }
             if (beam == null || !samePart)
             {
                 beam = new SwitchBeam(info.Beam, (MyEntity)Block, part, local, Settings.Branch);

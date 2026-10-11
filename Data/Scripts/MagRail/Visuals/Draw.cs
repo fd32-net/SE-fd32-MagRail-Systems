@@ -21,16 +21,21 @@ namespace MagRail
             MyTransparentGeometry.AddLineBillboard(Material, color, a, (Vector3)(d / length), length, thickness, BlendTypeEnum.Standard);
         }
 
-        // Prototype colour by curvature: green = gentle, yellow = tight, red = too tight.
-        public const double GreenRadius = 20, YellowRadius = 10;
+        // Prototype colour by how well the track pieces can follow the shape (TrackLayout), per module of
+        // rail: green = smooth; yellow = close to the limit; red = beyond it, the rail shows kinks (bend: the
+        // curve turns more than a bend model can take, radius under ~12 m) or steps (twist: the up turns more
+        // than ~2.5 degrees per module, e.g. a half roll in under ~45 m).
         public static readonly Color Green = new Color(60, 230, 90);
         public static readonly Color Yellow = new Color(255, 210, 60);
         public static readonly Color Red = new Color(255, 70, 50);
+        static readonly double YellowTwist = TrackLayout.MaxTwist, RedTwist = MathHelper.ToRadians(2.5);
 
-        public static Color ByCurvature(double curvature)
+        public static Color ByShape(double curvature, double twistRate)
         {
-            double radius = curvature > 1e-6 ? 1 / curvature : double.PositiveInfinity;
-            return radius >= GreenRadius ? Green : radius >= YellowRadius ? Yellow : Red;
+            double bend = curvature * TrackLayout.Module, twist = twistRate * TrackLayout.Module;
+            if (bend > TrackLayout.MaxBend || twist > RedTwist)
+                return Red;
+            return bend > 0.6 * TrackLayout.MaxBend || twist > YellowTwist ? Yellow : Green;
         }
 
         public static void Notify(string text, string font = MyFontEnum.White, int ms = 2000)

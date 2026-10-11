@@ -139,7 +139,7 @@
     <value>Lays maglev spans between track blocks and switches them between prototype and rail.</value>
   </data>
   <data name="MagRail_Linker_Hint" xml:space="preserve">
-    <value>LMB port → port: lay span · LMB span: prototype/rail · RMB: cancel / pick up end / delete span · Shift+RMB port: delete block's spans</value>
+    <value>LMB port → port: lay span · LMB span: prototype/rail · RMB: cancel / pick up end / delete span · Shift+RMB port: delete block's spans · MMB span: paint (colour and skin from P)</value>
   </data>
   <data name="MagRail_Linker_From" xml:space="preserve">
     <value>From {0}</value>
@@ -287,6 +287,9 @@
   </data>
   <data name="MagRail_Cmd_Rides" xml:space="preserve">
     <value>Hover engines: {0} on {1} grids; train physics {2} / {3} ms</value>
+  </data>
+  <data name="MagRail_Cmd_Skin" xml:space="preserve">
+    <value>Build skin: {0}; colour HSV {1}; read in {2} ms</value>
   </data>
   <data name="MagRail_EngineTerm_Section" xml:space="preserve">
     <value>MagRail engine</value>

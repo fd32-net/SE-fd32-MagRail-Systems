@@ -40,6 +40,7 @@
       <IsBlockCategory>true</IsBlockCategory>
       <ItemIds>
         <string>UpgradeModule/MagRail_RailBlock1</string>
+        <string>CubeBlock/MagRail_RailProfileTest</string>
         <string>UpgradeModule/MagRail_RailBlock5</string>
         <string>UpgradeModule/MagRail_FreeRail</string>
         <string>UpgradeModule/MagRail_Switch</string>

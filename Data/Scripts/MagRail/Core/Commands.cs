@@ -1,11 +1,15 @@
 using System;
+using System.Diagnostics;
 using Sandbox.ModAPI;
+using VRage.Game.ModAPI;
+using VRageMath;
 
 namespace MagRail
 {
     // Chat command /magrail: counts of track blocks, spans and track pieces, and the mod's time per tick.
     // /magrail debug, /magrail cursor [speed | off]: track checks, see TrackDebug.
     // /magrail log, /magrail mark <text>: the ride log, see RideLog.
+    // /magrail skin: TEMPORARY probe - the player's build skin (P menu) as the game saves it, and how long that takes.
     public static class Commands
     {
         public static void OnMessage(string text, ref bool sendToOthers)
@@ -32,6 +36,11 @@ namespace MagRail
                 MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.T(RideLog.Active ? "MagRail_Log_Mark" : "MagRail_Log_Off"));
                 return;
             }
+            if (command == "skin")
+            {
+                ProbeSkin();
+                return;
+            }
             if (command == "cursor")
             {
                 MyAPIGateway.Utilities.ShowMessage("MagRail", TrackDebug.StartGhost(words.Length > 2 ? words[2].ToLowerInvariant() : ""));
@@ -54,6 +63,22 @@ namespace MagRail
                 session.UpdateTime.Worst.ToString("0.00"), session.DrawTime.Average.ToString("0.00"), session.DrawTime.Worst.ToString("0.00")));
             MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Rides", session.Engines.Count, session.Rides.Count,
                 session.RideTime.Average.ToString("0.00"), session.RideTime.Worst.ToString("0.00")));
+        }
+
+        // How the Rail Linker reads the build skin (RailLinker.BuildSkin), and how long it takes.
+        static void ProbeSkin()
+        {
+            IMyPlayer me = MyAPIGateway.Session.Player;
+            if (me == null)
+                return;
+            Stopwatch watch = Stopwatch.StartNew();
+            string skin = RailLinker.BuildSkin(me);
+            double ms = watch.Elapsed.TotalMilliseconds;
+            Vector3 hsv = me.SelectedBuildColor;
+            string text = Loc.F("MagRail_Cmd_Skin", skin == "" ? "-" : skin,
+                hsv.X.ToString("0.000") + " " + hsv.Y.ToString("0.000") + " " + hsv.Z.ToString("0.000"), ms.ToString("0.0"));
+            MyAPIGateway.Utilities.ShowMessage("MagRail", text);
+            Log.Info(text);
         }
     }
 }

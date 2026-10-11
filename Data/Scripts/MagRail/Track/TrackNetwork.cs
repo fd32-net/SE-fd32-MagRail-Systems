@@ -388,6 +388,14 @@ namespace MagRail
                 Net.SendModeRequest(s.Owner, s.Record.OwnerPort, wantRail);
         }
 
+        public void RequestPaint(Span s, Vector3 hsv, string skin)
+        {
+            if (Net.IsServer)
+                SetPaint(s, hsv, skin);
+            else
+                Net.SendPaintRequest(s.Owner, s.Record.OwnerPort, hsv, skin);
+        }
+
         public void Link(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort)
         {
             if (LinkProblem(a, aPort, b, bPort) != null)
@@ -425,6 +433,16 @@ namespace MagRail
         public void SetMode(Span s, bool wantRail)
         {
             s.Record.WantRail = wantRail;
+            Changed(s.Owner);
+        }
+
+        public void SetPaint(Span s, Vector3 hsv, string skin)
+        {
+            s.Record.Painted = true;
+            s.Record.PaintH = hsv.X;
+            s.Record.PaintS = hsv.Y;
+            s.Record.PaintV = hsv.Z;
+            s.Record.PaintSkin = skin;
             Changed(s.Owner);
         }
 

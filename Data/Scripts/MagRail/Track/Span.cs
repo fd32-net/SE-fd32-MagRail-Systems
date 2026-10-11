@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProtoBuf;
 using Sandbox.ModAPI;
+using VRageMath;
 
 namespace MagRail
 {
@@ -20,6 +21,13 @@ namespace MagRail
         [ProtoMember(7)] public int PartnerZ;
         // Desired mode, switched with the Rail Linker: rail (true) or prototype.
         [ProtoMember(8)] public bool WantRail;
+        // Paint (Rail Linker, MMB): a colour mask HSV and an armour skin (subtype, "" = none) like a block's.
+        // Not painted: the owner block's colour and skin.
+        [ProtoMember(9)] public bool Painted;
+        [ProtoMember(10)] public float PaintH;
+        [ProtoMember(11)] public float PaintS;
+        [ProtoMember(12)] public float PaintV;
+        [ProtoMember(13)] public string PaintSkin;
     }
 
     [ProtoContract]
@@ -70,6 +78,17 @@ namespace MagRail
         public bool Bound
         {
             get { return Partner != null; }
+        }
+
+        // Colour mask HSV and skin of the span's track pieces.
+        public Vector3 Color
+        {
+            get { return Record.Painted ? new Vector3(Record.PaintH, Record.PaintS, Record.PaintV) : Owner.Block.SlimBlock.ColorMaskHSV; }
+        }
+
+        public string Skin
+        {
+            get { return Record.Painted ? Record.PaintSkin ?? "" : Owner.Block.SlimBlock.SkinSubtypeId.String; }
         }
 
         public bool IsRail

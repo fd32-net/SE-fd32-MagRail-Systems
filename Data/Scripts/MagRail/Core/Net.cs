@@ -4,6 +4,7 @@ using ProtoBuf;
 using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
+using VRageMath;
 
 namespace MagRail
 {
@@ -18,6 +19,7 @@ namespace MagRail
         EngineSettingsRequest = 7,  // client -> server: a player changed a hover engine's settings
         EngineSettings = 8,         // server -> clients: the engine settings the server applied
         PowerDemand = 9,            // server -> clients: hover engines' power demand (Ids, Values)
+        PaintRequest = 10,          // client -> server: paint the span on owner Block's Port: colour mask HSV in Values, Skin
     }
 
     [ProtoContract]
@@ -34,6 +36,7 @@ namespace MagRail
         [ProtoMember(9)] public EngineSettings Engine;
         [ProtoMember(10)] public long[] Ids;
         [ProtoMember(11)] public float[] Values;
+        [ProtoMember(12)] public string Skin;
     }
 
     // The mod's network channel. The server decides; clients send requests and apply what the
@@ -147,6 +150,12 @@ namespace MagRail
             ToServer(new Packet { Type = PacketType.ModeRequest, Block = owner.Block.EntityId, Port = port, Flag = wantRail });
         }
 
+        public static void SendPaintRequest(TrackBlockLogic owner, string port, Vector3 hsv, string skin)
+        {
+            ToServer(new Packet { Type = PacketType.PaintRequest, Block = owner.Block.EntityId, Port = port, Values = new[] { hsv.X, hsv.Y, hsv.Z },
+                Skin = skin });
+        }
+
         public static void BroadcastSpans(TrackBlockLogic owner)
         {
             ToClients(new Packet { Type = PacketType.Spans, Block = owner.Block.EntityId, Spans = owner.SpanStore });
@@ -209,6 +218,7 @@ namespace MagRail
                 }
                 case PacketType.UnlinkRequest:
                 case PacketType.ModeRequest:
+                case PacketType.PaintRequest:
                 {
                     Span s = network.FindOwnedSpan(logic, p.Port);
                     if (s == null || !RailLinker.IsHolding(player.Character)
@@ -216,8 +226,10 @@ namespace MagRail
                         return;
                     if (p.Type == PacketType.UnlinkRequest)
                         network.Unlink(s);
-                    else
+                    else if (p.Type == PacketType.ModeRequest)
                         network.SetMode(s, p.Flag);
+                    else if (p.Values != null && p.Values.Length == 3)
+                        network.SetPaint(s, new Vector3(p.Values[0], p.Values[1], p.Values[2]), p.Skin ?? "");
                     break;
                 }
             }

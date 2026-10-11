@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Entity;
@@ -95,6 +96,8 @@ namespace MagRail
                 Left();
             else if (MyAPIGateway.Input.IsNewRightMousePressed())
                 Right(MyAPIGateway.Input.IsAnyShiftKeyPressed());
+            else if (MyAPIGateway.Input.IsNewMiddleMousePressed())
+                Middle();
             BuildPreview();
             ShowInfo();
         }
@@ -255,6 +258,30 @@ namespace MagRail
                 Network.RequestUnlink(aimSpan);
                 Draw.Notify(Loc.T("MagRail_Linker_Deleted"));
             }
+        }
+
+        // Paint like the vanilla paint: MMB paints the aimed span with the player's colour and skin (picked with P).
+        void Middle()
+        {
+            if (startBlock != null || aimSpan == null || !aimSpan.Bound)
+                return;
+            IMyPlayer player = MyAPIGateway.Session.Player;
+            if (player == null)
+                return;
+            Network.RequestPaint(aimSpan, player.SelectedBuildColor, BuildSkin(player));
+        }
+
+        // The mod API has no getter for the player's build skin; the player's saved data has it
+        // (MyObjectBuilder_Player.BuildArmorSkin), and IMySession.GetCheckpoint builds that data in memory
+        // (the whole checkpoint, a few ms: only on a click).
+        public static string BuildSkin(IMyPlayer player)
+        {
+            MyObjectBuilder_Checkpoint checkpoint = MyAPIGateway.Session.GetCheckpoint("MagRail");
+            if (checkpoint != null && checkpoint.AllPlayersData != null)
+                foreach (KeyValuePair<MyObjectBuilder_Checkpoint.PlayerId, MyObjectBuilder_Player> p in checkpoint.AllPlayersData.Dictionary)
+                    if (p.Value.IdentityId == player.IdentityId)
+                        return p.Value.BuildArmorSkin ?? "";
+            return "";
         }
 
         void ShowInfo()

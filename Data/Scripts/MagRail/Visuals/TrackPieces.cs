@@ -65,6 +65,10 @@ namespace MagRail
                     placed[s] = p;
                 }
                 p.Take(layout, PieceEntities.ParentOf(s), frame, layout.Pieces.Count);
+                Vector3 color = s.Color;
+                string skin = s.Skin;
+                if (color != p.Color || skin != p.Skin)
+                    p.Paint(color, skin);
                 p.Stamp = stamp;
                 p.Distance = d;
                 if (!Done(p))
@@ -102,7 +106,7 @@ namespace MagRail
                 {
                     if (p.Entities[i] != null)
                         continue;
-                    p.Entities[i] = PieceEntities.Visual(PieceEntities.Model(layout.Models[i]), layout.Pieces[i], p.Frame, p.Parent);
+                    p.Entities[i] = PieceEntities.Visual(PieceEntities.Model(layout.Models[i]), layout.Pieces[i], p.Frame, p.Parent, p.Color, p.Skin);
                     budget--;
                 }
             }

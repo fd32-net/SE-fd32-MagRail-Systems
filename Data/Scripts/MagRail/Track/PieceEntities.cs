@@ -1,5 +1,8 @@
+using System;
+using Sandbox.Definitions;
 using Sandbox.Engine.Physics;
 using Sandbox.Game.Entities;
+using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.ModAPI;
@@ -19,6 +22,10 @@ namespace MagRail
         // (a number: a mod may not name MyPhysics).
         public const int StaticLayer = 13;
 
+        // Glow strips of the rail (material "Emissive" of the piece models and the blocks' straight rail parts,
+        // ModelSource/rail_profile.py).
+        public static readonly Color GlowColor = new Color(40, 190, 255);
+
         static string modelFolder;
 
         public static void Load(string modPath)
@@ -27,19 +34,14 @@ namespace MagRail
         }
 
         // Absolute path: a model entity is not a block and does not know the mod's folder.
-        public static string Model(int lengthIndex)
+        public static string Model(string name)
         {
-            return ModelOfLength(TrackLayout.Lengths[lengthIndex]);
+            return modelFolder + name + ".mwm";
         }
 
         public static string CollisionModel
         {
-            get { return ModelOfLength(TrackLayout.CollisionLength); }
-        }
-
-        static string ModelOfLength(double length)
-        {
-            return modelFolder + "MagRail_Track_" + (int)(length * 1000 + 0.5) + ".mwm";
+            get { return Model(TrackLayout.StraightModel((int)Math.Round(TrackLayout.CollisionLength / TrackLayout.Module))); }
         }
 
         // The span's pieces are children of this grid (null: world entities).
@@ -49,12 +51,17 @@ namespace MagRail
             return TrackNetwork.InGridFrame(s) && !s.Owner.Block.CubeGrid.IsStatic ? grid : null;
         }
 
-        // m: piece matrix in the span's frame (frame: TrackNetwork.FrameMatrix; a child uses m alone).
-        public static MyEntity Visual(string model, MatrixD m, MatrixD frame, MyEntity parent)
+        // m: piece matrix in the span's frame (frame: TrackNetwork.FrameMatrix; a child uses m alone);
+        // color, skin: colour mask HSV and armour skin, as on a block.
+        public static MyEntity Visual(string model, MatrixD m, MatrixD frame, MyEntity parent, Vector3 color, string skin)
         {
             MyEntity e = new MyEntity();
             e.Init(null, model, null, null, null);
+            e.Render.EnableColorMaskHsv = true;
+            Paint(e, color, skin, false);
             Place(e, m, frame, parent);
+            // After Place: the render object exists once the entity is in the scene.
+            e.SetEmissiveParts("Emissive", GlowColor, 1f);
             return e;
         }
 
@@ -84,6 +91,29 @@ namespace MagRail
             e.NeedsWorldMatrix = true;
             Matrix local = m;
             parent.Hierarchy.AddChildWithMatrix(e, ref local, true);
+        }
+
+        // Like MyCubeBlock.UpdateSkin: the skin's texture changes, and its fixed colour if it has one (gold...).
+        // A new skin shows once the render objects are made again (redraw).
+        public static void Paint(MyEntity e, Vector3 color, string skin, bool redraw)
+        {
+            MyDefinitionManager.MyAssetModifiers skinRender = default(MyDefinitionManager.MyAssetModifiers);
+            if (!string.IsNullOrEmpty(skin))
+            {
+                skinRender = MyDefinitionManager.Static.GetAssetModifierDefinitionForRender(skin);
+                MyAssetModifierDefinition def = MyDefinitionManager.Static.GetAssetModifierDefinition(
+                    new MyDefinitionId(typeof(MyObjectBuilder_AssetModifierDefinition), skin));
+                if (def != null && def.DefaultColor.HasValue)
+                    color = def.DefaultColor.Value.ColorToHSVDX11();
+            }
+            e.Render.TextureChanges = skinRender.SkinTextureChanges;
+            e.Render.MetalnessColorable = skinRender.MetalnessColorable;
+            e.Render.ColorMaskHsv = color;
+            if (redraw && e.InScene)
+            {
+                e.Render.RemoveRenderObjects();
+                e.Render.AddRenderObjects();
+            }
         }
 
         public static void Remove(MyEntity e)

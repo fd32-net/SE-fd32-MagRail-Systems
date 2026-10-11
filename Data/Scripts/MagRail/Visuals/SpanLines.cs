@@ -6,8 +6,8 @@ namespace MagRail
     public enum LineStyle
     {
         Rail,       // thick steel line (a rail whose track pieces are not all placed yet)
-        Prototype,  // laid span: thin solid line coloured by curvature, ticks along the rail's up (bank)
-        Preview,    // Rail Linker while laying: dashed, coloured by curvature, no ticks
+        Prototype,  // laid span: thin solid line coloured by shape (Draw.ByShape), ticks along the rail's up (bank)
+        Preview,    // Rail Linker while laying: dashed, coloured by shape, no ticks
     }
 
     // Spans as lines, seen by everyone (clients): prototypes, and rails until their track pieces are
@@ -56,7 +56,7 @@ namespace MagRail
                 double k = 0;
                 for (int n = i; n <= j; n++)
                     k = k > c.Curvature[n] ? k : c.Curvature[n];
-                Draw.Line(a, b, Draw.ByCurvature(k), style == LineStyle.Preview ? 0.09f : 0.06f);
+                Draw.Line(a, b, Draw.ByShape(k, c.TwistRate), style == LineStyle.Preview ? 0.09f : 0.06f);
             }
             if (style != LineStyle.Prototype)
                 return;
