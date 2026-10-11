@@ -13,7 +13,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.8.0";
+        public const string Version = "V0.9.0";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -21,6 +21,7 @@ namespace MagRail
         public TrackCollision Collision { get; private set; }
         public TrackPieces Pieces { get; private set; }     // null on a dedicated server
         public readonly List<HoverEngineLogic> Engines = new List<HoverEngineLogic>();
+        public readonly List<TrainControlLogic> ControlUnits = new List<TrainControlLogic>();
         public readonly Rides Rides = new Rides();
         public readonly PerfCounter UpdateTime = new PerfCounter(), DrawTime = new PerfCounter(), RideTime = new PerfCounter();
 
@@ -58,8 +59,11 @@ namespace MagRail
             Network.Clear();
             Collision.Clear();
             Engines.Clear();
+            ControlUnits.Clear();
             Rides.Clear();
             TrackDebug.Clear();
+            DriveTuning.Clear();
+            DriveTuningHud.Clear();
             RideLog.Stop();
             if (Pieces != null)
                 Pieces.Clear();
@@ -94,6 +98,9 @@ namespace MagRail
                 {
                     Pieces.Update(Network);
                     TrackDebug.Update();
+                    DriveTuningTerminal.Create();
+                    if (Net.IsServer)
+                        DriveTuningHud.Update(Rides);
                     if (tick % 60 == 0)
                         Loc.CheckReload();
                 }

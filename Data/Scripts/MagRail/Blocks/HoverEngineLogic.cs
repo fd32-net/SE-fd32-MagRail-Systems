@@ -23,7 +23,8 @@ namespace MagRail
 
     // A hover engine: a wheel suspension without a wheel (RotorPart names no block group, so the game spawns
     // none). A sensor of its grid's RailBody: its guide point (block centre + offsets), the cursor on the rail
-    // under it and its settings. Numbers are the old Maglev's, so the ported physics keeps them.
+    // under it and its settings; and the drive's power consumer. Numbers are the old Maglev's, so the ported physics
+    // keeps them.
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorSuspension), false,
         "MagRail_HoverLarge", "MagRail_HoverSmall", "MagRail_HoverMini")]
     public class HoverEngineLogic : MyGameLogicComponent
@@ -46,6 +47,10 @@ namespace MagRail
         public Vector3D LastOffset;
         public bool HasLastOffset;
         public int JumpTicks, LostTicks, NextSearchTick;
+        // Server: the power the drive asks for this tick, MW (Drive; Rides hands it to the network).
+        public float PowerWanted;
+        MyResourceSinkComponent sink;
+        float demand;
         bool registered;
 
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
@@ -67,6 +72,7 @@ namespace MagRail
                 };
                 MagRailSession.Instance.Engines.Add(this);
                 registered = true;
+                HookPower();
                 Block.AppendingCustomInfo += EngineInfo.Append;
                 EngineTerminal.Create();
             }
@@ -159,18 +165,27 @@ namespace MagRail
             }
         }
 
-        // Hold force by engine type, N: the rail cannot hold the grid harder than its engines.
-        public double HoldForce
+        // The engine's force by type, N: its full thrust (100% Power). Everything else is a share of it (PLAN 10.1):
+        // it holds the rail with HoldShare of it, the brakes are Drive's shares.
+        public double Force
         {
             get
             {
                 switch (Block.BlockDefinition.SubtypeId)
                 {
-                    case "MagRail_HoverLarge": return 4000000.0;
-                    case "MagRail_HoverSmall": return 2000000.0;
-                    default: return 300000.0;
+                    case "MagRail_HoverLarge": return 1000000.0;
+                    case "MagRail_HoverSmall": return 500000.0;
+                    default: return 75000.0;
                 }
             }
+        }
+
+        public const double HoldShare = 4.0;
+
+        // Hold force, N: the rail cannot hold the grid harder than its engines.
+        public double HoldForce
+        {
+            get { return Force * HoldShare; }
         }
 
         // Where the rail is for this engine, without hysteresis: Held = it could capture the rail now.
@@ -195,6 +210,87 @@ namespace MagRail
             if (Vector3D.Dot(Block.WorldMatrix.Up, sample.Up) < 0.5)
                 return RailState.Tilted;
             return error <= CaptureDistance ? RailState.Held : RailState.Far;
+        }
+
+        // ---- power ----
+
+        // Max power at full thrust, MW: RequiredPowerInput of the block definitions.
+        public double MaxPower
+        {
+            get
+            {
+                switch (Block.BlockDefinition.SubtypeId)
+                {
+                    case "MagRail_HoverLarge": return 5.0;
+                    case "MagRail_HoverSmall": return 2.4;
+                    default: return 0.4;
+                }
+            }
+        }
+
+        // The engine joins its grid's power network through the suspension's own resource sink. The game gives a
+        // suspension without a wheel no demand (and does not set the function again), so the sink's required-input
+        // function is replaced by ours.
+        void HookPower()
+        {
+            sink = Block.Components.Get<MyResourceSinkComponent>();
+            if (sink == null)
+                return;
+            sink.SetMaxRequiredInputByType(MyResourceDistributorComponent.ElectricityId, (float)MaxPower);
+            sink.SetRequiredInputFuncByType(MyResourceDistributorComponent.ElectricityId, () => demand);
+            sink.Update();
+        }
+
+        // Server, every tick: the drive's demand to the network, in 1% steps of the max (rounded up: a small force
+        // still asks for some power).
+        public void ApplyPower()
+        {
+            float step = (float)(MaxPower * 0.01);
+            SetDemand(Active ? (float)Math.Ceiling(PowerWanted / step - 0.001f) * step : 0f);
+        }
+
+        // The demand last set (MW) and the one last sent to clients (Net.BroadcastPower; -1 = never).
+        public float Demand
+        {
+            get { return demand; }
+        }
+
+        public float SentDemand = -1f;
+
+        // Server: the drive's demand; clients: the server's (Net), so their own copy of the grid's power network
+        // (power screen, load, battery time) matches.
+        public void SetDemand(float wanted)
+        {
+            if (sink == null || wanted == demand)
+                return;
+            demand = wanted;
+            sink.SetRequiredInputByType(MyResourceDistributorComponent.ElectricityId, wanted);
+        }
+
+        // Share of its thrust the engine can give now: what the network supplied of its last demand. An engine
+        // that asked for nothing yet gives nothing until the network answers (a tick).
+        public double PowerSupply
+        {
+            get
+            {
+                if (sink == null)
+                    return 1;
+                if (sink.RequiredInputByType(MyResourceDistributorComponent.ElectricityId) <= 0f)
+                    return 0;
+                return MathHelper.Clamp(sink.SuppliedRatioByType(MyResourceDistributorComponent.ElectricityId), 0f, 1f);
+            }
+        }
+
+        // Power drawn now, MW (0 on clients: they do not run the drive).
+        public double PowerNow
+        {
+            get { return sink != null ? sink.CurrentInputByType(MyResourceDistributorComponent.ElectricityId) : 0; }
+        }
+
+        // The network gave less than the engine asked for.
+        public bool PowerShort
+        {
+            get { return demand > 0f && sink != null && sink.SuppliedRatioByType(MyResourceDistributorComponent.ElectricityId) < 0.99f; }
         }
 
         // Physics state back to "no rail" (RailBody also resets the cursor).

@@ -17,6 +17,7 @@ namespace MagRail
         Spans = 6,              // server -> clients: an owner block's spans
         EngineSettingsRequest = 7,  // client -> server: a player changed a hover engine's settings
         EngineSettings = 8,         // server -> clients: the engine settings the server applied
+        PowerDemand = 9,            // server -> clients: hover engines' power demand (Ids, Values)
     }
 
     [ProtoContract]
@@ -31,6 +32,8 @@ namespace MagRail
         [ProtoMember(7)] public bool Flag;
         [ProtoMember(8)] public SpanStore Spans;
         [ProtoMember(9)] public EngineSettings Engine;
+        [ProtoMember(10)] public long[] Ids;
+        [ProtoMember(11)] public float[] Values;
     }
 
     // The mod's network channel. The server decides; clients send requests and apply what the
@@ -87,6 +90,48 @@ namespace MagRail
             ToClients(new Packet { Type = PacketType.EngineSettings, Block = engine.Block.EntityId, Engine = engine.Settings });
         }
 
+        // Server: the engines' power demand, which only the server's drive knows. Clients run their own copy of
+        // each grid's power network (power screen, load, battery time; the charge itself comes from the server),
+        // which needs the demand too. Changed demands go out 10 times a second in one packet; every 5 s all
+        // non-zero ones again, for clients that joined or streamed the grid in since.
+        const int PowerTicks = 6, PowerRefreshTicks = 300;
+        static readonly List<long> powerIds = new List<long>();
+        static readonly List<float> powerValues = new List<float>();
+
+        public static void BroadcastPower(List<HoverEngineLogic> engines, int tick)
+        {
+            if (tick % PowerTicks != 0 || !MyAPIGateway.Multiplayer.MultiplayerActive)
+                return;
+            bool refresh = tick % PowerRefreshTicks == 0;
+            for (int i = 0; i < engines.Count; i++)
+            {
+                HoverEngineLogic e = engines[i];
+                if (e.Demand == e.SentDemand && !(refresh && e.Demand > 0f))
+                    continue;
+                e.SentDemand = e.Demand;
+                powerIds.Add(e.Block.EntityId);
+                powerValues.Add(e.Demand);
+            }
+            if (powerIds.Count > 0)
+                ToClients(new Packet { Type = PacketType.PowerDemand, Ids = powerIds.ToArray(), Values = powerValues.ToArray() });
+            powerIds.Clear();
+            powerValues.Clear();
+        }
+
+        static void ReceivePower(Packet p)
+        {
+            if (p.Ids == null || p.Values == null)
+                return;
+            for (int i = 0; i < p.Ids.Length && i < p.Values.Length; i++)
+            {
+                IMyEntity entity;
+                HoverEngineLogic engine = MyAPIGateway.Entities.TryGetEntityById(p.Ids[i], out entity) && entity.GameLogic != null
+                    ? entity.GameLogic.GetAs<HoverEngineLogic>() : null;
+                if (engine != null)
+                    engine.SetDemand(p.Values[i]);
+            }
+        }
+
         public static void SendLinkRequest(TrackBlockLogic a, string aPort, TrackBlockLogic b, string bPort)
         {
             ToServer(new Packet { Type = PacketType.LinkRequest, Block = a.Block.EntityId, Port = aPort, Block2 = b.Block.EntityId, Port2 = bPort });
@@ -114,6 +159,12 @@ namespace MagRail
                 Packet p = MyAPIGateway.Utilities.SerializeFromBinary<Packet>(data);
                 if (p == null)
                     return;
+                if (p.Type == PacketType.PowerDemand)
+                {
+                    if (!IsServer && fromServer)
+                        ReceivePower(p);
+                    return;
+                }
                 if (p.Type == PacketType.EngineSettingsRequest || p.Type == PacketType.EngineSettings)
                 {
                     ReceiveEngine(p, sender, fromServer);

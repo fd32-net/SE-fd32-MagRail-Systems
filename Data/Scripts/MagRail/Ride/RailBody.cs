@@ -12,11 +12,12 @@ namespace MagRail
     // - every engine that holds the rail is a guide point with a critically damped spring across the rail;
     // - one least-squares solve turns the points, the rail frame's orientation wish and "keep the speed along
     //   the rail" into one change of the grid's linear and angular velocity about its centre of mass;
-    // - the rail is passive along its length: thrusters, couplers and gravity move the train; the momentum is
-    //   turned with the rail in curves; a little drag;
+    // - along the rail only the drive (Drive: thrust, brakes, parking) and a little drag act; couplers, gravity and
+    //   outside forces move the train too; the momentum is turned with the rail in curves;
     // - only the hold is limited by the engines' force: following the rail's curves is the rail's job.
     // On a rail inside a moving ship the speeds are taken relative to the rail and the rail's acceleration across
-    // it is fed forward like gravity; along the rail the train keeps its speed and slides (parking: stage 5).
+    // it is fed forward like gravity; along the rail the brakes hold it (they cancel the rail's acceleration along
+    // it up front, as far as their force goes), else it slides.
     // Guards against clang (PLAN 10.7): hold acceleration and spin change limits, an engine whose error grows
     // fast lets go early, an engine whose rail point jumps is ignored for a few ticks, an engine past the end
     // of the track does not hold (HoverEngineLogic.Probe).
@@ -56,7 +57,9 @@ namespace MagRail
 
         public readonly IMyCubeGrid Grid;
         public readonly List<HoverEngineLogic> Engines = new List<HoverEngineLogic>();
+        public readonly Drive Drive;
         readonly List<GuidePoint> points = new List<GuidePoint>();
+        readonly List<HoverEngineLogic> held = new List<HoverEngineLogic>();
         readonly TrackCursor ahead = new TrackCursor();
         static readonly double[] matrix = new double[36], rhs = new double[6], row = new double[6];
 
@@ -100,6 +103,7 @@ namespace MagRail
         public RailBody(IMyCubeGrid grid)
         {
             Grid = grid;
+            Drive = new Drive(grid);
         }
 
         public void Update(int tick)
@@ -117,6 +121,7 @@ namespace MagRail
                 : v.LengthSquared() > 0.36 ? Vector3D.Normalize(v) : Engines[0].Block.WorldMatrix.Forward;
 
             points.Clear();
+            held.Clear();
             HoverEngineLogic first = null;
             Vector3D firstTangent = Vector3D.Zero;
             IMyCubeGrid carrier = null;
@@ -138,6 +143,7 @@ namespace MagRail
                     carrier = s.Carrier;
                 }
                 lockSum += e.Settings.HoldStrength;
+                held.Add(e);
                 points.Add(new GuidePoint
                 {
                     Position = e.GuidePoint,
@@ -204,6 +210,15 @@ namespace MagRail
             double along = Vector3D.Dot(v + linearChange - carrierVelocity, pathForward);
             double drag = Math.Min(Math.Abs(along), (RollingDrag + AirDrag * along * along) * Step * ramp);
             linearChange -= pathForward * (Math.Sign(along) * drag);
+            along -= Math.Sign(along) * drag;
+
+            // The drive: thrust at the centre of mass, then the brakes (Drive).
+            Drive.ReadInput(tick);
+            double thrust = Drive.Thrust(held, pathForward, along, physics.Mass, ramp, tick);
+            linearChange += pathForward * thrust;
+            along += thrust;
+            double carriedAlong = Vector3D.Dot(carried - carrierVelocity, pathForward);
+            linearChange += pathForward * Drive.Brake(carriedAlong, along, physics.Mass, ramp, thrust == 0, lastWrittenTick == tick - 1);
 
             Vector3D newLinear = v + linearChange, newAngular = w + angularChange;
             if (!IsFinite(newLinear) || !IsFinite(newAngular))
@@ -323,6 +338,7 @@ namespace MagRail
             hasLastControl = false;
             hasLastDesired = false;
             lastWrittenTick = -999;
+            Drive.Release();
         }
 
         // ---- rail frame ----

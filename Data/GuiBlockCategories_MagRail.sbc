@@ -46,6 +46,8 @@
         <string>MotorSuspension/MagRail_HoverLarge</string>
         <string>MotorSuspension/MagRail_HoverSmall</string>
         <string>MotorSuspension/MagRail_HoverMini</string>
+        <string>Thrust/MagRail_TrainControlLarge</string>
+        <string>Thrust/MagRail_TrainControlSmall</string>
       </ItemIds>
     </Category>
   </CategoryClasses>

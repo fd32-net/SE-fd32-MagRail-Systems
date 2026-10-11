@@ -179,7 +179,7 @@
       <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
       <DestroySound>WepSmallWarheadExpl</DestroySound>
       <BuildTimeSeconds>20</BuildTimeSeconds>
-      <ResourceSinkGroup>Utility</ResourceSinkGroup>
+      <ResourceSinkGroup>Thrust</ResourceSinkGroup>
       <RequiredPowerInput>5</RequiredPowerInput>
       <RequiredIdlePowerInput>0</RequiredIdlePowerInput>
       <MaxForceMagnitude>1E9</MaxForceMagnitude>
@@ -235,7 +235,7 @@
       <DestroyEffect>BlockDestroyedExplosion_Small</DestroyEffect>
       <DestroySound>WepSmallWarheadExpl</DestroySound>
       <BuildTimeSeconds>20</BuildTimeSeconds>
-      <ResourceSinkGroup>Utility</ResourceSinkGroup>
+      <ResourceSinkGroup>Thrust</ResourceSinkGroup>
       <RequiredPowerInput>2.4</RequiredPowerInput>
       <RequiredIdlePowerInput>0</RequiredIdlePowerInput>
       <MaxForceMagnitude>1E9</MaxForceMagnitude>
@@ -291,7 +291,7 @@
       <DestroyEffect>BlockDestroyedExplosion_Small</DestroyEffect>
       <DestroySound>WepSmallWarheadExpl</DestroySound>
       <BuildTimeSeconds>12</BuildTimeSeconds>
-      <ResourceSinkGroup>Utility</ResourceSinkGroup>
+      <ResourceSinkGroup>Thrust</ResourceSinkGroup>
       <RequiredPowerInput>0.4</RequiredPowerInput>
       <RequiredIdlePowerInput>0</RequiredIdlePowerInput>
       <MaxForceMagnitude>1E9</MaxForceMagnitude>
@@ -310,6 +310,129 @@
       <AirShockActivationDelay>60</AirShockActivationDelay>
       <PCU>15</PCU>
       <IsAirTight>false</IsAirTight>
+    </Definition>
+    <!-- Train Control Unit: a thruster with (almost) no force. A grid has the vanilla inertia dampeners (Z, the
+         cockpit's checkbox, the HUD) only while a working thruster is on it, so the cockpit grid of a train needs
+         one; the drive reads the flag. The vanilla AI Flight (Move) block's model. ForceMagnitude is not 0: the
+         game divides by it (override power, thrust percentage). -->
+    <Definition xsi:type="MyObjectBuilder_ThrustDefinition">
+      <Id>
+        <TypeId>Thrust</TypeId>
+        <SubtypeId>MagRail_TrainControlLarge</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_TrainControl</DisplayName>
+      <Description>Description_MagRail_TrainControl</Description>
+      <Icon>Textures\GUI\Icons\Cubes\FlightMovementBlock_Move.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\FlightMovementBlock.mwm</Model>
+      <Components>
+        <Component Subtype="InteriorPlate" Count="20" />
+        <Component Subtype="Construction" Count="30" />
+        <Component Subtype="Motor" Count="4" />
+        <Component Subtype="Computer" Count="20" />
+        <Component Subtype="SteelPlate" Count="20" />
+      </Components>
+      <CriticalComponent Subtype="Computer" Index="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="0.3" EndY="1" Default="true" />
+        <MountPoint Side="Bottom" StartX="0.7" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Bottom" StartX="0.3" StartY="0.15" EndX="0.7" EndY="0.85" />
+        <MountPoint Side="Left" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Right" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="0.3" EndY="1" />
+        <MountPoint Side="Back" StartX="0.7" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0.3" StartY="0.15" EndX="0.7" EndY="0.85" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="0.3" EndY="1" />
+        <MountPoint Side="Front" StartX="0.7" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0.3" StartY="0.15" EndX="0.7" EndY="0.85" />
+        <MountPoint Side="Top" StartX="0" StartY="0" EndX="0.3" EndY="1" />
+        <MountPoint Side="Top" StartX="0.7" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Top" StartX="0.3" StartY="0.15" EndX="0.7" EndY="0.85" />
+      </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Large\DroneFeatureBlockConstruction_1.mwm" />
+        <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Large\DroneFeatureBlockConstruction_2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Large\DroneFeatureBlockConstruction_3.mwm" />
+      </BuildProgressModels>
+      <BlockPairName>MagRail_TrainControl</BlockPairName>
+      <MirroringZ>Y</MirroringZ>
+      <MirroringY>Z</MirroringY>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>24</BuildTimeSeconds>
+      <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
+      <DamagedSound>ParticleElectrical</DamagedSound>
+      <PCU>25</PCU>
+      <ThrusterType>Ion</ThrusterType>
+      <ResourceSinkGroup>Thrust</ResourceSinkGroup>
+      <ForceMagnitude>0.001</ForceMagnitude>
+      <MaxPowerConsumption>0</MaxPowerConsumption>
+      <MinPowerConsumption>0</MinPowerConsumption>
+      <SlowdownFactor>1</SlowdownFactor>
+      <MinPlanetaryInfluence>0</MinPlanetaryInfluence>
+      <MaxPlanetaryInfluence>1</MaxPlanetaryInfluence>
+      <EffectivenessAtMinInfluence>1</EffectivenessAtMinInfluence>
+      <EffectivenessAtMaxInfluence>1</EffectivenessAtMaxInfluence>
+      <FlameDamageLengthScale>0</FlameDamageLengthScale>
+      <FlameDamage>0</FlameDamage>
+      <FlameLengthScale>0</FlameLengthScale>
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_ThrustDefinition">
+      <Id>
+        <TypeId>Thrust</TypeId>
+        <SubtypeId>MagRail_TrainControlSmall</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_TrainControl</DisplayName>
+      <Description>Description_MagRail_TrainControl</Description>
+      <Icon>Textures\GUI\Icons\Cubes\FlightMovementBlock_Move.dds</Icon>
+      <CubeSize>Small</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Small\FlightMovementBlock.mwm</Model>
+      <Components>
+        <Component Subtype="InteriorPlate" Count="2" />
+        <Component Subtype="Construction" Count="5" />
+        <Component Subtype="Motor" Count="2" />
+        <Component Subtype="Computer" Count="10" />
+        <Component Subtype="SteelPlate" Count="2" />
+      </Components>
+      <CriticalComponent Subtype="Computer" Index="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Right" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Left" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Top" StartX="0" StartY="0" EndX="1" EndY="1" />
+      </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.50" File="Models\Cubes\Small\DroneFeatureBlockConstruction_1.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Small\DroneFeatureBlockConstruction_2.mwm" />
+      </BuildProgressModels>
+      <BlockPairName>MagRail_TrainControl</BlockPairName>
+      <MirroringZ>Y</MirroringZ>
+      <MirroringY>Z</MirroringY>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>10</BuildTimeSeconds>
+      <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
+      <DamagedSound>ParticleElectrical</DamagedSound>
+      <PCU>25</PCU>
+      <ThrusterType>Ion</ThrusterType>
+      <ResourceSinkGroup>Thrust</ResourceSinkGroup>
+      <ForceMagnitude>0.001</ForceMagnitude>
+      <MaxPowerConsumption>0</MaxPowerConsumption>
+      <MinPowerConsumption>0</MinPowerConsumption>
+      <SlowdownFactor>1</SlowdownFactor>
+      <MinPlanetaryInfluence>0</MinPlanetaryInfluence>
+      <MaxPlanetaryInfluence>1</MaxPlanetaryInfluence>
+      <EffectivenessAtMinInfluence>1</EffectivenessAtMinInfluence>
+      <EffectivenessAtMaxInfluence>1</EffectivenessAtMaxInfluence>
+      <FlameDamageLengthScale>0</FlameDamageLengthScale>
+      <FlameDamage>0</FlameDamage>
+      <FlameLengthScale>0</FlameLengthScale>
     </Definition>
   </CubeBlocks>
 </Definitions>

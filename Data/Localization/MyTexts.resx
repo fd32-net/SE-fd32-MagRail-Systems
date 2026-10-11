@@ -343,7 +343,7 @@
     <value>Rail: held</value>
   </data>
   <data name="MagRail_Engine_Info_Hold" xml:space="preserve">
-    <value>Hold force: {0}</value>
+    <value>Engine force (full thrust): {0}; holds the rail with {1}</value>
   </data>
   <data name="MagRail_Engine_Info_Grid" xml:space="preserve">
     <value>Grid: {0} engines, {1} together; mass {2} t</value>
@@ -356,6 +356,186 @@
   </data>
   <data name="MagRail_Unit_MN" xml:space="preserve">
     <value>{0} MN</value>
+  </data>
+  <data name="MagRail_Unit_kW" xml:space="preserve">
+    <value>{0} kW</value>
+  </data>
+  <data name="MagRail_Unit_MW" xml:space="preserve">
+    <value>{0} MW</value>
+  </data>
+  <data name="MagRail_Power_Info" xml:space="preserve">
+    <value>Power: {0} (max {1})</value>
+  </data>
+  <data name="MagRail_Power_Insufficient" xml:space="preserve">
+    <value> - insufficient power</value>
+  </data>
+  <data name="MagRail_Drive_OffRail" xml:space="preserve">
+    <value>Drive: off the rail</value>
+  </data>
+  <data name="MagRail_Drive_Idle" xml:space="preserve">
+    <value>Drive: idle</value>
+  </data>
+  <data name="MagRail_Drive_Pushing" xml:space="preserve">
+    <value>Drive: pushing {0}</value>
+  </data>
+  <data name="MagRail_Drive_Braking" xml:space="preserve">
+    <value>Drive: braking (Space) {0}</value>
+  </data>
+  <data name="MagRail_Drive_Parked" xml:space="preserve">
+    <value>Drive: parked (hand brake) {0}</value>
+  </data>
+  <data name="MagRail_Drive_NoController" xml:space="preserve">
+    <value>Drive: no cockpit to take the direction from</value>
+  </data>
+  <data name="MagRail_Drive_Sideways" xml:space="preserve">
+    <value>Drive: ERROR: the cockpit faces across the rail</value>
+  </data>
+  <data name="MagRail_Drive_NoPower" xml:space="preserve">
+    <value> - NO POWER</value>
+  </data>
+  <data name="MagRail_Drive_PowerShare" xml:space="preserve">
+    <value> (power {0}%)</value>
+  </data>
+  <data name="MagRail_Drive_PropulsionOff" xml:space="preserve">
+    <value>Propulsion is off: this engine does not push</value>
+  </data>
+  <data name="DisplayName_MagRail_TrainControl" xml:space="preserve">
+    <value>Train Control Unit</value>
+  </data>
+  <data name="Description_MagRail_TrainControl" xml:space="preserve">
+    <value>Put it on the grid of the train's cockpit: it gives the train the vanilla inertia dampeners (Z). Dampeners on: release W/S and the train brakes to a stop and holds. Off: it coasts. Model of the AI Flight block (placeholder).</value>
+  </data>
+  <data name="MagRail_Control_DampersOn" xml:space="preserve">
+    <value>Inertia dampeners: on</value>
+  </data>
+  <data name="MagRail_Control_DampersOff" xml:space="preserve">
+    <value>Inertia dampeners: off</value>
+  </data>
+  <data name="MagRail_Control_Info" xml:space="preserve">
+    <value>Gives the grid's cockpits the inertia dampeners (Z) for the train.</value>
+  </data>
+  <data name="MagRail_Drive_Dampers" xml:space="preserve">
+    <value>Drive: dampeners {0}</value>
+  </data>
+  <data name="MagRail_Drive_NoControlUnit" xml:space="preserve">
+    <value>Dampeners (Z): no Train Control Unit on the cockpit's grid</value>
+  </data>
+  <data name="MagRail_Unit_s" xml:space="preserve">
+    <value>{0} s</value>
+  </data>
+  <data name="MagRail_Unit_mps" xml:space="preserve">
+    <value>{0} m/s</value>
+  </data>
+  <data name="MagRail_Unit_mps2" xml:space="preserve">
+    <value>{0} m/s²</value>
+  </data>
+  <data name="MagRail_Tune_Section" xml:space="preserve">
+    <value>MagRail: drive tuning (test; saved with the world; works when this controller drives the train)</value>
+  </data>
+  <data name="MagRail_Tune_Hud" xml:space="preserve">
+    <value>Drive line on the HUD</value>
+  </data>
+  <data name="MagRail_Tune_Hud_Tip" xml:space="preserve">
+    <value>While you drive the train from here: drive state, speed, deceleration, stopping distance, mass. Single player. Default off.</value>
+  </data>
+  <data name="MagRail_Tune_Brake" xml:space="preserve">
+    <value>Brake (Space)</value>
+  </data>
+  <data name="MagRail_Tune_BrakeFactor" xml:space="preserve">
+    <value>Brake: times thrust</value>
+  </data>
+  <data name="MagRail_Tune_BrakeFactor_Tip" xml:space="preserve">
+    <value>Each braking engine brakes with this many times its thrust (its Power slider), up to the most below. Default x2: Power 10% brakes with 20% of the force, 50% and more with 100%.</value>
+  </data>
+  <data name="MagRail_Tune_BrakeShare" xml:space="preserve">
+    <value>Brake: at most</value>
+  </data>
+  <data name="MagRail_Tune_BrakeShare_Tip" xml:space="preserve">
+    <value>The most an engine brakes with, share of its force (100% = its full thrust). Default 100%.</value>
+  </data>
+  <data name="MagRail_Tune_BrakeMax" xml:space="preserve">
+    <value>Brake limit</value>
+  </data>
+  <data name="MagRail_Tune_BrakeMax_Tip" xml:space="preserve">
+    <value>The grid's deceleration at most. Default 100 m/s².</value>
+  </data>
+  <data name="MagRail_Tune_BrakeRise" xml:space="preserve">
+    <value>Brake rise time</value>
+  </data>
+  <data name="MagRail_Tune_BrakeRise_Tip" xml:space="preserve">
+    <value>Time for the brake to rise from half to full force after Space is pressed. 0 = full force at once. Default 0.5 s.</value>
+  </data>
+  <data name="MagRail_Tune_SoftStop" xml:space="preserve">
+    <value>Soft stop below</value>
+  </data>
+  <data name="MagRail_Tune_SoftStop_Tip" xml:space="preserve">
+    <value>Below this speed the Space brake weakens with the speed (down to 10% at a standstill). 0 = off (default).</value>
+  </data>
+  <data name="MagRail_Tune_Disturbance" xml:space="preserve">
+    <value>Brakes cancel pushes</value>
+  </data>
+  <data name="MagRail_Tune_Disturbance_Tip" xml:space="preserve">
+    <value>The brakes cancel last tick's push along the rail (slope, couplers) up front, within their force. Default on.</value>
+  </data>
+  <data name="MagRail_Tune_Park" xml:space="preserve">
+    <value>Parking (P) and rest hold</value>
+  </data>
+  <data name="MagRail_Tune_ParkShare" xml:space="preserve">
+    <value>Parking force</value>
+  </data>
+  <data name="MagRail_Tune_ParkShare_Tip" xml:space="preserve">
+    <value>Share of each parked engine's force (100% = its full thrust; the engine needs Braking and Parking on). Default 150%.</value>
+  </data>
+  <data name="MagRail_Tune_ParkMax" xml:space="preserve">
+    <value>Parking limit</value>
+  </data>
+  <data name="MagRail_Tune_ParkMax_Tip" xml:space="preserve">
+    <value>The grid's deceleration at most while parked. Default 100 m/s².</value>
+  </data>
+  <data name="MagRail_Tune_RestAccel" xml:space="preserve">
+    <value>Rest hold</value>
+  </data>
+  <data name="MagRail_Tune_RestAccel_Tip" xml:space="preserve">
+    <value>A grid nearly standing that nothing pushes is held by this weak brake. Default 0.49 m/s² (about a 5% slope).</value>
+  </data>
+  <data name="MagRail_Tune_RestSpeed" xml:space="preserve">
+    <value>Rest hold below</value>
+  </data>
+  <data name="MagRail_Tune_RestSpeed_Tip" xml:space="preserve">
+    <value>The rest hold works below this speed. Default 0.30 m/s.</value>
+  </data>
+  <data name="MagRail_Tune_Thrust" xml:space="preserve">
+    <value>Thrust (W/S and dampeners)</value>
+  </data>
+  <data name="MagRail_Tune_ThrustShare" xml:space="preserve">
+    <value>Thrust</value>
+  </data>
+  <data name="MagRail_Tune_ThrustShare_Tip" xml:space="preserve">
+    <value>An engine's thrust at 100% Power, share of its force (power at full thrust stays the engine's max power). Default 100%.</value>
+  </data>
+  <data name="MagRail_Tune_ThrustMax" xml:space="preserve">
+    <value>Thrust limit</value>
+  </data>
+  <data name="MagRail_Tune_ThrustMax_Tip" xml:space="preserve">
+    <value>The grid's acceleration by thrust at most, the dampeners too. Default 100 m/s².</value>
+  </data>
+  <data name="MagRail_Tune_Reset" xml:space="preserve">
+    <value>Reset to defaults</value>
+  </data>
+  <data name="MagRail_Tune_Reset_Tip" xml:space="preserve">
+    <value>All drive tuning values of this controller back to the defaults.</value>
+  </data>
+  <data name="MagRail_Tune_HudLine" xml:space="preserve">
+    <value>{0} · {1} m/s · decel. {2} m/s² · stops in {3} · {4} t</value>
+  </data>
+  <data name="MagRail_Tune_HudCapped" xml:space="preserve">
+    <value> · AT THE LIMIT</value>
+  </data>
+  <data name="MagRail_Tune_ParkStopsDrive" xml:space="preserve">
+    <value>Parked: W/S does not push</value>
+  </data>
+  <data name="MagRail_Tune_ParkStopsDrive_Tip" xml:space="preserve">
+    <value>While the hand brake of this controller's grid is on, W/S pushes no grid of the train (else the wagons push the parked locomotive). Default on.</value>
   </data>
   <data name="MagRail_Loc_Loaded" xml:space="preserve">
     <value>1</value>

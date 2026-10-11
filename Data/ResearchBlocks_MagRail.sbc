@@ -9,5 +9,7 @@
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="MotorSuspension" Subtype="MagRail_HoverLarge" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="MotorSuspension" Subtype="MagRail_HoverSmall" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="MotorSuspension" Subtype="MagRail_HoverMini" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="Thrust" Subtype="MagRail_TrainControlLarge" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="Thrust" Subtype="MagRail_TrainControlSmall" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
   </ResearchBlocks>
 </Definitions>

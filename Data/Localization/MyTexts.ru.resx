@@ -343,7 +343,7 @@
     <value>Рельс: держит</value>
   </data>
   <data name="MagRail_Engine_Info_Hold" xml:space="preserve">
-    <value>Сила удержания: {0}</value>
+    <value>Сила двигателя (полная тяга): {0}; удержание: {1}</value>
   </data>
   <data name="MagRail_Engine_Info_Grid" xml:space="preserve">
     <value>Грид: двигателей {0}, вместе {1}; масса {2} т</value>
@@ -356,5 +356,185 @@
   </data>
   <data name="MagRail_Unit_MN" xml:space="preserve">
     <value>{0} МН</value>
+  </data>
+  <data name="MagRail_Unit_kW" xml:space="preserve">
+    <value>{0} кВт</value>
+  </data>
+  <data name="MagRail_Unit_MW" xml:space="preserve">
+    <value>{0} МВт</value>
+  </data>
+  <data name="MagRail_Power_Info" xml:space="preserve">
+    <value>Энергия: {0} (макс. {1})</value>
+  </data>
+  <data name="MagRail_Power_Insufficient" xml:space="preserve">
+    <value> - не хватает энергии</value>
+  </data>
+  <data name="MagRail_Drive_OffRail" xml:space="preserve">
+    <value>Привод: не на рельсе</value>
+  </data>
+  <data name="MagRail_Drive_Idle" xml:space="preserve">
+    <value>Привод: простой</value>
+  </data>
+  <data name="MagRail_Drive_Pushing" xml:space="preserve">
+    <value>Привод: тянет {0}</value>
+  </data>
+  <data name="MagRail_Drive_Braking" xml:space="preserve">
+    <value>Привод: тормоз (Space) {0}</value>
+  </data>
+  <data name="MagRail_Drive_Parked" xml:space="preserve">
+    <value>Привод: стоянка (ручной тормоз) {0}</value>
+  </data>
+  <data name="MagRail_Drive_NoController" xml:space="preserve">
+    <value>Привод: нет кокпита, от которого взять направление</value>
+  </data>
+  <data name="MagRail_Drive_Sideways" xml:space="preserve">
+    <value>Привод: ОШИБКА: кокпит смотрит поперёк рельса</value>
+  </data>
+  <data name="MagRail_Drive_NoPower" xml:space="preserve">
+    <value> - НЕТ ЭНЕРГИИ</value>
+  </data>
+  <data name="MagRail_Drive_PowerShare" xml:space="preserve">
+    <value> (энергия {0}%)</value>
+  </data>
+  <data name="MagRail_Drive_PropulsionOff" xml:space="preserve">
+    <value>Тяга выключена: этот двигатель не толкает</value>
+  </data>
+  <data name="DisplayName_MagRail_TrainControl" xml:space="preserve">
+    <value>Блок управления поездом</value>
+  </data>
+  <data name="Description_MagRail_TrainControl" xml:space="preserve">
+    <value>Ставится на грид кокпита поезда: даёт поезду ванильные гасители инерции (Z). Гасители включены: отпустил W/S — поезд тормозит до остановки и стоит. Выключены — катится. Модель блока полёта ИИ (заглушка).</value>
+  </data>
+  <data name="MagRail_Control_DampersOn" xml:space="preserve">
+    <value>Гасители инерции: вкл.</value>
+  </data>
+  <data name="MagRail_Control_DampersOff" xml:space="preserve">
+    <value>Гасители инерции: выкл.</value>
+  </data>
+  <data name="MagRail_Control_Info" xml:space="preserve">
+    <value>Даёт кокпитам этого грида гасители инерции (Z) для поезда.</value>
+  </data>
+  <data name="MagRail_Drive_Dampers" xml:space="preserve">
+    <value>Привод: гасители {0}</value>
+  </data>
+  <data name="MagRail_Drive_NoControlUnit" xml:space="preserve">
+    <value>Гасители (Z): нет блока управления поездом на гриде кокпита</value>
+  </data>
+  <data name="MagRail_Unit_s" xml:space="preserve">
+    <value>{0} с</value>
+  </data>
+  <data name="MagRail_Unit_mps" xml:space="preserve">
+    <value>{0} м/с</value>
+  </data>
+  <data name="MagRail_Unit_mps2" xml:space="preserve">
+    <value>{0} м/с²</value>
+  </data>
+  <data name="MagRail_Tune_Section" xml:space="preserve">
+    <value>MagRail: настройка привода (тест; сохраняется с миром; действует, когда поездом управляет этот контроллер)</value>
+  </data>
+  <data name="MagRail_Tune_Hud" xml:space="preserve">
+    <value>Строка привода на HUD</value>
+  </data>
+  <data name="MagRail_Tune_Hud_Tip" xml:space="preserve">
+    <value>Пока ведёшь поезд отсюда: состояние привода, скорость, замедление, тормозной путь, масса. Одиночная игра. Стандарт: выкл.</value>
+  </data>
+  <data name="MagRail_Tune_Brake" xml:space="preserve">
+    <value>Тормоз (Space)</value>
+  </data>
+  <data name="MagRail_Tune_BrakeFactor" xml:space="preserve">
+    <value>Тормоз: × тяги</value>
+  </data>
+  <data name="MagRail_Tune_BrakeFactor_Tip" xml:space="preserve">
+    <value>Каждый тормозящий двигатель тормозит с силой во столько раз больше своей тяги (по ползунку «Мощность»), но не больше предела ниже. Стандарт ×2: мощность 10% — тормоз 20% силы, 50% и выше — 100%.</value>
+  </data>
+  <data name="MagRail_Tune_BrakeShare" xml:space="preserve">
+    <value>Тормоз: не больше</value>
+  </data>
+  <data name="MagRail_Tune_BrakeShare_Tip" xml:space="preserve">
+    <value>Наибольший тормоз двигателя, доля его силы (100% = его полная тяга). Стандарт 100%.</value>
+  </data>
+  <data name="MagRail_Tune_BrakeMax" xml:space="preserve">
+    <value>Предел тормоза</value>
+  </data>
+  <data name="MagRail_Tune_BrakeMax_Tip" xml:space="preserve">
+    <value>Наибольшее замедление грида. Стандарт 100 м/с².</value>
+  </data>
+  <data name="MagRail_Tune_BrakeRise" xml:space="preserve">
+    <value>Нарастание тормоза</value>
+  </data>
+  <data name="MagRail_Tune_BrakeRise_Tip" xml:space="preserve">
+    <value>Время, за которое тормоз после нажатия Space нарастает от половины до полной силы. 0 = сразу полная сила. Стандарт 0.5 с.</value>
+  </data>
+  <data name="MagRail_Tune_SoftStop" xml:space="preserve">
+    <value>Мягкая остановка ниже</value>
+  </data>
+  <data name="MagRail_Tune_SoftStop_Tip" xml:space="preserve">
+    <value>Ниже этой скорости тормоз Space слабеет вместе со скоростью (до 10% на месте). 0 = выкл. (стандарт).</value>
+  </data>
+  <data name="MagRail_Tune_Disturbance" xml:space="preserve">
+    <value>Тормоза гасят толчки</value>
+  </data>
+  <data name="MagRail_Tune_Disturbance_Tip" xml:space="preserve">
+    <value>Тормоза заранее гасят толчок вдоль рельса за прошлый тик (уклон, сцепки), в пределах своей силы. Стандарт: вкл.</value>
+  </data>
+  <data name="MagRail_Tune_Park" xml:space="preserve">
+    <value>Стоянка (P) и покой</value>
+  </data>
+  <data name="MagRail_Tune_ParkShare" xml:space="preserve">
+    <value>Сила стоянки</value>
+  </data>
+  <data name="MagRail_Tune_ParkShare_Tip" xml:space="preserve">
+    <value>Доля силы каждого двигателя на стоянке (100% = его полная тяга; у двигателя должны быть включены торможение и парковка). Стандарт 150%.</value>
+  </data>
+  <data name="MagRail_Tune_ParkMax" xml:space="preserve">
+    <value>Предел стоянки</value>
+  </data>
+  <data name="MagRail_Tune_ParkMax_Tip" xml:space="preserve">
+    <value>Наибольшее замедление грида на стоянке. Стандарт 100 м/с².</value>
+  </data>
+  <data name="MagRail_Tune_RestAccel" xml:space="preserve">
+    <value>Покой: торможение</value>
+  </data>
+  <data name="MagRail_Tune_RestAccel_Tip" xml:space="preserve">
+    <value>Почти стоящий грид, который никто не толкает, держит этот слабый тормоз. Стандарт 0.49 м/с² (около 5% уклона).</value>
+  </data>
+  <data name="MagRail_Tune_RestSpeed" xml:space="preserve">
+    <value>Покой: ниже скорости</value>
+  </data>
+  <data name="MagRail_Tune_RestSpeed_Tip" xml:space="preserve">
+    <value>Покой включается ниже этой скорости. Стандарт 0.30 м/с.</value>
+  </data>
+  <data name="MagRail_Tune_Thrust" xml:space="preserve">
+    <value>Тяга (W/S и гасители)</value>
+  </data>
+  <data name="MagRail_Tune_ThrustShare" xml:space="preserve">
+    <value>Тяга</value>
+  </data>
+  <data name="MagRail_Tune_ThrustShare_Tip" xml:space="preserve">
+    <value>Тяга двигателя при мощности 100%, доля его силы (мощность при полной тяге — по-прежнему максимальная мощность двигателя). Стандарт 100%.</value>
+  </data>
+  <data name="MagRail_Tune_ThrustMax" xml:space="preserve">
+    <value>Предел тяги</value>
+  </data>
+  <data name="MagRail_Tune_ThrustMax_Tip" xml:space="preserve">
+    <value>Наибольшее ускорение грида тягой, и гасителями тоже. Стандарт 100 м/с².</value>
+  </data>
+  <data name="MagRail_Tune_Reset" xml:space="preserve">
+    <value>Сбросить к стандарту</value>
+  </data>
+  <data name="MagRail_Tune_Reset_Tip" xml:space="preserve">
+    <value>Все значения настройки привода этого контроллера — к стандартным.</value>
+  </data>
+  <data name="MagRail_Tune_HudLine" xml:space="preserve">
+    <value>{0} · {1} м/с · замедл. {2} м/с² · остановка через {3} · {4} т</value>
+  </data>
+  <data name="MagRail_Tune_HudCapped" xml:space="preserve">
+    <value> · УПОР В ПРЕДЕЛ</value>
+  </data>
+  <data name="MagRail_Tune_ParkStopsDrive" xml:space="preserve">
+    <value>Стоянка: W/S не тянет</value>
+  </data>
+  <data name="MagRail_Tune_ParkStopsDrive_Tip" xml:space="preserve">
+    <value>Пока на гриде этого контроллера включён ручной тормоз, W/S не тянет ни один грид поезда (иначе вагоны толкают стоящий локомотив). Стандарт: вкл.</value>
   </data>
 </root>

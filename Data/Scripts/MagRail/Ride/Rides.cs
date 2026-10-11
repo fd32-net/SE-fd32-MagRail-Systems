@@ -57,8 +57,13 @@ namespace MagRail
 
             if (Net.IsServer)
             {
+                for (int i = 0; i < engines.Count; i++)
+                    engines[i].PowerWanted = 0;
                 foreach (RailBody body in bodies.Values)
                     body.Update(tick);
+                for (int i = 0; i < engines.Count; i++)
+                    engines[i].ApplyPower();
+                Net.BroadcastPower(engines, tick);
                 if (RideLog.Active)
                     RideLog.Record(bodies.Values);
             }
@@ -106,6 +111,24 @@ namespace MagRail
             MyCubeGrid g = grid as MyCubeGrid;
             if (g != null && !g.Closed && !g.ForceDisablePrediction)
                 g.ForceDisablePrediction = true;
+        }
+
+        public RailBody Body(IMyCubeGrid grid)
+        {
+            RailBody body;
+            return bodies.TryGetValue(grid, out body) ? body : null;
+        }
+
+        // The body a ship controller drives: its own grid's, else one whose drive takes it as the reference.
+        public RailBody Driven(IMyShipController controller)
+        {
+            RailBody body = Body(controller.CubeGrid);
+            if (body != null)
+                return body;
+            foreach (RailBody b in bodies.Values)
+                if (b.Drive.Reference == controller)
+                    return b;
+            return null;
         }
 
         // The body holding the rail nearest to a point (/magrail debug).

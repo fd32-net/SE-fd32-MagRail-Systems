@@ -21,6 +21,9 @@ namespace MagRail
             "Add Top Part", "Steering", "AirShock", "InvertSteering", "InvertPropulsion", "MaxSteerAngle", "Strength",
             "Height", "Friction", "Steer override", "Weld speed", "Force weld", "SafetyDetach", "ShareInertiaTensor",
         };
+        // Drive controls the game greys out without a wheel (enabled only with the wheel's constraint): enabled on
+        // our engines. Their toolbar actions have no such check.
+        static readonly string[] DriveControls = { "Propulsion", "Power", "Speed Limit", "Propulsion override" };
         // Toolbar actions hidden on our engines: any whose id contains one of these (slider actions are
         // "Increase<Id>" / "Decrease<Id>" / "Reset<Id>").
         static readonly string[] HiddenActionParts =
@@ -120,6 +123,12 @@ namespace MagRail
             MyAPIGateway.TerminalControls.GetControls<IMyMotorSuspension>(out vanilla);
             foreach (IMyTerminalControl control in vanilla)
             {
+                if (Array.IndexOf(DriveControls, control.Id) >= 0)
+                {
+                    Func<IMyTerminalBlock, bool> enabled = control.Enabled;
+                    control.Enabled = b => IsEngine(b) || enabled == null || enabled(b);
+                    continue;
+                }
                 if (Array.IndexOf(HiddenControls, control.Id) < 0)
                     continue;
                 Func<IMyTerminalBlock, bool> visible = control.Visible;
