@@ -9,8 +9,13 @@
       <Blocks>
         <Block Type="UpgradeModule" Subtype="MagRail_RailBlock1" />
         <Block Type="UpgradeModule" Subtype="MagRail_RailBlock5" />
+        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock10" />
+        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock20" />
         <Block Type="UpgradeModule" Subtype="MagRail_FreeRail" />
         <Block Type="UpgradeModule" Subtype="MagRail_Switch" />
+        <Block Type="UpgradeModule" Subtype="MagRail_Switch3" />
+        <Block Type="UpgradeModule" Subtype="MagRail_Switch5" />
+        <Block Type="UpgradeModule" Subtype="MagRail_Switch7" />
       </Blocks>
     </BlockVariantGroup>
     <BlockVariantGroup>

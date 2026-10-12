@@ -21,6 +21,18 @@
   <data name="Description_MagRail_RailBlock5" xml:space="preserve">
     <value>Straight rail, 5 blocks long. Rails placed end to end join by themselves.</value>
   </data>
+  <data name="DisplayName_MagRail_RailBlock10" xml:space="preserve">
+    <value>Rail Block 10</value>
+  </data>
+  <data name="Description_MagRail_RailBlock10" xml:space="preserve">
+    <value>Straight rail, 10 blocks long, on platforms at its ends. Rails placed end to end join by themselves.</value>
+  </data>
+  <data name="DisplayName_MagRail_RailBlock20" xml:space="preserve">
+    <value>Rail Block 20</value>
+  </data>
+  <data name="Description_MagRail_RailBlock20" xml:space="preserve">
+    <value>Straight rail, 20 blocks long, on platforms at its ends. Rails placed end to end join by themselves.</value>
+  </data>
   <data name="DisplayName_MagRail_FreeRail" xml:space="preserve">
     <value>Free Rail Block</value>
   </data>
@@ -28,10 +40,28 @@
     <value>Rail with a turning head: any direction, slope and bank.</value>
   </data>
   <data name="DisplayName_MagRail_Switch" xml:space="preserve">
-    <value>Rail Switch</value>
+    <value>Rail Switch 2</value>
   </data>
   <data name="Description_MagRail_Switch" xml:space="preserve">
-    <value>One entry, three branches: left, centre, right.</value>
+    <value>One entry, three branches: left, centre, right. 2 blocks long: side branches at 11°, bend radius 20 m (slow).</value>
+  </data>
+  <data name="DisplayName_MagRail_Switch3" xml:space="preserve">
+    <value>Rail Switch 3</value>
+  </data>
+  <data name="Description_MagRail_Switch3" xml:space="preserve">
+    <value>One entry, three branches: left, centre, right. 3 blocks long: side branches at 7.3°, bend radius 49 m.</value>
+  </data>
+  <data name="DisplayName_MagRail_Switch5" xml:space="preserve">
+    <value>Rail Switch 5</value>
+  </data>
+  <data name="Description_MagRail_Switch5" xml:space="preserve">
+    <value>One entry, three branches: left, centre, right. 5 blocks long: side branches at 4.4°, bend radius 146 m.</value>
+  </data>
+  <data name="DisplayName_MagRail_Switch7" xml:space="preserve">
+    <value>Rail Switch 7</value>
+  </data>
+  <data name="Description_MagRail_Switch7" xml:space="preserve">
+    <value>One entry, three branches: left, centre, right. 7 blocks long: side branches at 3.1°, bend radius 295 m.</value>
   </data>
   <data name="DisplayName_MagRail_EngineGroup" xml:space="preserve">
     <value>Hover Engines</value>

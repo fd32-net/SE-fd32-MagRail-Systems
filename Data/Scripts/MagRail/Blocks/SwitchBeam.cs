@@ -1,63 +1,60 @@
 using System;
 using System.Collections.Generic;
-using Sandbox.ModAPI;
 using VRage.Game.Entity;
 using VRageMath;
 
 namespace MagRail
 {
-    // The Rail Switch beam, like a bending Transrapid switch: rigid segments (subparts "Beam0", "Beam1"... of the
-    // block, not of the rail part: the placement preview shows only the block's own subparts) laid as chords of a
-    // circular arc that leaves the entry straight and ends at the selected branch. The arc is in the rail part's
-    // coordinates, so the beam follows the rail height.
-    // Only a look: the branch switches at once, the beam end follows sideways at a fixed speed. With the model's
-    // branches (arcs over the whole switch length) the arc's end direction is the branch port's.
-    // Lamps over the branch ends: material "Emissive<SwitchBranch>" of the rail part; green = selected, yellow =
-    // the beam is still moving there, red = closed, off while the switch is damaged.
+    // The Rail Switch's flexible rail, like a bending Transrapid switch: a beam of fixed length clamped at the end of
+    // the entry module that bends into a circular arc, its end turned by the selected branch's angle. Rigid
+    // segments (subparts "Beam0", "Beam1"... of the block, not of the rail part: the placement preview shows only the
+    // block's own subparts) laid as the arc's chords; the last one is the end model turned round (its chamfer at the
+    // beam's far end). The exit block's branch exits start where the beam ends, ExitSpace on
+    // (ModelSource/blocks/TrackBlocks.py).
+    // The arc is in the rail part's coordinates, so the beam follows the rail height.
+    // Only a look: the branch switches at once, the beam bends after it at a fixed speed.
     public class SwitchBeam
     {
-        const float Speed = 1.5f;           // sideways speed of the beam end, m/s
-        static readonly Color OpenColor = new Color(40, 230, 70), MovingColor = new Color(255, 200, 40), ClosedColor = new Color(255, 40, 30);
+        const float Speed = 1.5f;           // about the sideways speed of the beam end, m/s
+        // TrackBlocks.py: the entry module (MODULE), the gap and the centre exit after the beam (FLEX_GAP + MODULE).
+        const float EntryModule = 0.625f, ExitSpace = 0.05f + 0.625f;
 
         // Branch port names by SwitchBranch.
         public static readonly string[] BranchPorts = { "branch_c", "branch_l", "branch_r" };
 
-        // Per subtype, in the rail part's coordinates: from the entry port along the switch.
+        // Per subtype, in the rail part's coordinates.
         public class Shape
         {
-            public Vector3 Start, Along, Side, Up;
-            public float Length;                                // along the switch to the branch ends
-            public readonly float[] Offsets = new float[3];     // sideways offset of each branch end (SwitchBranch)
+            public Vector3 Start, Along, Side, Up;              // beam start (end of the entry module), straight on
+            public float Length;                                // of the beam
+            public readonly float[] Turns = new float[3];       // the beam end's turn towards Side per branch (SwitchBranch)
         }
 
         // entry, branches: port matrices in the rail part (Forward = outwards).
         public static Shape ShapeOf(Matrix entry, Matrix[] branches)
         {
-            Shape s = new Shape { Start = entry.Translation, Along = entry.Backward, Up = entry.Up };
+            Shape s = new Shape { Along = entry.Backward, Up = entry.Up };
+            s.Start = entry.Translation + s.Along * EntryModule;
             s.Side = Vector3.Cross(s.Along, s.Up);
-            s.Length = Vector3.Dot(branches[0].Translation - s.Start, s.Along);
+            s.Length = Vector3.Dot(branches[(int)SwitchBranch.Center].Translation - s.Start, s.Along) - ExitSpace;
             for (int i = 0; i < branches.Length; i++)
-                s.Offsets[i] = Vector3.Dot(branches[i].Translation - s.Start, s.Side);
+                s.Turns[i] = (float)Math.Atan2(Vector3.Dot(branches[i].Forward, s.Side), Vector3.Dot(branches[i].Forward, s.Along));
             return s;
         }
 
         readonly Shape shape;
-        readonly MyEntitySubpart part;
         readonly List<MyEntitySubpart> segments = new List<MyEntitySubpart>();
-        float offset, target;
-        SwitchBranch branch;
+        float bend, target;         // the beam end's turn, rad
         Matrix partLocal;           // rail part relative to the block
 
         // Placed at the branch at once (a new or reloaded block does not swing).
-        public SwitchBeam(Shape shape, MyEntity block, MyEntitySubpart part, Matrix partLocal, SwitchBranch branch)
+        public SwitchBeam(Shape shape, MyEntity block, Matrix partLocal, SwitchBranch branch)
         {
             this.shape = shape;
-            this.part = part;
-            this.branch = branch;
             MyEntitySubpart segment;
             while (block.TryGetSubpart("Beam" + segments.Count, out segment))
                 segments.Add(segment);
-            offset = target = shape.Offsets[(int)branch];
+            bend = target = shape.Turns[(int)branch];
             Place(partLocal);
         }
 
@@ -68,26 +65,12 @@ namespace MagRail
 
         public bool Moving
         {
-            get { return offset != target; }
+            get { return bend != target; }
         }
 
         public void Select(SwitchBranch branch)
         {
-            this.branch = branch;
-            target = shape.Offsets[(int)branch];
-        }
-
-        // Cheap (one render message per lamp): also sent every 100 ticks, so a damaged or re-rendered part
-        // gets its colours back.
-        public void ShowLights(bool working)
-        {
-            if (MyAPIGateway.Utilities.IsDedicated || part.Closed)
-                return;
-            for (int i = 0; i < shape.Offsets.Length; i++)
-            {
-                Color color = (int)branch != i ? ClosedColor : Moving ? MovingColor : OpenColor;
-                part.SetEmissiveParts("Emissive" + i, color, working ? 1 : 0);
-            }
+            target = shape.Turns[(int)branch];
         }
 
         // One tick of the movement; true when the beam has just arrived.
@@ -95,8 +78,9 @@ namespace MagRail
         {
             if (!Moving)
                 return false;
-            const float step = Speed / 60;
-            offset = Math.Abs(target - offset) <= step ? target : offset + Math.Sign(target - offset) * step;
+            // The end moves sideways about Length * bend / 2.
+            float step = 2 * Speed / shape.Length / 60;
+            bend = Math.Abs(target - bend) <= step ? target : bend + Math.Sign(target - bend) * step;
             Place();
             return !Moving;
         }
@@ -111,25 +95,25 @@ namespace MagRail
         void Place()
         {
             int n = segments.Count;
-            // The chord to the end makes half the arc's turn with the start direction.
-            float turn = 2 * (float)Math.Atan2(offset, shape.Length);
-            Vector3 a = Point(0, turn);
+            Vector3 a = shape.Start;
             for (int i = 0; i < n; i++)
             {
-                Vector3 b = Point((float)(i + 1) / n, turn);
-                Matrix m = Matrix.CreateWorld(a, Vector3.Normalize(b - a), shape.Up) * partLocal;
+                Vector3 b = Point((float)(i + 1) / n);
+                Vector3 dir = Vector3.Normalize(b - a);
+                Matrix m = (i == n - 1 ? Matrix.CreateWorld(b, -dir, shape.Up) : Matrix.CreateWorld(a, dir, shape.Up)) * partLocal;
                 if (!segments[i].Closed)
                     segments[i].PositionComp.SetLocalMatrix(ref m);
                 a = b;
             }
         }
 
-        // Point of the arc at fraction t of its turn.
-        Vector3 Point(float t, float turn)
+        // Point of the beam at fraction t of its length.
+        Vector3 Point(float t)
         {
-            if (Math.Abs(turn) < 1e-4f)
-                return shape.Start + shape.Along * (shape.Length * t) + shape.Side * (offset * t);
-            float r = shape.Length / (float)Math.Sin(turn), phi = turn * t;
+            float s = shape.Length * t;
+            if (Math.Abs(bend) < 1e-4f)
+                return shape.Start + shape.Along * s;
+            float r = shape.Length / bend, phi = bend * t;
             return shape.Start + shape.Along * (r * (float)Math.Sin(phi)) + shape.Side * (r * (1 - (float)Math.Cos(phi)));
         }
     }

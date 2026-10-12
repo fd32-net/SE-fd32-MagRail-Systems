@@ -19,7 +19,8 @@ namespace MagRail
     // head about the rail point = the part's origin) and gives it physics: the game gives subparts none.
     // Ports are the dummies of the part's model: position = rail point, Forward = outwards, Up = rail up.
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_UpgradeModule), false,
-        "MagRail_RailBlock1", "MagRail_RailBlock5", "MagRail_FreeRail", "MagRail_Switch")]
+        "MagRail_RailBlock1", "MagRail_RailBlock5", "MagRail_RailBlock10", "MagRail_RailBlock20", "MagRail_FreeRail",
+        "MagRail_Switch", "MagRail_Switch3", "MagRail_Switch5", "MagRail_Switch7")]
     public class TrackBlockLogic : MyGameLogicComponent
     {
         // Must be listed in Data/EntityComponents_MagRail.sbc, or the game drops them on save.
@@ -70,7 +71,8 @@ namespace MagRail
         {
             if (subtype == "MagRail_FreeRail")
                 return TrackKind.FreeRail;
-            if (subtype == "MagRail_Switch")
+            // MagRail_Switch (2 blocks long), MagRail_Switch3/5/7.
+            if (subtype.StartsWith("MagRail_Switch"))
                 return TrackKind.Switch;
             return TrackKind.Rail;
         }
@@ -112,8 +114,6 @@ namespace MagRail
             try
             {
                 UpdatePart();
-                if (beam != null)
-                    beam.ShowLights(Block.IsFunctional);
                 if (registered && (Block.CubeGrid != indexedGrid || Block.CubeGrid.IsStatic != indexedStatic))
                 {
                     indexedGrid = Block.CubeGrid;
@@ -136,7 +136,6 @@ namespace MagRail
                 {
                     foreach (MyEntitySubpart segment in beam.Segments)
                         RebuildPhysics(segment);
-                    beam.ShowLights(Block.IsFunctional);
                 }
                 if (beam == null || !beam.Moving)
                     NeedsUpdate &= ~MyEntityUpdateEnum.EACH_FRAME;
@@ -448,22 +447,19 @@ namespace MagRail
             Matrix local = PartMatrix(info);
             part.PositionComp.SetLocalMatrix(ref local);
             RebuildPhysics(part);
+            if (!MyAPIGateway.Utilities.IsDedicated)
+                part.SetEmissiveParts("Emissive", PieceEntities.GlowColor, 1f);
             if (info.Beam == null)
-            {
-                if (!MyAPIGateway.Utilities.IsDedicated)
-                    part.SetEmissiveParts("Emissive", PieceEntities.GlowColor, 1f);
                 return;
-            }
             if (beam == null || !samePart)
             {
-                beam = new SwitchBeam(info.Beam, (MyEntity)Block, part, local, Settings.Branch);
+                beam = new SwitchBeam(info.Beam, (MyEntity)Block, local, Settings.Branch);
             }
             else
             {
                 beam.Select(Settings.Branch);
                 beam.Place(local);
             }
-            beam.ShowLights(Block.IsFunctional);
             // A moving beam gets its collision when it arrives.
             if (beam.Moving)
                 NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;

@@ -21,6 +21,18 @@
   <data name="Description_MagRail_RailBlock5" xml:space="preserve">
     <value>Прямой рельс длиной 5 блоков. Рельсы, поставленные торец к торцу, соединяются сами.</value>
   </data>
+  <data name="DisplayName_MagRail_RailBlock10" xml:space="preserve">
+    <value>Рельс 10</value>
+  </data>
+  <data name="Description_MagRail_RailBlock10" xml:space="preserve">
+    <value>Прямой рельс длиной 10 блоков на платформах по концам. Рельсы, поставленные торец к торцу, соединяются сами.</value>
+  </data>
+  <data name="DisplayName_MagRail_RailBlock20" xml:space="preserve">
+    <value>Рельс 20</value>
+  </data>
+  <data name="Description_MagRail_RailBlock20" xml:space="preserve">
+    <value>Прямой рельс длиной 20 блоков на платформах по концам. Рельсы, поставленные торец к торцу, соединяются сами.</value>
+  </data>
   <data name="DisplayName_MagRail_FreeRail" xml:space="preserve">
     <value>Поворотный рельс</value>
   </data>
@@ -28,10 +40,28 @@
     <value>Рельс с поворотной головой: любое направление, уклон и крен.</value>
   </data>
   <data name="DisplayName_MagRail_Switch" xml:space="preserve">
-    <value>Стрелка</value>
+    <value>Стрелка 2</value>
   </data>
   <data name="Description_MagRail_Switch" xml:space="preserve">
-    <value>Один вход, три ветки: левая, прямая, правая.</value>
+    <value>Один вход, три ветки: левая, прямая, правая. Длина 2 блока: боковые ветки под 11°, радиус изгиба 20 м (тихий ход).</value>
+  </data>
+  <data name="DisplayName_MagRail_Switch3" xml:space="preserve">
+    <value>Стрелка 3</value>
+  </data>
+  <data name="Description_MagRail_Switch3" xml:space="preserve">
+    <value>Один вход, три ветки: левая, прямая, правая. Длина 3 блока: боковые ветки под 7,3°, радиус изгиба 49 м.</value>
+  </data>
+  <data name="DisplayName_MagRail_Switch5" xml:space="preserve">
+    <value>Стрелка 5</value>
+  </data>
+  <data name="Description_MagRail_Switch5" xml:space="preserve">
+    <value>Один вход, три ветки: левая, прямая, правая. Длина 5 блоков: боковые ветки под 4,4°, радиус изгиба 146 м.</value>
+  </data>
+  <data name="DisplayName_MagRail_Switch7" xml:space="preserve">
+    <value>Стрелка 7</value>
+  </data>
+  <data name="Description_MagRail_Switch7" xml:space="preserve">
+    <value>Один вход, три ветки: левая, прямая, правая. Длина 7 блоков: боковые ветки под 3,1°, радиус изгиба 295 м.</value>
   </data>
   <data name="DisplayName_MagRail_EngineGroup" xml:space="preserve">
     <value>Двигатели парения</value>

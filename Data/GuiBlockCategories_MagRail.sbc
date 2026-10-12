@@ -42,8 +42,13 @@
         <string>UpgradeModule/MagRail_RailBlock1</string>
         <string>CubeBlock/MagRail_RailProfileTest</string>
         <string>UpgradeModule/MagRail_RailBlock5</string>
+        <string>UpgradeModule/MagRail_RailBlock10</string>
+        <string>UpgradeModule/MagRail_RailBlock20</string>
         <string>UpgradeModule/MagRail_FreeRail</string>
         <string>UpgradeModule/MagRail_Switch</string>
+        <string>UpgradeModule/MagRail_Switch3</string>
+        <string>UpgradeModule/MagRail_Switch5</string>
+        <string>UpgradeModule/MagRail_Switch7</string>
         <string>MotorSuspension/MagRail_HoverLarge</string>
         <string>MotorSuspension/MagRail_HoverSmall</string>
         <string>MotorSuspension/MagRail_HoverMini</string>

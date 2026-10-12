@@ -4,8 +4,13 @@
   <ResearchBlocks>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock1" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock5" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock10" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock20" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_FreeRail" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_Switch" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_Switch3" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_Switch5" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_Switch7" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="MotorSuspension" Subtype="MagRail_HoverLarge" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="MotorSuspension" Subtype="MagRail_HoverSmall" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="MotorSuspension" Subtype="MagRail_HoverMini" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
