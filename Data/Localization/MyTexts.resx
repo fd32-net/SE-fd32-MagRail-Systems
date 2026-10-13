@@ -333,6 +333,9 @@
   <data name="MagRail_Cmd_Rides" xml:space="preserve">
     <value>Hover engines: {0} on {1} grids; train physics {2} / {3} ms</value>
   </data>
+  <data name="MagRail_Cmd_Terrain" xml:space="preserve">
+    <value>Ground under spans: {0} spans read, {1} lifted; {2} ms in all, worst {3} ms; {4} k voxels</value>
+  </data>
   <data name="MagRail_Cmd_Skin" xml:space="preserve">
     <value>Build skin: {0}; colour HSV {1}; read in {2} ms</value>
   </data>

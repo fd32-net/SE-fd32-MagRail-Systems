@@ -35,6 +35,11 @@ namespace MagRail
         Span aimSpan;
         SpanCurve preview;          // while laying: start port -> aimed port or free end
         string previewProblem;      // why the aimed port cannot take the span (Loc key)
+        // What the preview was built for (BuildPreview).
+        const int PreviewLiftFrames = 6;
+        int previewFrames, previewAimPort = -1;
+        TrackBlockLogic previewAimBlock;
+        Vector3D previewFrom, previewTo, previewToForward;
 
         static TrackNetwork Network
         {
@@ -104,26 +109,56 @@ namespace MagRail
 
         void BuildPreview()
         {
-            preview = null;
             previewProblem = null;
             if (startBlock == null)
-                return;
-            MatrixD from = startBlock.PortWorld(startPort);
-            if (aimBlock != null && !(aimBlock == startBlock && aimPort == startPort))
             {
-                previewProblem = Network.LinkProblem(startBlock, startPort, aimBlock, aimPort);
-                preview = SpanCurve.Build(from, aimBlock.PortWorld(aimPort));
+                preview = null;
                 return;
             }
-            MatrixD cam = MyAPIGateway.Session.Camera.WorldMatrix;
-            Vector3D end = cam.Translation + cam.Forward * FreeEndDistance;
-            Vector3D back = from.Translation - end;
-            if (back.LengthSquared() < 0.01)
+            MatrixD from = startBlock.PortWorld(startPort);
+            MatrixD to;
+            bool toStatic = true, freeEnd = true;
+            if (aimBlock != null && !(aimBlock == startBlock && aimPort == startPort))
+            {
+                freeEnd = false;
+                previewProblem = Network.LinkProblem(startBlock, startPort, aimBlock, aimPort);
+                to = aimBlock.PortWorld(aimPort);
+                toStatic = aimBlock.Block.CubeGrid.IsStatic;
+            }
+            else
+            {
+                MatrixD cam = MyAPIGateway.Session.Camera.WorldMatrix;
+                Vector3D end = cam.Translation + cam.Forward * FreeEndDistance;
+                Vector3D back = from.Translation - end;
+                if (back.LengthSquared() < 0.01)
+                {
+                    preview = null;
+                    return;
+                }
+                back.Normalize();
+                Vector3D up = from.Up - back * Vector3D.Dot(from.Up, back);
+                up = up.LengthSquared() > 1e-6 ? Vector3D.Normalize(up) : Vector3D.CalculatePerpendicularVector(back);
+                to = MatrixD.CreateWorld(end, back, up);
+            }
+
+            // Over planet ground the preview is lifted like the span will be (TerrainLift): rebuilt only every few
+            // frames while its ends move, and at once when the aimed port changes.
+            previewFrames++;
+            bool same = preview != null && Vector3D.DistanceSquared(from.Translation, previewFrom) < 1e-6
+                        && Vector3D.DistanceSquared(to.Translation, previewTo) < 1e-6
+                        && Vector3D.DistanceSquared(to.Forward, previewToForward) < 1e-8;
+            bool targetChanged = aimBlock != previewAimBlock || aimPort != previewAimPort;
+            if (same || (!targetChanged && preview != null && previewFrames < PreviewLiftFrames))
                 return;
-            back.Normalize();
-            Vector3D up = from.Up - back * Vector3D.Dot(from.Up, back);
-            up = up.LengthSquared() > 1e-6 ? Vector3D.Normalize(up) : Vector3D.CalculatePerpendicularVector(back);
-            preview = SpanCurve.Build(from, MatrixD.CreateWorld(end, back, up));
+            previewFrames = 0;
+            previewFrom = from.Translation;
+            previewTo = to.Translation;
+            previewToForward = to.Forward;
+            previewAimBlock = aimBlock;
+            previewAimPort = aimPort;
+            preview = SpanCurve.Build(from, to);
+            if (startBlock.Block.CubeGrid.IsStatic && toStatic)
+                preview = TerrainLift.Live(preview, MatrixD.Identity, startBlock.Style.Width, freeEnd);
         }
 
         void Aim()

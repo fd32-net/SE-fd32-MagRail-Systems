@@ -345,14 +345,26 @@ namespace MagRail
             if (s.Curve != null && s.CurveOwnerRevision == s.Owner.Revision && s.CurvePartnerRevision == s.Partner.Revision
                 && s.CurveGrid == grid && !(moving && tick - s.CurveTick >= MovingCurveTicks))
                 return s.Curve;
-            s.Curve = inGrid
-                ? SpanCurve.Build(s.Owner.PortGridLocal(s.OwnerPort), s.Partner.PortGridLocal(s.PartnerPort))
-                : SpanCurve.Build(s.Owner.PortWorld(s.OwnerPort), s.Partner.PortWorld(s.PartnerPort));
+            s.Curve = BaseCurve(s);
+            // Over planet ground, spans that stand still (both blocks on static grids): a prototype follows the ground
+            // as it is, a rail keeps the lift measured when it was built (SetMode).
+            if (s.Owner.Block.CubeGrid.IsStatic && s.Partner.Block.CubeGrid.IsStatic)
+                s.Curve = s.Record.WantRail
+                    ? TerrainLift.Apply(s.Curve, FrameMatrix(s), s.Record.Lift)
+                    : TerrainLift.Live(s.Curve, FrameMatrix(s), s.Owner.Style.Width);
             s.CurveOwnerRevision = s.Owner.Revision;
             s.CurvePartnerRevision = s.Partner.Revision;
             s.CurveGrid = grid;
             s.CurveTick = tick;
             return s.Curve;
+        }
+
+        // The span's curve between its ports, before any lift over the ground.
+        static SpanCurve BaseCurve(Span s)
+        {
+            return InGridFrame(s)
+                ? SpanCurve.Build(s.Owner.PortGridLocal(s.OwnerPort), s.Partner.PortGridLocal(s.PartnerPort))
+                : SpanCurve.Build(s.Owner.PortWorld(s.OwnerPort), s.Partner.PortWorld(s.PartnerPort));
         }
 
         // How the span is laid from track pieces (for its current curve).
@@ -437,7 +449,12 @@ namespace MagRail
 
         public void SetMode(Span s, bool wantRail)
         {
+            // Built as it lies now: the prototype's lift over the ground is kept with the rail.
+            s.Record.Lift = null;
+            if (wantRail && s.Bound && s.Owner.Block.CubeGrid.IsStatic && s.Partner.Block.CubeGrid.IsStatic)
+                s.Record.Lift = TerrainLift.Measure(BaseCurve(s), FrameMatrix(s), s.Owner.Style.Width);
             s.Record.WantRail = wantRail;
+            s.Curve = null;
             Changed(s.Owner);
         }
 

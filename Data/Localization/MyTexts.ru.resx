@@ -333,6 +333,9 @@
   <data name="MagRail_Cmd_Rides" xml:space="preserve">
     <value>Двигатели парения: {0} на {1} гридах; физика поездов {2} / {3} мс</value>
   </data>
+  <data name="MagRail_Cmd_Terrain" xml:space="preserve">
+    <value>Грунт под пролётами: прочитано {0}, поднято {1}; всего {2} мс, худший {3} мс; {4} тыс. вокселей</value>
+  </data>
   <data name="MagRail_Cmd_Skin" xml:space="preserve">
     <value>Скин постройки: {0}; цвет HSV {1}; прочитан за {2} мс</value>
   </data>

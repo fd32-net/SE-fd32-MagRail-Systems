@@ -63,6 +63,8 @@ namespace MagRail
                 session.UpdateTime.Worst.ToString("0.00"), session.DrawTime.Average.ToString("0.00"), session.DrawTime.Worst.ToString("0.00")));
             MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Rides", session.Engines.Count, session.Rides.Count,
                 session.RideTime.Average.ToString("0.00"), session.RideTime.Worst.ToString("0.00")));
+            MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Terrain", TerrainLift.Calls, TerrainLift.Lifted,
+                TerrainLift.TotalMs.ToString("0.0"), TerrainLift.WorstMs.ToString("0.0"), (TerrainLift.Voxels / 1000).ToString()));
         }
 
         // How the Rail Linker reads the build skin (RailLinker.BuildSkin), and how long it takes.

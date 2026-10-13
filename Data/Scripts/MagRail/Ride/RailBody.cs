@@ -247,7 +247,7 @@ namespace MagRail
             SpanCurve curve = c.Valid ? c.Curve : null;
             if (curve != null && curve.Curvature.Count > 0)
             {
-                double k = curve.Curvature[Math.Max(0, Math.Min(curve.Curvature.Count - 1, (int)Math.Round(c.S / SpanCurve.Step)))];
+                double k = curve.Curvature[curve.Index(c.S)];
                 Radius = k > 1e-4 ? 1.0 / k : 0;
             }
             Speed = Vector3D.Dot(relative, pathForward);

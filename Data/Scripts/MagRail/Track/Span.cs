@@ -28,6 +28,9 @@ namespace MagRail
         [ProtoMember(11)] public float PaintS;
         [ProtoMember(12)] public float PaintV;
         [ProtoMember(13)] public string PaintSkin;
+        // Lift over planet ground (TerrainLift), m, evenly over the span: measured when the span was switched to rail
+        // and kept while it is one. null: none (also rails laid before the lift existed).
+        [ProtoMember(14)] public float[] Lift;
     }
 
     [ProtoContract]

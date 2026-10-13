@@ -68,6 +68,42 @@ namespace MagRail
                 c.Curvature.Add(speed > 1e-8 ? Vector3D.Cross(d1, d2).Length() / (speed * speed * speed) : 0);
                 c.S.Add(i == 0 ? 0 : c.S[i - 1] + Vector3D.Distance(c.Pos[i - 1], p));
             }
+            c.Finish(up0, up3);
+            return c;
+        }
+
+        // The same curve with every point moved by offset[i] (TerrainLift): tangents and curvature from the moved
+        // points, the ends keep theirs (the offset is meant to fade out there).
+        public SpanCurve Shifted(Vector3D[] offset)
+        {
+            SpanCurve c = new SpanCurve();
+            int n = Pos.Count - 1;
+            for (int i = 0; i <= n; i++)
+            {
+                c.Pos.Add(Pos[i] + offset[i]);
+                c.S.Add(i == 0 ? 0 : c.S[i - 1] + Vector3D.Distance(c.Pos[i - 1], c.Pos[i]));
+            }
+            for (int i = 0; i <= n; i++)
+            {
+                Vector3D d = i == 0 || i == n ? Vector3D.Zero : c.Pos[i + 1] - c.Pos[i - 1];
+                c.Tan.Add(d.LengthSquared() > 1e-12 ? Vector3D.Normalize(d) : Tan[i]);
+            }
+            for (int i = 0; i <= n; i++)
+            {
+                int a = Math.Max(0, i - 1), b = Math.Min(n, i + 1);
+                double ds = c.S[b] - c.S[a];
+                double angle = Math.Acos(MathHelper.Clamp(Vector3D.Dot(c.Tan[a], c.Tan[b]), -1.0, 1.0));
+                c.Curvature.Add(ds > 1e-9 ? angle / ds : 0);
+            }
+            c.Finish(Up[0], Up[n]);
+            return c;
+        }
+
+        // From Pos, Tan, S and Curvature: Length, the ups, MinRadius, Bounds.
+        void Finish(Vector3D up0, Vector3D up3)
+        {
+            SpanCurve c = this;
+            int n = Pos.Count - 1;
             c.Length = c.S[n];
 
             // Parallel transport of A's up along the tangents, then the remaining twist to B's up
@@ -97,7 +133,6 @@ namespace MagRail
                     c.MinRadius = Math.Min(c.MinRadius, 1 / c.Curvature[i]);
             }
             c.Bounds = new BoundingSphereD(box.Center, box.HalfExtents.Length());
-            return c;
         }
 
         // ---- sampling by arc length (linear between the table's samples) ----
