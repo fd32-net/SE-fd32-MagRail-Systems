@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using VRage.Utils;
 
 namespace MagRail
 {
@@ -11,8 +13,11 @@ namespace MagRail
     // strip instead (strip: where the branches of a Rail Switch 1 overlap, see TrackLayout).
     public class TrackStyle
     {
-        public static readonly TrackStyle Narrow = new TrackStyle("MagRail_", 0.45f, 0.74);
-        public static readonly TrackStyle Wide = new TrackStyle("MagRail_Wide", 0.45f, 2.0);
+        public static readonly TrackStyle Narrow = new TrackStyle("MagRail_", 0.45f, 0.74, "Narrow", 0.5f, -0.455f, 0.545f);
+        public static readonly TrackStyle Wide = new TrackStyle("MagRail_Wide", 0.45f, 2.0, "Wide", 1.2f, -0.555f, 0.645f);
+
+        // Crest top over the rail point (CREST_Z), m.
+        public const double CrestHeight = 0.33;
 
         readonly string prefix;
         // Lowest rail point over the bottom of the cell (terminal height), m: the feet of both sections hang 0.24 m
@@ -20,12 +25,29 @@ namespace MagRail
         public readonly float MinHeight;
         // Width of the section (BODY_W), m.
         public readonly double Width;
+        // The end face overlay (Draw.Face): its texture's box from the rail point, m (FACES in
+        // ModelSource/overlay_textures.py, which draws the section's outline into it).
+        public readonly float FaceHalfWidth, FaceBottom, FaceTop;
+        readonly MyStringId[] faceLines, faceFills;
 
-        TrackStyle(string prefix, float minHeight, double width)
+        TrackStyle(string prefix, float minHeight, double width, string face, float faceHalfWidth, float faceBottom, float faceTop)
         {
             this.prefix = prefix;
             MinHeight = minHeight;
             Width = width;
+            FaceHalfWidth = faceHalfWidth;
+            FaceBottom = faceBottom;
+            FaceTop = faceTop;
+            string[] parts = { "", "C", "L", "R" };
+            faceLines = parts.Select(s => MyStringId.GetOrCompute("MagRail_Face" + face + s + "Line")).ToArray();
+            faceFills = parts.Select(s => MyStringId.GetOrCompute("MagRail_Face" + face + s + "Fill")).ToArray();
+        }
+
+        // The whole end face (part -1), or the third of a Rail Switch 1's end face for that SwitchBranch: its outline,
+        // or its inside (fill).
+        public MyStringId FaceMaterial(int part, bool fill)
+        {
+            return (fill ? faceFills : faceLines)[part + 1];
         }
 
         public static TrackStyle Of(string subtype)

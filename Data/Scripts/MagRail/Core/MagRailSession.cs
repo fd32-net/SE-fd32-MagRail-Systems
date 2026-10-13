@@ -133,7 +133,8 @@ namespace MagRail
             try
             {
                 DrawTime.Start();
-                SpanLines.DrawAll(Network, Pieces);
+                MagRail.Draw.Begin(linker.Held);
+                SpanLines.DrawAll(Network, Pieces, linker.AimedSpan);
                 linker.DrawFrame();
                 TrackDebug.DrawFrame(this);
                 DrawTime.Stop();

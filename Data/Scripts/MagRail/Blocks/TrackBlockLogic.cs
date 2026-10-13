@@ -27,8 +27,6 @@ namespace MagRail
     {
         // Branch port names by SwitchBranch.
         public static readonly string[] BranchPorts = { "branch_c", "branch_l", "branch_r" };
-        // L/R branch ports in one point with the centre one are aimed at (Rail Linker) this far to their side, m.
-        const float FanAimOffset = 0.6f;
         // Must be listed in Data/EntityComponents_MagRail.sbc, or the game drops them on save.
         static readonly Guid SettingsGuid = new Guid("444da85b-4de9-4530-8b2a-10d8f75d9c76");
         static readonly Guid SpansGuid = new Guid("b0b3f1c2-6f7e-4d84-9a51-2c8e7d3f4a60");
@@ -37,7 +35,7 @@ namespace MagRail
         {
             public string Name;
             public Matrix Local;    // in the rail part's coordinates
-            public Vector3 Aim;     // where the Rail Linker aims at it, from the port point, in the same coordinates
+            public Vector3 Aim;     // L/R branch in the centre's point: its side (unit, same coordinates), see PortAim
         }
 
         class PartInfo
@@ -297,12 +295,13 @@ namespace MagRail
             return PortBlockLocal(port) * Block.WorldMatrix;
         }
 
-        // Where the Rail Linker aims at the port and draws its marker: the port point, but L/R branches that share
-        // the centre branch's point are moved to their side.
+        // Where the Rail Linker aims at the port and draws its dot: the port point, but L/R branches that share the
+        // centre branch's point are moved to their side, to the middle of their third of the end face.
         public Vector3D PortAim(int port)
         {
             PartInfo info = GetPartInfo();
-            return Vector3D.Transform(info.Ports[port].Local.Translation + info.Ports[port].Aim, PartMatrix(info) * Block.WorldMatrix);
+            return Vector3D.Transform(info.Ports[port].Local.Translation + info.Ports[port].Aim * (float)(Style.Width / 3),
+                PartMatrix(info) * Block.WorldMatrix);
         }
 
         // A branch port of a switch whose branches share one point (FanLevel): its SwitchBranch, else -1.
@@ -422,7 +421,7 @@ namespace MagRail
                 if (center == null || p == center || !p.Name.StartsWith("branch_")
                     || Vector3.DistanceSquared(p.Local.Translation, center.Local.Translation) > 1e-4f)
                     continue;
-                p.Aim = (p.Name == BranchPorts[(int)SwitchBranch.Left] ? p.Local.Left : p.Local.Right) * FanAimOffset;
+                p.Aim = p.Name == BranchPorts[(int)SwitchBranch.Left] ? center.Local.Left : center.Local.Right;
                 info.Fan = true;
             }
             info.Ports = ports;

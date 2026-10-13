@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Sandbox.ModAPI;
 using VRage.Game;
@@ -19,7 +20,9 @@ namespace MagRail
     public class RailLinker
     {
         public const string Subtype = "MagRail_RailLinker";
-        const double AimRange = 40, MarkerRange = 60;
+        const double AimRange = 40, MarkerRange = 300;
+        // End faces far away stay at least this wide on screen: m per m of distance (~15 px across at 1080p).
+        const double FaceOnScreen = 0.02;
         // While laying with no port aimed, the free end of the preview: this far in front of the
         // camera, facing the start port (the curve does not swing when the player turns).
         const double FreeEndDistance = 7;
@@ -35,11 +38,27 @@ namespace MagRail
         Span aimSpan;
         SpanCurve preview;          // while laying: start port -> aimed port or free end
         string previewProblem;      // why the aimed port cannot take the span (Loc key)
-        // What the preview was built for (BuildPreview).
-        const int PreviewLiftFrames = 6;
-        int previewFrames, previewAimPort = -1;
+        // What the preview was built for (BuildPreview), and its lift over the ground (TerrainLift.Measure: reads voxels,
+        // so measured again at most every PreviewLiftSeconds; the curve itself follows every frame).
+        const double PreviewLiftSeconds = 0.1;
+        int previewAimPort = -1;
         TrackBlockLogic previewAimBlock;
         Vector3D previewFrom, previewTo, previewToForward;
+        float[] previewLift;
+        double previewLiftTime = double.NegativeInfinity;
+        bool previewLiftStale;      // the curve moved since its lift was measured
+
+        // In the local player's hand (overlays see through models: Draw.SeeThrough).
+        public bool Held
+        {
+            get { return held; }
+        }
+
+        // The span under the crosshair (it pulses: SpanLines).
+        public Span AimedSpan
+        {
+            get { return held ? aimSpan : null; }
+        }
 
         static TrackNetwork Network
         {
@@ -90,6 +109,7 @@ namespace MagRail
             if (startBlock != null && Network.Find(startBlock.Block.EntityId) == null)
                 startBlock = null;
             hint.Show(Loc.T("MagRail_Linker_Hint"));
+            RefreshJoints();
             if (MyAPIGateway.Gui.IsCursorVisible || MyAPIGateway.Gui.ChatEntryVisible)
             {
                 info.Hide();
@@ -103,13 +123,16 @@ namespace MagRail
                 Right(MyAPIGateway.Input.IsAnyShiftKeyPressed());
             else if (MyAPIGateway.Input.IsNewMiddleMousePressed())
                 Middle();
-            BuildPreview();
+            BuildPreview(true);
             ShowInfo();
         }
 
-        void BuildPreview()
+        // Every tick (HandleInput: also why the aimed port cannot take it) and every frame (DrawFrame: the free end
+        // follows the camera without lagging behind it at a frame rate over 60).
+        void BuildPreview(bool tick)
         {
-            previewProblem = null;
+            if (tick)
+                previewProblem = null;
             if (startBlock == null)
             {
                 preview = null;
@@ -121,7 +144,8 @@ namespace MagRail
             if (aimBlock != null && !(aimBlock == startBlock && aimPort == startPort))
             {
                 freeEnd = false;
-                previewProblem = Network.LinkProblem(startBlock, startPort, aimBlock, aimPort);
+                if (tick)
+                    previewProblem = Network.LinkProblem(startBlock, startPort, aimBlock, aimPort);
                 to = aimBlock.PortWorld(aimPort);
                 toStatic = aimBlock.Block.CubeGrid.IsStatic;
             }
@@ -141,24 +165,35 @@ namespace MagRail
                 to = MatrixD.CreateWorld(end, back, up);
             }
 
-            // Over planet ground the preview is lifted like the span will be (TerrainLift): rebuilt only every few
-            // frames while its ends move, and at once when the aimed port changes.
-            previewFrames++;
+            // Over planet ground the preview is lifted like the span will be (TerrainLift): the curve is rebuilt
+            // whenever its ends move, the lift measured again every PreviewLiftSeconds (at once when the aimed port
+            // changes) and laid on the new curve in between.
             bool same = preview != null && Vector3D.DistanceSquared(from.Translation, previewFrom) < 1e-6
                         && Vector3D.DistanceSquared(to.Translation, previewTo) < 1e-6
                         && Vector3D.DistanceSquared(to.Forward, previewToForward) < 1e-8;
             bool targetChanged = aimBlock != previewAimBlock || aimPort != previewAimPort;
-            if (same || (!targetChanged && preview != null && previewFrames < PreviewLiftFrames))
+            double now = MyAPIGateway.Session.ElapsedPlayTime.TotalSeconds;
+            bool remeasure = targetChanged || ((!same || previewLiftStale) && now - previewLiftTime >= PreviewLiftSeconds);
+            if (same && !remeasure)
                 return;
-            previewFrames = 0;
             previewFrom = from.Translation;
             previewTo = to.Translation;
             previewToForward = to.Forward;
             previewAimBlock = aimBlock;
             previewAimPort = aimPort;
-            preview = SpanCurve.Build(from, to);
-            if (startBlock.Block.CubeGrid.IsStatic && toStatic)
-                preview = TerrainLift.Live(preview, MatrixD.Identity, startBlock.Style.Width, freeEnd);
+            SpanCurve curve = SpanCurve.Build(from, to);
+            if (!startBlock.Block.CubeGrid.IsStatic || !toStatic)
+            {
+                preview = curve;
+                return;
+            }
+            if (remeasure)
+            {
+                previewLift = TerrainLift.Measure(curve, MatrixD.Identity, startBlock.Style.Width, freeEnd);
+                previewLiftTime = now;
+            }
+            previewLiftStale = !remeasure;
+            preview = TerrainLift.Apply(curve, MatrixD.Identity, previewLift);
         }
 
         void Aim()
@@ -175,6 +210,8 @@ namespace MagRail
                     continue;
                 for (int i = 0; i < b.PortCount; i++)
                 {
+                    if (Joined(b, i))
+                        continue;
                     double score = AimScore(b.PortAim(i), origin, dir, 0.3);
                     if (score < best)
                     {
@@ -377,37 +414,110 @@ namespace MagRail
         {
             if (!held)
                 return;
+            if (!MyAPIGateway.Gui.IsCursorVisible && !MyAPIGateway.Gui.ChatEntryVisible)
+                BuildPreview(false);
+            foreach (TrackBlockLogic b in Network.Blocks)
+            {
+                if (!b.PortsKnown || Vector3D.DistanceSquared(b.Block.WorldMatrix.Translation, MagRail.Draw.Camera) > MarkerRange * MarkerRange)
+                    continue;
+                for (int i = 0; i < b.PortCount; i++)
+                {
+                    int rank = b.FanRank(i);
+                    if (rank == (int)SwitchBranch.Center)
+                        DrawSwitchFace(b);
+                    else if (rank < 0 && !Joined(b, i))
+                        DrawPort(b, i);
+                }
+            }
+            if (preview != null)
+                SpanLines.DrawCurve(preview, MatrixD.Identity, startBlock.Style, LineStyle.Preview);
+        }
+
+        // 0 = none, 1 = start of the span being laid, 2 = aimed.
+        int Selection(TrackBlockLogic b, int port)
+        {
+            return b == aimBlock && port == aimPort ? 2 : b == startBlock && port == startPort ? 1 : 0;
+        }
+
+        void DrawPort(TrackBlockLogic b, int port)
+        {
+            MatrixD m = b.PortWorld(port);
+            DrawEnd(b.Style, -1, m, m.Translation, m.Forward, Network.SpanAt(b, port) != null, Selection(b, port));
+        }
+
+        // The branch ports of a Rail Switch 1 share one point: one end face, each third lit by its branch.
+        void DrawSwitchFace(TrackBlockLogic b)
+        {
+            MatrixD face = b.PortWorld(b.PortIndex(TrackBlockLogic.BranchPorts[(int)SwitchBranch.Center]));
+            for (int rank = 0; rank < TrackBlockLogic.BranchPorts.Length; rank++)
+            {
+                int q = b.PortIndex(TrackBlockLogic.BranchPorts[rank]);
+                if (q >= 0 && !Joined(b, q))
+                    DrawEnd(b.Style, rank, face, b.PortAim(q), b.PortWorld(q).Forward, Network.SpanAt(b, q) != null, Selection(b, q));
+            }
+        }
+
+        // The rail's end face (or the switch's third `part`) in the port's plane, a dot where the port is aimed at and,
+        // unless linked, a stick outwards with a ball on its end. Bright and seen through models, so ports are easy to
+        // find along a long rail (as bright behind a model as in front of it); far away all of it keeps a size on
+        // screen. The outline, dot and stick show linked or
+        // free; the inside is yellow while the port is selected (selection: 1 = start, 2 = aimed, pulses).
+        static void DrawEnd(TrackStyle style, int part, MatrixD face, Vector3D aim, Vector3D forward, bool linked, int selection)
+        {
+            const float Bright = 3;
+            Color color = linked ? LinkedColor : FreeColor;
+            double distance = Vector3D.Distance(face.Translation, MagRail.Draw.Camera);
+            float scale = (float)Math.Max(1, distance * FaceOnScreen / style.Width);
+            float pulse = selection == 2 ? MagRail.Draw.Pulse : 0;
+            if (selection > 0)
+                MagRail.Draw.Face(style, part, true, face.Translation, face.Right, face.Up, AimColor * (0.6f + 0.25f * pulse), scale,
+                    true, Bright * (1 + pulse), throughAlpha: 1);
+            else
+                MagRail.Draw.Face(style, part, true, face.Translation, face.Right, face.Up, color * SpanLines.FillAlpha, scale, true, throughAlpha: 1);
+            MagRail.Draw.Face(style, part, false, face.Translation, face.Right, face.Up, color, scale, true, Bright, throughAlpha: 1);
+            Vector3D p = face.Translation + (aim - face.Translation) * scale;
+            MagRail.Draw.Dot(p, color, Math.Max(0.1f * scale, (float)(distance * 0.004)), true, Bright, throughAlpha: 1);
+            if (linked)
+                return;
+            Vector3D tip = p + forward * 0.7 * scale;
+            MagRail.Draw.Line(p, tip, color, MagRail.Draw.Width(distance, 0.05f * scale), true, Bright, throughAlpha: 1);
+            MagRail.Draw.Dot(tip, color, Math.Max(0.13f * scale, (float)(distance * 0.005)), true, Bright, throughAlpha: 1);
+        }
+
+        // ---- joints ----
+
+        // Ports joined end to end to another block (TrackNetwork.FindJoint) get no marker and are not aimed at: a bit
+        // per port, found again every JointRefresh ticks for the blocks in marker range.
+        const int JointRefresh = 30;
+        readonly Dictionary<TrackBlockLogic, int> joined = new Dictionary<TrackBlockLogic, int>();
+        int jointTicks = JointRefresh;
+
+        bool Joined(TrackBlockLogic b, int port)
+        {
+            int mask;
+            return joined.TryGetValue(b, out mask) && (mask & (1 << port)) != 0;
+        }
+
+        void RefreshJoints()
+        {
+            if (++jointTicks < JointRefresh)
+                return;
+            jointTicks = 0;
+            joined.Clear();
             Vector3D camera = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
             foreach (TrackBlockLogic b in Network.Blocks)
             {
                 if (!b.PortsKnown || Vector3D.DistanceSquared(b.Block.WorldMatrix.Translation, camera) > MarkerRange * MarkerRange)
                     continue;
+                int mask = 0;
+                TrackBlockLogic other;
+                int otherPort;
                 for (int i = 0; i < b.PortCount; i++)
-                {
-                    bool aimed = (b == aimBlock && i == aimPort) || (b == startBlock && i == startPort);
-                    Color color = aimed ? AimColor : Network.SpanAt(b, i) != null ? LinkedColor : FreeColor;
-                    // A switch branch aimed at beside its point: the marker there, a thin line to the point.
-                    MatrixD port = b.PortWorld(i);
-                    Vector3D aim = b.PortAim(i);
-                    if (Vector3D.DistanceSquared(aim, port.Translation) > 1e-4)
-                        MagRail.Draw.Line(port.Translation, aim, color, 0.03f);
-                    port.Translation = aim;
-                    DrawPort(port, color, aimed);
-                }
+                    if (Network.FindJoint(b, i, out other, out otherPort))
+                        mask |= 1 << i;
+                if (mask != 0)
+                    joined[b] = mask;
             }
-            if (preview != null)
-                SpanLines.DrawCurve(preview, MatrixD.Identity, LineStyle.Preview);
-        }
-
-        // A cross across the rail at the port and a stroke outwards.
-        static void DrawPort(MatrixD port, Color color, bool aimed)
-        {
-            double h = aimed ? 0.35 : 0.25;
-            float thickness = aimed ? 0.08f : 0.05f;
-            Vector3D p = port.Translation;
-            MagRail.Draw.Line(p - port.Right * h, p + port.Right * h, color, thickness);
-            MagRail.Draw.Line(p - port.Up * h, p + port.Up * h, color, thickness);
-            MagRail.Draw.Line(p, p + port.Forward * h * 2, color, thickness);
         }
     }
 }
