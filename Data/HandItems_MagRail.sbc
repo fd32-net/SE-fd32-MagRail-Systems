@@ -2,31 +2,32 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <HandItems>
     <!-- Rail Linker: the vanilla HandToolBase entity with no tool actions, so LMB/RMB do nothing
-         in the game and the mod script reads them (Tools/RailLinker.cs). Hand pose and fingers are
-         copied from the vanilla CubePlacer: the hand held up, palm out, as when placing a block. -->
+         in the game and the mod script reads them (Tools/RailLinker.cs). For now it holds the welder model
+         (PhysicalItems_MagRail.sbc): hand pose, sway and fingers copied from the vanilla Welder, but
+         positioned from this data (the welder's TransformFromAnim needs the welder's animation). -->
     <HandItem xsi:type="MyObjectBuilder_HandItemDefinition">
       <Id Type="MyObjectBuilder_HandToolBase" Subtype="MagRail_RailLinker" />
       <LeftHandOrientation>
-        <X>0.317969531</X>
-        <Y>0.4508094</Y>
-        <Z>0.3129707</Z>
-        <W>0.7731207</W>
+        <X>-0.707107961</X>
+        <Y>-3.905627E-07</Y>
+        <Z>-1.68587874E-07</Z>
+        <W>0.7071056</W>
       </LeftHandOrientation>
       <LeftHandPosition>
-        <X>-0.2992194</X>
-        <Y>-0.0101186307</Y>
-        <Z>0.105521679</Z>
+        <X>-0.08030445</X>
+        <Y>-0.114194907</Y>
+        <Z>-0.06793878</Z>
       </LeftHandPosition>
       <RightHandOrientation>
-        <X>0.627892137</X>
-        <Y>-0.5274028</Y>
-        <Z>-0.378415644</Z>
-        <W>0.4294174</W>
+        <X>-0.365488321</X>
+        <Y>-0.48690632</Y>
+        <Z>-0.5507982</Z>
+        <W>0.5709306</W>
       </RightHandOrientation>
       <RightHandPosition>
-        <X>0.09395765</X>
-        <Y>-0.021682661</Y>
-        <Z>0.226824775</Z>
+        <X>0.021914959</X>
+        <Y>-0.062458396</Y>
+        <Z>0.120534658</Z>
       </RightHandPosition>
       <ItemOrientation>
         <X>0</X>
@@ -35,31 +36,31 @@
         <W>1</W>
       </ItemOrientation>
       <ItemPosition>
-        <X>0.207100451</X>
-        <Y>-0.193951219</Y>
-        <Z>-0.4174887</Z>
+        <X>0.100000024</X>
+        <Y>-0.18</Y>
+        <Z>-0.220000029</Z>
       </ItemPosition>
       <ItemWalkingOrientation>
         <X>0</X>
         <Y>0</Y>
-        <Z>0</Z>
-        <W>1</W>
+        <Z>0.1195997</Z>
+        <W>0.9928222</W>
       </ItemWalkingOrientation>
       <ItemWalkingPosition>
-        <X>0.14792937</X>
-        <Y>-0.200525835</Y>
-        <Z>-0.364891738</Z>
+        <X>0.1</X>
+        <Y>-0.218271181</Y>
+        <Z>-0.210783452</Z>
       </ItemWalkingPosition>
       <ItemShootOrientation>
-        <X>0</X>
-        <Y>0.0722291842</Y>
+        <X>-0.119511753</X>
+        <Y>0</Y>
         <Z>0</Z>
-        <W>0.997388065</W>
+        <W>0.9928328</W>
       </ItemShootOrientation>
       <ItemShootPosition>
-        <X>0.220249176</X>
-        <Y>-0.174227774</Y>
-        <Z>-0.516108155</Z>
+        <X>0.100000024</X>
+        <Y>-0.233399391</Y>
+        <Z>-0.338593721</Z>
       </ItemShootPosition>
       <ItemIronsightOrientation>
         <X>0</X>
@@ -79,46 +80,46 @@
         <W>1</W>
       </ItemOrientation3rd>
       <ItemPosition3rd>
-        <X>0.11708571</X>
-        <Y>-0.1282059</Y>
-        <Z>-0.394478023</Z>
+        <X>0.1</X>
+        <Y>-0.18</Y>
+        <Z>-0.22</Z>
       </ItemPosition3rd>
       <ItemWalkingOrientation3rd>
         <X>0</X>
         <Y>0</Y>
-        <Z>0.114382215</Z>
-        <W>0.9934368</W>
-      </ItemWalkingOrientation3rd>
-      <ItemWalkingPosition3rd>
-        <X>0.138066173</X>
-        <Y>-0.290927768</Y>
-        <Z>-0.394478023</Z>
-      </ItemWalkingPosition3rd>
-      <ItemShootOrientation3rd>
-        <X>0</X>
-        <Y>0</Y>
         <Z>0</Z>
         <W>1</W>
+      </ItemWalkingOrientation3rd>
+      <ItemWalkingPosition3rd>
+        <X>0.186470717</X>
+        <Y>-0.322347462</Y>
+        <Z>-0.102630876</Z>
+      </ItemWalkingPosition3rd>
+      <ItemShootOrientation3rd>
+        <X>-0.180763185</X>
+        <Y>0</Y>
+        <Z>0</Z>
+        <W>0.983526647</W>
       </ItemShootOrientation3rd>
       <ItemShootPosition3rd>
-        <X>0.1</X>
-        <Y>-0.180801988</Y>
-        <Z>-0.3846156</Z>
+        <X>0.100000024</X>
+        <Y>-0.18</Y>
+        <Z>-0.318869</Z>
       </ItemShootPosition3rd>
-      <BlendTime>1</BlendTime>
-      <ShootBlend>1.3767252</ShootBlend>
-      <XAmplitudeOffset>0.007227002</XAmplitudeOffset>
-      <YAmplitudeOffset>1.0479939</YAmplitudeOffset>
-      <ZAmplitudeOffset>1.39491487</ZAmplitudeOffset>
-      <XAmplitudeScale>0.07516496</XAmplitudeScale>
-      <YAmplitudeScale>0.04273431</YAmplitudeScale>
-      <ZAmplitudeScale>0.161895186</ZAmplitudeScale>
-      <RunMultiplier>1.72304142</RunMultiplier>
+      <BlendTime>0.15</BlendTime>
+      <ShootBlend>0.15</ShootBlend>
+      <XAmplitudeOffset>0</XAmplitudeOffset>
+      <YAmplitudeOffset>0</YAmplitudeOffset>
+      <ZAmplitudeOffset>0</ZAmplitudeOffset>
+      <XAmplitudeScale>0.300995946</XAmplitudeScale>
+      <YAmplitudeScale>0.5022766</YAmplitudeScale>
+      <ZAmplitudeScale>0</ZAmplitudeScale>
+      <RunMultiplier>2.47470331</RunMultiplier>
       <AmplitudeMultiplier3rd>1</AmplitudeMultiplier3rd>
       <SimulateLeftHand>false</SimulateLeftHand>
       <SimulateLeftHandFps xsi:nil="true" />
       <SimulateRightHandFps xsi:nil="true" />
-      <FingersAnimation>UseCubePlacerFingers</FingersAnimation>
+      <FingersAnimation>HoldingTool</FingersAnimation>
       <MuzzlePosition>
         <X>0</X>
         <Y>0</Y>

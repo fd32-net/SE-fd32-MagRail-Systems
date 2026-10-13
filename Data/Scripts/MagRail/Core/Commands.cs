@@ -9,6 +9,7 @@ namespace MagRail
     // Chat command /magrail: counts of track blocks, spans and track pieces, and the mod's time per tick.
     // /magrail debug, /magrail cursor [speed | off]: track checks, see TrackDebug.
     // /magrail log, /magrail mark <text>: the ride log, see RideLog.
+    // /magrail hud [compare | <text>]: TEMPORARY, checks the HUD windows, see HudTest.
     // /magrail skin: TEMPORARY probe - the player's build skin (P menu) as the game saves it, and how long that takes.
     public static class Commands
     {
@@ -39,6 +40,11 @@ namespace MagRail
             if (command == "skin")
             {
                 ProbeSkin();
+                return;
+            }
+            if (command == "hud")
+            {
+                HudTest.Command(text);
                 return;
             }
             if (command == "cursor")

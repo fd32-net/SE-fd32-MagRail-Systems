@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Sandbox.Game;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Input;
 using VRage.ModAPI;
+using VRage.Utils;
 using VRageMath;
 
 namespace MagRail
@@ -20,6 +22,7 @@ namespace MagRail
     public class RailLinker
     {
         public const string Subtype = "MagRail_RailLinker";
+        static readonly MyStringId Icon = MyStringId.GetOrCompute("MagRail_Icon_RailLinker");
         const double AimRange = 40, MarkerRange = 300;
         // End faces far away stay at least this wide on screen: m per m of distance (~15 px across at 1080p).
         const double FaceOnScreen = 0.02;
@@ -31,7 +34,10 @@ namespace MagRail
         static readonly Color LinkedColor = new Color(60, 230, 90);
         static readonly Color AimColor = new Color(255, 230, 70);
 
-        readonly HudLine hint = new HudLine(), info = new HudLine();
+        // The help window (top right, like the welder's): the state line, then the controls.
+        readonly HudPanel panel = new HudPanel();
+        string status;
+        Vector4 statusColor;
         bool held;
         TrackBlockLogic startBlock, aimBlock;
         int startPort = -1, aimPort = -1;
@@ -73,16 +79,6 @@ namespace MagRail
             return tool != null && tool.DefinitionId.HasValue && tool.DefinitionId.Value.SubtypeName == Subtype;
         }
 
-        // The item has the welder model for when it lies on the ground; the hand tool entity uses the
-        // same model: hidden, so the hand stays empty, palm out. Every client, each time it is taken.
-        public static void HideInHand(IMyEntity entity)
-        {
-            MyEntity tool = entity as MyEntity;
-            if (tool != null && tool.DefinitionId.HasValue && tool.DefinitionId.Value.TypeId == typeof(MyObjectBuilder_HandToolBase)
-                && tool.DefinitionId.Value.SubtypeName == Subtype)
-                entity.Visible = false;
-        }
-
         // On foot, through the player's own eyes (not from a cockpit, camera block or spectator).
         static bool LocalHolds()
         {
@@ -100,21 +96,16 @@ namespace MagRail
                 if (!held)
                 {
                     startBlock = null;
-                    hint.Hide();
-                    info.Hide();
+                    status = null;
                 }
             }
             if (!held)
                 return;
             if (startBlock != null && Network.Find(startBlock.Block.EntityId) == null)
                 startBlock = null;
-            hint.Show(Loc.T("MagRail_Linker_Hint"));
             RefreshJoints();
             if (MyAPIGateway.Gui.IsCursorVisible || MyAPIGateway.Gui.ChatEntryVisible)
-            {
-                info.Hide();
                 return;
-            }
 
             Aim();
             if (MyAPIGateway.Input.IsNewLeftMousePressed())
@@ -362,17 +353,17 @@ namespace MagRail
             {
                 string text = Loc.F("MagRail_Linker_From", PortTitle(startBlock, startPort));
                 if (preview != null)
-                    text += " → " + CurveText(preview);
+                    text += ": " + CurveText(preview);
                 if (previewProblem != null)
-                    info.Show(text + " — " + Loc.T(previewProblem), MyFontEnum.Red);
+                    Status(text + " — " + Loc.T(previewProblem), HudPanel.Red);
                 else
-                    info.Show(text, aimBlock != null ? MyFontEnum.Green : MyFontEnum.White);
+                    Status(text, aimBlock != null ? HudPanel.Green : HudPanel.White);
                 return;
             }
             if (aimBlock != null)
             {
                 bool busy = Network.SpanAt(aimBlock, aimPort) != null;
-                info.Show(PortTitle(aimBlock, aimPort) + ": " + Loc.T(busy ? "MagRail_Linker_AimBusy" : "MagRail_Linker_AimFree"));
+                Status(PortTitle(aimBlock, aimPort) + ": " + Loc.T(busy ? "MagRail_Linker_AimBusy" : "MagRail_Linker_AimFree"), HudPanel.White);
                 return;
             }
             // The aimed span may have just been deleted (RMB) or lost its partner.
@@ -381,10 +372,38 @@ namespace MagRail
                 string text = Loc.T(aimSpan.IsRail ? "MagRail_Mode_Rail" : "MagRail_Mode_Prototype") + ", " + CurveText(Network.CurveOf(aimSpan));
                 if (aimSpan.Record.WantRail && aimSpan.Problem != null)
                     text += " — " + Loc.F("MagRail_Linker_RailWaits", Loc.T(aimSpan.Problem));
-                info.Show(text);
+                Status(text, HudPanel.White);
                 return;
             }
-            info.Hide();
+            status = null;
+        }
+
+        void Status(string text, Vector4 color)
+        {
+            status = text;
+            statusColor = color;
+        }
+
+        // The help window, every frame while the tool is in hand (Hud.Begin first).
+        public void DrawHud()
+        {
+            if (!held || !Hud.Visible)
+                return;
+            panel.Title = Loc.T("DisplayName_Item_MagRail_RailLinker");
+            panel.Icon = Icon;
+            panel.Clear();
+            if (status != null)
+                panel.Add(status, statusColor);
+            if (HudTest.Text != null)
+                panel.Add(HudTest.Text, HudPanel.Blue);
+            else
+            {
+                string lmb = Keys.Control(MyControlsSpace.PRIMARY_TOOL_ACTION), rmb = Keys.Control(MyControlsSpace.SECONDARY_TOOL_ACTION),
+                    mmb = Keys.Mouse(MyMouseButtonsEnum.Middle), shift = Keys.Key(MyKeys.Shift), colours = Keys.Control(MyControlsSpace.LANDING_GEAR);
+                for (int i = 1; i <= 5; i++)
+                    panel.Add(Loc.F("MagRail_Linker_Help" + i, lmb, rmb, mmb, shift, colours), HudPanel.Blue);
+            }
+            panel.Draw();
         }
 
         static string CurveText(SpanCurve c)

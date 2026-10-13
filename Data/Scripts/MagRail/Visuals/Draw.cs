@@ -28,12 +28,14 @@ namespace MagRail
 
         // Per frame (Begin): the camera, the see-through pass on or off, 0..1 pulsing about once a second.
         public static Vector3D Camera;
+        public static MatrixD CameraMatrix;
         public static bool SeeThrough;
         public static float Pulse;
 
         public static void Begin(bool linkerHeld)
         {
-            Camera = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
+            CameraMatrix = MyAPIGateway.Session.Camera.WorldMatrix;
+            Camera = CameraMatrix.Translation;
             SeeThrough = linkerHeld;
             Pulse = 0.5f + 0.5f * (float)Math.Sin(MyAPIGateway.Session.ElapsedPlayTime.TotalSeconds * 2 * Math.PI * 1.2);
         }

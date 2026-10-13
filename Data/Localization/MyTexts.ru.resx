@@ -180,8 +180,20 @@
   <data name="Description_Item_MagRail_RailLinker" xml:space="preserve">
     <value>Прокладывает пролёты маглева между блоками пути и переключает их между прототипом и рельсом.</value>
   </data>
-  <data name="MagRail_Linker_Hint" xml:space="preserve">
-    <value>ЛКМ порт → порт: пролёт · ЛКМ по пролёту: прототип/рельс · ПКМ: отмена / поднять конец / удалить пролёт · Shift+ПКМ по порту: удалить пролёты блока · СКМ по пролёту: покрасить (цвет и скин из P)</value>
+  <data name="MagRail_Linker_Help1" xml:space="preserve">
+    <value>{0} по порту, затем {0} по другому порту: проложить пролёт.</value>
+  </data>
+  <data name="MagRail_Linker_Help2" xml:space="preserve">
+    <value>{0} по пролёту: прототип / рельс.</value>
+  </data>
+  <data name="MagRail_Linker_Help3" xml:space="preserve">
+    <value>{1}: отмена. По порту с пролётом: поднять его конец. По пролёту: удалить его.</value>
+  </data>
+  <data name="MagRail_Linker_Help4" xml:space="preserve">
+    <value>{3}+{1} по порту: удалить все пролёты блока.</value>
+  </data>
+  <data name="MagRail_Linker_Help5" xml:space="preserve">
+    <value>{2} по пролёту: покрасить (цвет и скин из {4}).</value>
   </data>
   <data name="MagRail_Linker_From" xml:space="preserve">
     <value>От {0}</value>
@@ -338,6 +350,15 @@
   </data>
   <data name="MagRail_Cmd_Skin" xml:space="preserve">
     <value>Скин постройки: {0}; цвет HSV {1}; прочитан за {2} мс</value>
+  </data>
+  <data name="MagRail_Cmd_HudSample" xml:space="preserve">
+    <value>Окно Rail Linker: пример {0} из {1} (0 = свой текст)</value>
+  </data>
+  <data name="MagRail_Cmd_HudCompareOn" xml:space="preserve">
+    <value>Копия окна инструмента игры: вкл. (возьмите сварщик или болгарку)</value>
+  </data>
+  <data name="MagRail_Cmd_HudCompareOff" xml:space="preserve">
+    <value>Копия окна инструмента игры: выкл.</value>
   </data>
   <data name="MagRail_EngineTerm_Section" xml:space="preserve">
     <value>Двигатель MagRail</value>

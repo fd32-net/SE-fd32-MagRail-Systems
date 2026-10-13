@@ -3,8 +3,8 @@
   <PhysicalItems>
     <!-- Rail Linker hand tool (hand pose in HandItems_MagRail.sbc). Must be a
          ToolItemDefinition: the HandToolBase entity reads its action lists every 10 frames.
-         No actions. The welder model is for the item dropped on the ground; in hand the
-         script hides it (Tools/RailLinker.cs), so the hand stays empty, palm out.
+         No actions. The model (on the ground and in hand) is the vanilla welder's until the
+         Linker has its own.
          Recipe in Blueprints_MagRail.sbc. -->
     <PhysicalItem xsi:type="MyObjectBuilder_ToolItemDefinition">
       <Id>

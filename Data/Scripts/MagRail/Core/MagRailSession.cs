@@ -42,7 +42,6 @@ namespace MagRail
             {
                 linker = new RailLinker();
                 Pieces = new TrackPieces();
-                MyAPIGateway.Entities.OnEntityAdd += RailLinker.HideInHand;
                 MyAPIGateway.Utilities.MessageEntered += Commands.OnMessage;
             }
             Log.Info(Version + " loaded (" + (MyAPIGateway.Session.IsServer ? "server" : "client") + ")");
@@ -53,7 +52,6 @@ namespace MagRail
             Net.Unload();
             if (client)
             {
-                MyAPIGateway.Entities.OnEntityAdd -= RailLinker.HideInHand;
                 MyAPIGateway.Utilities.MessageEntered -= Commands.OnMessage;
             }
             Network.Clear();
@@ -136,6 +134,11 @@ namespace MagRail
                 MagRail.Draw.Begin(linker.Held);
                 SpanLines.DrawAll(Network, Pieces, linker.AimedSpan);
                 linker.DrawFrame();
+                if (Hud.Begin())
+                {
+                    linker.DrawHud();
+                    HudTest.DrawCompare();
+                }
                 TrackDebug.DrawFrame(this);
                 DrawTime.Stop();
             }
