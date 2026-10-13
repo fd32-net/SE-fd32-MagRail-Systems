@@ -3,8 +3,8 @@
   <PhysicalItems>
     <!-- Rail Linker hand tool (hand pose in HandItems_MagRail.sbc). Must be a
          ToolItemDefinition: the HandToolBase entity reads its action lists every 10 frames.
-         No actions. The model (on the ground and in hand) is the vanilla welder's until the
-         Linker has its own.
+         No actions. The model (on the ground and in hand): ModelSource/blocks/RailLinker.py, the vanilla
+         welder's grip with a ruler; the script runs rail end faces along it (LinkerRuler).
          Recipe in Blueprints_MagRail.sbc. -->
     <PhysicalItem xsi:type="MyObjectBuilder_ToolItemDefinition">
       <Id>
@@ -21,7 +21,7 @@
       </Size>
       <Mass>0.1</Mass>
       <Volume>0.1</Volume>
-      <Model>Models\Weapons\Welder.mwm</Model>
+      <Model>Models\Tools\MagRail_RailLinker.mwm</Model>
       <PhysicalMaterial>Metal</PhysicalMaterial>
       <CanPlayerOrder>false</CanPlayerOrder>
       <CanPlayerOffer>false</CanPlayerOffer>

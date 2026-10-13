@@ -134,6 +134,7 @@ namespace MagRail
                 MagRail.Draw.Begin(linker.Held);
                 SpanLines.DrawAll(Network, Pieces, linker.AimedSpan);
                 linker.DrawFrame();
+                LinkerRuler.DrawOthers(MagRail.Draw.Camera, RailLinker.FreeColor);
                 if (Hud.Begin())
                 {
                     linker.DrawHud();

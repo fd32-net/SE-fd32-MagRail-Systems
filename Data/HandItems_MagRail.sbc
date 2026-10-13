@@ -2,9 +2,14 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <HandItems>
     <!-- Rail Linker: the vanilla HandToolBase entity with no tool actions, so LMB/RMB do nothing
-         in the game and the mod script reads them (Tools/RailLinker.cs). For now it holds the welder model
-         (PhysicalItems_MagRail.sbc): hand pose, sway and fingers copied from the vanilla Welder, but
-         positioned from this data (the welder's TransformFromAnim needs the welder's animation). -->
+         in the game and the mod script reads them (Tools/RailLinker.cs). Its model keeps the welder's grip and
+         origin (PhysicalItems_MagRail.sbc): hand pose, sway and fingers copied from the vanilla Welder, and it is
+         held by the welder's animation (TransformFromAnim; Data/AnimationControllers/AC_Astronaut*_MagRail.sbc
+         plays it on the equip event MagRail_RailLinker; ironsight from this data, as the Paint Gun does).
+         While a mouse button is held the character "shoots" (HandToolBase.CanShoot: OK, GetShakeOnAction: true) and
+         the tool blends to ItemShoot* from this data: the welder's push forwards (the vanilla welder uses data for
+         every state), arms following by IK; without the welder's tilt (it points the welder's tip at the crosshair,
+         but tips the ruler down) and without its drop. -->
     <HandItem xsi:type="MyObjectBuilder_HandItemDefinition">
       <Id Type="MyObjectBuilder_HandToolBase" Subtype="MagRail_RailLinker" />
       <LeftHandOrientation>
@@ -52,14 +57,14 @@
         <Z>-0.210783452</Z>
       </ItemWalkingPosition>
       <ItemShootOrientation>
-        <X>-0.119511753</X>
+        <X>0</X>
         <Y>0</Y>
         <Z>0</Z>
-        <W>0.9928328</W>
+        <W>1</W>
       </ItemShootOrientation>
       <ItemShootPosition>
         <X>0.100000024</X>
-        <Y>-0.233399391</Y>
+        <Y>-0.18</Y>
         <Z>-0.338593721</Z>
       </ItemShootPosition>
       <ItemIronsightOrientation>
@@ -96,10 +101,10 @@
         <Z>-0.102630876</Z>
       </ItemWalkingPosition3rd>
       <ItemShootOrientation3rd>
-        <X>-0.180763185</X>
+        <X>0</X>
         <Y>0</Y>
         <Z>0</Z>
-        <W>0.983526647</W>
+        <W>1</W>
       </ItemShootOrientation3rd>
       <ItemShootPosition3rd>
         <X>0.100000024</X>
@@ -148,14 +153,14 @@
       <ShakeAmountNoTarget>0</ShakeAmountNoTarget>
       <ToolSounds />
       <ToolMaterial>Grinder</ToolMaterial>
-      <ItemPositioning>TransformFromData</ItemPositioning>
-      <ItemPositioning3rd>TransformFromData</ItemPositioning3rd>
-      <ItemPositioningWalk>TransformFromData</ItemPositioningWalk>
-      <ItemPositioningWalk3rd>TransformFromData</ItemPositioningWalk3rd>
+      <ItemPositioning>TransformFromAnim</ItemPositioning>
+      <ItemPositioning3rd>TransformFromAnim</ItemPositioning3rd>
+      <ItemPositioningWalk>TransformFromAnim</ItemPositioningWalk>
+      <ItemPositioningWalk3rd>TransformFromAnim</ItemPositioningWalk3rd>
       <ItemPositioningShoot>TransformFromData</ItemPositioningShoot>
       <ItemPositioningShoot3rd>TransformFromData</ItemPositioningShoot3rd>
       <ItemPositioningIronsight>TransformFromData</ItemPositioningIronsight>
-      <ItemPositioningIronsight3rd>TransformFromData</ItemPositioningIronsight3rd>
+      <ItemPositioningIronsight3rd>TransformFromAnim</ItemPositioningIronsight3rd>
     </HandItem>
   </HandItems>
 </Definitions>

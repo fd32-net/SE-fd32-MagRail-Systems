@@ -30,7 +30,7 @@ namespace MagRail
         // camera, facing the start port (the curve does not swing when the player turns).
         const double FreeEndDistance = 7;
 
-        static readonly Color FreeColor = new Color(70, 165, 255);
+        public static readonly Color FreeColor = new Color(70, 165, 255);
         static readonly Color LinkedColor = new Color(60, 230, 90);
         static readonly Color AimColor = new Color(255, 230, 70);
 
@@ -450,6 +450,17 @@ namespace MagRail
             }
             if (preview != null)
                 SpanLines.DrawCurve(preview, MatrixD.Identity, startBlock.Style, LineStyle.Preview);
+            IMyCharacter character = MyAPIGateway.Session.ControlledObject as IMyCharacter;
+            if (character != null)
+                LinkerRuler.Draw(character.EquippedTool, RulerColor());
+        }
+
+        // The running faces and glow of the tool, coloured like its state.
+        Color RulerColor()
+        {
+            if (startBlock != null)
+                return previewProblem != null ? MagRail.Draw.Red : aimBlock != null ? LinkedColor : AimColor;
+            return aimBlock != null || aimSpan != null ? AimColor : FreeColor;
         }
 
         // 0 = none, 1 = start of the span being laid, 2 = aimed.
