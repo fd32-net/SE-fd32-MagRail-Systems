@@ -140,7 +140,7 @@ namespace MagRail
                     continue;
                 for (int i = 0; i < b.PortCount; i++)
                 {
-                    double score = AimScore(b.PortWorld(i).Translation, origin, dir, 0.3);
+                    double score = AimScore(b.PortAim(i), origin, dir, 0.3);
                     if (score < best)
                     {
                         best = score;
@@ -351,7 +351,13 @@ namespace MagRail
                 {
                     bool aimed = (b == aimBlock && i == aimPort) || (b == startBlock && i == startPort);
                     Color color = aimed ? AimColor : Network.SpanAt(b, i) != null ? LinkedColor : FreeColor;
-                    DrawPort(b.PortWorld(i), color, aimed);
+                    // A switch branch aimed at beside its point: the marker there, a thin line to the point.
+                    MatrixD port = b.PortWorld(i);
+                    Vector3D aim = b.PortAim(i);
+                    if (Vector3D.DistanceSquared(aim, port.Translation) > 1e-4)
+                        MagRail.Draw.Line(port.Translation, aim, color, 0.03f);
+                    port.Translation = aim;
+                    DrawPort(port, color, aimed);
                 }
             }
             if (preview != null)

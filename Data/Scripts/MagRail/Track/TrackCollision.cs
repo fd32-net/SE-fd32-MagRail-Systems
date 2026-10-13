@@ -56,7 +56,7 @@ namespace MagRail
                     {
                         if (d < EnterRange && budget > 0)
                         {
-                            p.Entities[j] = PieceEntities.Collision(layout.Collision[j], p.Frame);
+                            p.Entities[j] = PieceEntities.Collision(layout.CollisionModel, layout.Collision[j], p.Frame);
                             budget--;
                         }
                     }

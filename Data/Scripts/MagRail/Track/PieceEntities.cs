@@ -22,9 +22,15 @@ namespace MagRail
         // (a number: a mod may not name MyPhysics).
         public const int StaticLayer = 13;
 
-        // Glow strips of the rail (material "Emissive" of the piece models and the blocks' straight rail parts,
-        // ModelSource/rail_profile.py).
-        public static readonly Color GlowColor = new Color(40, 190, 255);
+        // The rail's copper strip (material "Emissive" of the piece models and the blocks' rail parts,
+        // ModelSource/rail_profile.py): its colour and glow.
+        public static readonly Color CopperColor = new Color(184, 115, 51);
+        const float CopperEmissivity = 1f;
+
+        public static void LightCopper(MyEntity e)
+        {
+            e.SetEmissiveParts("Emissive", CopperColor, CopperEmissivity);
+        }
 
         static string modelFolder;
 
@@ -37,11 +43,6 @@ namespace MagRail
         public static string Model(string name)
         {
             return modelFolder + name + ".mwm";
-        }
-
-        public static string CollisionModel
-        {
-            get { return Model(TrackLayout.StraightModel((int)Math.Round(TrackLayout.CollisionLength / TrackLayout.Module))); }
         }
 
         // The span's pieces are children of this grid (null: world entities).
@@ -61,15 +62,15 @@ namespace MagRail
             Paint(e, color, skin, false);
             Place(e, m, frame, parent);
             // After Place: the render object exists once the entity is in the scene.
-            e.SetEmissiveParts("Emissive", GlowColor, 1f);
+            LightCopper(e);
             return e;
         }
 
-        // Collision only (no render model), a static body in the world.
-        public static MyEntity Collision(MatrixD m, MatrixD frame)
+        // Collision only (no render model), a static body in the world; model: name (TrackLayout.CollisionModel).
+        public static MyEntity Collision(string model, MatrixD m, MatrixD frame)
         {
             MyEntity e = new MyEntity();
-            e.Init(null, null, null, null, CollisionModel);
+            e.Init(null, null, null, null, Model(model));
             Place(e, m, frame, null);
             e.InitModelPhysics(RigidBodyFlag.RBF_STATIC, StaticLayer);
             return e;

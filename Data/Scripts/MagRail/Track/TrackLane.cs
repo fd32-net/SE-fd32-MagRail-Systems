@@ -1,7 +1,7 @@
 namespace MagRail
 {
     // The rail inside a track block from one of its ports to another: straight on a rail block, from the
-    // switch entry to each branch (straight to C, arcs to L/R). Built from the port dummies in the block's
+    // switch entry to each branch (all straight: the branches share one point). Built from the port dummies in the block's
     // coordinates, so it moves with the block; the curve follows the rail part (height, head).
     public class TrackLane
     {

@@ -4,68 +4,65 @@ using VRageMath;
 
 namespace MagRail
 {
-    // How a span in rail mode is laid from track piece models (ModelSource/blocks/TrackPieces.py, TrackBends.py).
-    // The rail is a row of 0.625 m modules (the span length rounded to whole modules, all stretched alike), so
-    // the copper plates and textures of the models run on across the joints. Its centre line is a polyline
-    // through the curve: vertices in the middles of modules, legs as long as the curve allows. Every vertex
-    // module is a bend model that turns the rail from one leg to the next (also from the port's direction into
-    // the first leg and out of the last), the modules between are straight pieces. So the rail has no kinks
-    // beyond the bends' rounding (a quarter step); where a vertex is too steep for a bend (tight curves, fast
-    // twist), a joint with pyramid ends shows a chamfer instead. For collision, a run of unscaled 2.5 m pieces.
+    // How a span in rail mode is laid from track piece models (ModelSource/blocks/TrackPieces.py, TrackBends.py,
+    // WideTrack.py). The rail is a row of 0.625 m modules (the span length rounded to whole modules, all stretched
+    // alike), so the copper plates and textures of the models run on across the joints. Every module lies on its chord
+    // of the curve. On a curve every module is a bend model that turns the rail by its share of the curve, by yaw,
+    // pitch or roll (the up twisting about the rail) only, in whole steps: what a module rounds away, or the axes that
+    // wait, are carried on to the next module, so the rail follows the curve to a fraction of a step without models for
+    // every mix of the three. Straight modules in a row become longer straight pieces where the curve is straight and
+    // untwisted enough. Where a module would turn more than a bend model can (radius under about 12 m, a half roll in
+    // under about 40 m), a joint with pyramid ends shows a chamfer instead. For collision, a run of unscaled 2.5 m
+    // pieces.
     // Matrices are in the span's frame (see SpanCurve): origin = rail point in the middle of the piece's chord,
-    // Forward along the chord, Up.
+    // Forward along the chord, Up. A FanLevel shifts the drawn pieces (not the collision) near a Rail Switch 1; where
+    // the span still overlaps another branch there, its modules are laid one by one with a continuous copper strip
+    // instead of plates (TrackStyle: strip models), as the other branch's are.
     public class TrackLayout
     {
         public const double Module = 0.625;
         public const double CollisionLength = 2.5;
-        // Straight pieces, in modules (model MagRail_Track_<mm>); a straight run takes the longest first.
+        // Straight pieces, in modules; a straight run takes the longest that fits first.
         static readonly int[] StraightModules = { 64, 32, 16, 8, 4, 2, 1 };
-        // Bend models turn by yaw and pitch in steps of BendStep, at most BendSteps each (TrackBends.py).
+        // Bend models turn by yaw, pitch or roll in steps of BendStep, at most BendSteps (TrackBends.py, WideTrack.py)
+        // per module: MaxBend (radius about 12 m), MaxTwist (half a roll in about 40 m); prototype colours (Draw).
         const int BendSteps = 6;
         static readonly double BendStep = MathHelper.ToRadians(0.5);
-        // A leg stays this close to the curve (sag L^2 / 8R), m.
-        const double SagTolerance = 0.04;
-        // Over one leg the curve turns at most as much as a bend can take (the bend at a vertex is about half
-        // of each neighbouring leg's turn); tighter than about 12 m radius even one module turns more. Twist (the
-        // up turning about the rail) has no bend models: it stays small enough to see no step at a joint.
         public static readonly double MaxBend = BendSteps * BendStep;
-        public static readonly double MaxTwist = MathHelper.ToRadians(1);
-        // Where a vertex turns more than a bend model can take, or the up twists more than this between the
-        // neighbouring legs, a joint (MagRail_Track_Joint) takes the bend's place: its pyramid ends turn the
-        // kink into a chamfer.
-        static readonly double JointTwist = MathHelper.ToRadians(2.5);
-        const string JointModel = "MagRail_Track_Joint";
-        static readonly double MaxTurnCos = Math.Cos(MaxBend);
+        public static readonly double MaxTwist = BendSteps * BendStep;
+        // Straight modules join into one piece while the curve points between them stay this close to its chord, m,
+        // and its ends' ups within half a step.
+        const double StraightTolerance = 0.003;
 
         public readonly SpanCurve Curve;
+        public readonly TrackStyle Style;
+        readonly FanLevel level;
         public readonly List<string> Models = new List<string>();       // model names
         public readonly List<MatrixD> Pieces = new List<MatrixD>();     // stretched along Forward
         public readonly List<MatrixD> Collision = new List<MatrixD>();
 
-        TrackLayout(SpanCurve curve)
+        TrackLayout(SpanCurve curve, TrackStyle style, FanLevel level)
         {
             Curve = curve;
+            Style = style;
+            this.level = level;
         }
 
-        public static string StraightModel(int modules)
+        // Unscaled piece of CollisionLength, its collision used for the Collision matrices.
+        public string CollisionModel
         {
-            return "MagRail_Track_" + (modules * 625);
+            get { return Style.Straight((int)Math.Round(CollisionLength / Module)); }
         }
 
-        static string BendModel(int yaw, int pitch)
+        public static TrackLayout Build(SpanCurve c, TrackStyle style, FanLevel level)
         {
-            return "MagRail_Bend_Y" + yaw + "_P" + (pitch < 0 ? "m" : "") + Math.Abs(pitch);
-        }
-
-        public static TrackLayout Build(SpanCurve c)
-        {
-            TrackLayout layout = new TrackLayout(c);
+            TrackLayout layout = new TrackLayout(c, style, level);
             double length = c.Length;
             int n = Math.Max(1, (int)Math.Round(length / Module));
             double m = length / n;      // stretched module
 
             if (n == 1)
-                layout.Add(StraightModel(1), Chord(c.PosAt(0), c.PosAt(length), c.UpAt(0) + c.UpAt(length), m));
+                layout.Add(style.Straight(1, layout.Strip(0, length)), Chord(layout.Drawn(0), layout.Drawn(length), c.UpAt(0) + c.UpAt(length), Module));
             else
                 layout.Rail(n, m);
 
@@ -81,118 +78,146 @@ namespace MagRail
         void Rail(int n, double m)
         {
             SpanCurve c = Curve;
-            int samples = c.Pos.Count;
-            double[] allowed = new double[samples];
-            for (int i = 0; i < samples; i++)
-                allowed[i] = c.Curvature[i] > 1e-9 ? Math.Sqrt(8 * SagTolerance / c.Curvature[i]) : double.PositiveInfinity;
-
-            // Vertices at module middles (in modules): the first and last module are bends too, so the rail
-            // leaves and enters the ports along their direction. Longest leg that fits (binary search).
-            List<double> at = new List<double> { 0.5 };
-            double last = n - 0.5;
-            while (at[at.Count - 1] < last)
+            // Module ends: the first and last are the ports, so the rail leaves and enters them along their direction.
+            Vector3D[] pos = new Vector3D[n + 1], tan = new Vector3D[n + 1], up = new Vector3D[n + 1];
+            for (int k = 0; k <= n; k++)
             {
-                double p = at[at.Count - 1];
-                int lo = 1, hi = (int)Math.Round(last - p);
-                while (lo < hi)
-                {
-                    int mid = (lo + hi + 1) / 2;
-                    if (Fits(c, allowed, p * m, (p + mid) * m))
-                        lo = mid;
-                    else
-                        hi = mid - 1;
-                }
-                at.Add(p + lo);
+                double s = k == n ? c.Length : k * m;
+                pos[k] = Drawn(s);
+                tan[k] = c.TanAt(s);
+                up[k] = c.UpAt(s);
             }
 
-            // The end vertices lie on the ports' lines, half a module in; the others on the curve.
-            int v = at.Count;
-            Vector3D[] pos = new Vector3D[v];
-            for (int i = 0; i < v; i++)
-                pos[i] = c.PosAt(at[i] * m);
-            Vector3D startTan = c.TanAt(0), endTan = c.TanAt(c.Length);
-            pos[0] = c.PosAt(0) + startTan * (m / 2);
-            pos[v - 1] = c.PosAt(c.Length) - endTan * (m / 2);
-
-            // Legs: direction and up (mean of the curve's ups at its ends).
-            Vector3D[] dir = new Vector3D[v - 1], up = new Vector3D[v - 1];
-            for (int i = 0; i < v - 1; i++)
+            // Per module: bend steps on one axis (yaw, pitch, roll), or a joint; copper strip or plates.
+            int[][] steps = { new int[n], new int[n], new int[n] };
+            bool[] joint = new bool[n], strip = new bool[n];
+            for (int k = 0; k < n; k++)
+                strip[k] = Strip(k * m, k == n - 1 ? c.Length : (k + 1) * m);
+            double[] carry = new double[3], want = new double[3];
+            int[] rounded = new int[3];
+            for (int k = 0; k < n; k++)
             {
-                dir[i] = Vector3D.Normalize(pos[i + 1] - pos[i]);
-                up[i] = c.UpAt(at[i] * m) + c.UpAt(at[i + 1] * m);
-            }
-
-            for (int i = 0; i < v; i++)
-            {
-                Vector3D din = i == 0 ? startTan : dir[i - 1];
-                Vector3D dout = i == v - 1 ? endTan : dir[i];
-                Vector3D bendUp = (i == 0 ? c.UpAt(0) * 2 : up[i - 1]) + (i == v - 1 ? c.UpAt(c.Length) * 2 : up[i]);
-                // Twist between the pieces on both sides: the legs' halves (a port side counts as nothing).
-                double twist = c.TwistRate * m * ((i > 0 ? at[i] - at[i - 1] : 0) + (i < v - 1 ? at[i + 1] - at[i] : 0)) / 2;
-                AddBend(pos[i] - din * (m / 2), pos[i] + dout * (m / 2), din, dout, bendUp, twist);
-                if (i == v - 1)
-                    break;
-                // Straight run between this vertex's bend and the next one's.
-                int modules = (int)Math.Round(at[i + 1] - at[i]) - 1;
-                Vector3D a = pos[i] + dir[i] * (m / 2);
-                while (modules > 0)
+                MatrixD f = Chord(pos[k], pos[k + 1], up[k] + up[k + 1], 0);
+                want[0] = Turn(tan[k], tan[k + 1], f.Right) / BendStep + carry[0];
+                want[1] = Turn(tan[k], tan[k + 1], f.Up) / BendStep + carry[1];
+                want[2] = Turn(up[k], up[k + 1], f.Right) / BendStep + carry[2];
+                int axis = -1;
+                for (int a = 0; a < 3; a++)
                 {
-                    int take = 1;
-                    for (int j = 0; j < StraightModules.Length; j++)
-                        if (StraightModules[j] <= modules)
-                        {
-                            take = StraightModules[j];
-                            break;
-                        }
-                    Vector3D b = a + dir[i] * (take * m);
-                    Add(StraightModel(take), Chord(a, b, up[i], take * Module));
-                    a = b;
-                    modules -= take;
+                    rounded[a] = (int)Math.Round(want[a]);
+                    if (rounded[a] != 0 && (axis < 0 || Math.Abs(want[a]) > Math.Abs(want[axis])))
+                        axis = a;
                 }
+                if (Math.Abs(rounded[0]) > BendSteps || Math.Abs(rounded[1]) > BendSteps || Math.Abs(rounded[2]) > BendSteps)
+                {
+                    joint[k] = true;
+                    carry[0] = carry[1] = carry[2] = 0;
+                    continue;
+                }
+                // The axis that asks most turns; the others wait. At most a step carried: where several axes keep
+                // asking at once, the rail lags a little instead of piling up a turn.
+                for (int a = 0; a < 3; a++)
+                {
+                    int take = a == axis ? rounded[a] : 0;
+                    steps[a][k] = take;
+                    carry[a] = MathHelper.Clamp(want[a] - take, -1, 1);
+                }
+            }
+            int[] yaw = steps[0], pitch = steps[1], roll = steps[2];
+
+            int i = 0;
+            while (i < n)
+            {
+                if (joint[i])
+                {
+                    Add(Style.Joint, Chord(pos[i], pos[i + 1], up[i] + up[i + 1], Module));
+                    i++;
+                    continue;
+                }
+                if (yaw[i] != 0 || pitch[i] != 0 || roll[i] != 0)
+                {
+                    AddBend(i, pos, up, yaw[i], pitch[i], roll[i], strip[i]);
+                    i++;
+                    continue;
+                }
+                int left = 1;
+                while (!strip[i] && i + left < n && !joint[i + left] && !strip[i + left]
+                       && yaw[i + left] == 0 && pitch[i + left] == 0 && roll[i + left] == 0)
+                    left++;
+                int take = StraightTake(i, left, pos, up);
+                Add(Style.Straight(take, strip[i]), Chord(pos[i], pos[i + take], up[i] + up[i + take], take * Module));
+                i += take;
             }
         }
 
-        // Bend module from p0 (direction din) to p1 (direction dout): placed by its chord, the nearest bend model
-        // (a left bend is the right bend model turned around its up), or a joint where the kink is too steep.
-        void AddBend(Vector3D p0, Vector3D p1, Vector3D din, Vector3D dout, Vector3D up, double twist)
+        // The module from s0 to s1 has a copper strip (the span overlaps another branch of a Rail Switch 1 there).
+        bool Strip(double s0, double s1)
         {
-            MatrixD m = Chord(p0, p1, up, Module);
-            Vector3D right = m.Right, u = m.Up;
-            double yaw = Math.Asin(MathHelper.Clamp(Vector3D.Dot(dout, right), -1, 1)) - Math.Asin(MathHelper.Clamp(Vector3D.Dot(din, right), -1, 1));
-            double pitch = Math.Asin(MathHelper.Clamp(Vector3D.Dot(dout, u), -1, 1)) - Math.Asin(MathHelper.Clamp(Vector3D.Dot(din, u), -1, 1));
-            int ys = (int)Math.Round(yaw / BendStep), ps = (int)Math.Round(pitch / BendStep);
-            if (Math.Abs(ys) > BendSteps || Math.Abs(ps) > BendSteps || twist > JointTwist)
+            return level != null && level.Overlaps(s0, s1);
+        }
+
+        // Where the drawn rail runs at arc length s.
+        Vector3D Drawn(double s)
+        {
+            Vector3D p = Curve.PosAt(s);
+            return level != null ? p + level.Offset(s) : p;
+        }
+
+        // Longest straight piece from module i (at most `left` modules) that the curve is straight and untwisted
+        // enough for.
+        static int StraightTake(int i, int left, Vector3D[] pos, Vector3D[] up)
+        {
+            for (int j = 0; j < StraightModules.Length; j++)
             {
-                Add(JointModel, m);
-                return;
+                int take = StraightModules[j];
+                if (take <= left && (take == 1 || IsStraight(pos, up, i, i + take)))
+                    return take;
             }
-            if (ys == 0 && ps == 0)
+            return 1;
+        }
+
+        static bool IsStraight(Vector3D[] pos, Vector3D[] up, int a, int b)
+        {
+            Vector3D d = pos[b] - pos[a];
+            double length = d.Length();
+            if (length < 1e-6)
+                return true;
+            d /= length;
+            Vector3D right = Vector3D.Cross(d, up[a] + up[b]);
+            if (right.LengthSquared() > 1e-12 && Math.Abs(Turn(up[a], up[b], Vector3D.Normalize(right))) > BendStep / 2)
+                return false;
+            for (int k = a + 1; k < b; k++)
             {
-                Add(StraightModel(1), m);
-                return;
+                Vector3D v = pos[k] - pos[a];
+                if ((v - d * Vector3D.Dot(v, d)).LengthSquared() > StraightTolerance * StraightTolerance)
+                    return false;
             }
+            return true;
+        }
+
+        // Bend module k on its chord.
+        void AddBend(int k, Vector3D[] pos, Vector3D[] up, int ys, int ps, int rs, bool strip)
+        {
+            MatrixD m = Chord(pos[k], pos[k + 1], up[k] + up[k + 1], Module);
             if (ys < 0)
             {
                 m.Forward = -m.Forward;
                 m.Right = -m.Right;
+                ys = -ys;
             }
-            Add(BendModel(Math.Abs(ys), ps), m);
+            Add(Style.Bend(ys, ps, rs, strip), m);
+        }
+
+        // How far the direction turns from a to b about the axis square to `side` (towards side), rad.
+        static double Turn(Vector3D a, Vector3D b, Vector3D side)
+        {
+            return Math.Asin(MathHelper.Clamp(Vector3D.Dot(b, side), -1, 1)) - Math.Asin(MathHelper.Clamp(Vector3D.Dot(a, side), -1, 1));
         }
 
         void Add(string model, MatrixD m)
         {
             Models.Add(model);
             Pieces.Add(m);
-        }
-
-        static bool Fits(SpanCurve c, double[] allowed, double s0, double s1)
-        {
-            s1 = Math.Min(s1, c.Length);
-            double length = s1 - s0;
-            for (int i = c.Index(s0), last = Math.Min(c.Index(s1) + 1, c.Pos.Count - 1); i <= last; i++)
-                if (allowed[i] < length)
-                    return false;
-            return Vector3D.Dot(c.TanAt(s0), c.TanAt(s1)) >= MaxTurnCos && c.TwistRate * length <= MaxTwist;
         }
 
         // Piece on the chord p0 -> p1, up made square to it; modelLength > 0 stretches the model to the chord.

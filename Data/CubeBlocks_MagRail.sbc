@@ -41,6 +41,117 @@
       <IsAirTight>false</IsAirTight>
       <Upgrades />
     </Definition>
+    <!-- Wide rail style (ModelSource/blocks/WideTrack.py): connects only to wide rail blocks. -->
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_WideRailBlock1</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_WideRailBlock1</DisplayName>
+      <Description>Description_MagRail_WideRailBlock1</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_WideRailBlock1.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_WideRailBlock1.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="4" />
+        <Component Subtype="Construction" Count="6" />
+        <Component Subtype="MetalGrid" Count="4" />
+      </Components>
+      <CriticalComponent Subtype="MetalGrid" Index="0" />
+      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <Center x="0" y="0" z="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
+      </MountPoints>
+      <BlockPairName>MagRail_WideRailBlock1</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>8</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>10</PCU>
+      <IsAirTight>false</IsAirTight>
+      <Upgrades />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_WideRailBlock5</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_WideRailBlock5</DisplayName>
+      <Description>Description_MagRail_WideRailBlock5</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_WideRailBlock5.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="5" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_WideRailBlock5.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="10" />
+        <Component Subtype="Construction" Count="20" />
+        <Component Subtype="MetalGrid" Count="15" />
+      </Components>
+      <CriticalComponent Subtype="MetalGrid" Index="0" />
+      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <Center x="0" y="0" z="4" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="4" EndX="1" EndY="5" Default="true" />
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
+      </MountPoints>
+      <BlockPairName>MagRail_WideRailBlock5</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>20</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>15</PCU>
+      <IsAirTight>false</IsAirTight>
+      <Upgrades />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_WideFreeRail</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_WideFreeRail</DisplayName>
+      <Description>Description_MagRail_WideFreeRail</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_WideFreeRail.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_WideFreeRail.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="4" />
+        <Component Subtype="Construction" Count="8" />
+        <Component Subtype="MetalGrid" Count="4" />
+        <Component Subtype="Motor" Count="2" />
+        <Component Subtype="Computer" Count="2" />
+      </Components>
+      <CriticalComponent Subtype="Computer" Index="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+      </MountPoints>
+      <BlockPairName>MagRail_WideFreeRail</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>12</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>15</PCU>
+      <IsAirTight>false</IsAirTight>
+      <Upgrades />
+    </Definition>
     <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
       <Id>
         <TypeId>UpgradeModule</TypeId>
@@ -190,163 +301,81 @@
       <IsAirTight>false</IsAirTight>
       <Upgrades />
     </Definition>
+    <!-- Rail Switch 1 / Wide Rail Switch 1 (ModelSource/blocks/Switch1.py): the model of Rail Block 1, one entry and
+         three branch ports in one point at the front end (like the old Maglev junction). -->
     <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
       <Id>
         <TypeId>UpgradeModule</TypeId>
-        <SubtypeId>MagRail_Switch</SubtypeId>
+        <SubtypeId>MagRail_Switch1</SubtypeId>
       </Id>
-      <DisplayName>DisplayName_MagRail_Switch</DisplayName>
-      <Description>Description_MagRail_Switch</Description>
-      <Icon>Textures\Icons\Blocks\MagRail_Switch.dds</Icon>
+      <DisplayName>DisplayName_MagRail_Switch1</DisplayName>
+      <Description>Description_MagRail_Switch1</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_Switch1.dds</Icon>
       <CubeSize>Large</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="1" y="1" z="2" />
+      <Size x="1" y="1" z="1" />
       <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Large\MagRail_Switch.mwm</Model>
+      <Model>Models\Cubes\Large\MagRail_Switch1.mwm</Model>
       <Components>
-        <Component Subtype="SteelPlate" Count="8" />
-        <Component Subtype="Construction" Count="12" />
-        <Component Subtype="MetalGrid" Count="6" />
-        <Component Subtype="Motor" Count="4" />
-        <Component Subtype="Computer" Count="4" />
+        <Component Subtype="SteelPlate" Count="4" />
+        <Component Subtype="Construction" Count="6" />
+        <Component Subtype="MetalGrid" Count="4" />
+        <Component Subtype="Computer" Count="2" />
       </Components>
       <CriticalComponent Subtype="Computer" Index="0" />
-      <!-- Placed by the entry cell (back, Center), bottom mount points on the end cells, mount points on both ends. -->
-      <Center x="0" y="0" z="1" />
+      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <Center x="0" y="0" z="0" />
       <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="1" EndX="1" EndY="2" Default="true" />
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
         <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
         <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
       </MountPoints>
-      <BlockPairName>MagRail_Switch</BlockPairName>
+      <BlockPairName>MagRail_Switch1</BlockPairName>
       <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>16</BuildTimeSeconds>
+      <BuildTimeSeconds>10</BuildTimeSeconds>
       <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
       <DamagedSound>ParticleHeavyMech</DamagedSound>
       <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
       <DestroySound>WepSmallWarheadExpl</DestroySound>
-      <PCU>25</PCU>
+      <PCU>15</PCU>
       <IsAirTight>false</IsAirTight>
       <Upgrades />
     </Definition>
     <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
       <Id>
         <TypeId>UpgradeModule</TypeId>
-        <SubtypeId>MagRail_Switch3</SubtypeId>
+        <SubtypeId>MagRail_WideSwitch1</SubtypeId>
       </Id>
-      <DisplayName>DisplayName_MagRail_Switch3</DisplayName>
-      <Description>Description_MagRail_Switch3</Description>
-      <Icon>Textures\Icons\Blocks\MagRail_Switch3.dds</Icon>
+      <DisplayName>DisplayName_MagRail_WideSwitch1</DisplayName>
+      <Description>Description_MagRail_WideSwitch1</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_WideSwitch1.dds</Icon>
       <CubeSize>Large</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="1" y="1" z="3" />
+      <Size x="1" y="1" z="1" />
       <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Large\MagRail_Switch3.mwm</Model>
+      <Model>Models\Cubes\Large\MagRail_WideSwitch1.mwm</Model>
       <Components>
-        <Component Subtype="SteelPlate" Count="10" />
-        <Component Subtype="Construction" Count="16" />
-        <Component Subtype="MetalGrid" Count="9" />
-        <Component Subtype="Motor" Count="6" />
-        <Component Subtype="Computer" Count="4" />
+        <Component Subtype="SteelPlate" Count="4" />
+        <Component Subtype="Construction" Count="6" />
+        <Component Subtype="MetalGrid" Count="4" />
+        <Component Subtype="Computer" Count="2" />
       </Components>
       <CriticalComponent Subtype="Computer" Index="0" />
-      <!-- Placed by the entry cell (back, Center), bottom mount points on the end cells, mount points on both ends. -->
-      <Center x="0" y="0" z="2" />
+      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <Center x="0" y="0" z="0" />
       <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="2" EndX="1" EndY="3" Default="true" />
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
         <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
         <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
       </MountPoints>
-      <BlockPairName>MagRail_Switch3</BlockPairName>
+      <BlockPairName>MagRail_WideSwitch1</BlockPairName>
       <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>20</BuildTimeSeconds>
+      <BuildTimeSeconds>10</BuildTimeSeconds>
       <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
       <DamagedSound>ParticleHeavyMech</DamagedSound>
       <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
       <DestroySound>WepSmallWarheadExpl</DestroySound>
-      <PCU>30</PCU>
-      <IsAirTight>false</IsAirTight>
-      <Upgrades />
-    </Definition>
-    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
-      <Id>
-        <TypeId>UpgradeModule</TypeId>
-        <SubtypeId>MagRail_Switch5</SubtypeId>
-      </Id>
-      <DisplayName>DisplayName_MagRail_Switch5</DisplayName>
-      <Description>Description_MagRail_Switch5</Description>
-      <Icon>Textures\Icons\Blocks\MagRail_Switch5.dds</Icon>
-      <CubeSize>Large</CubeSize>
-      <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="1" y="1" z="5" />
-      <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Large\MagRail_Switch5.mwm</Model>
-      <Components>
-        <Component Subtype="SteelPlate" Count="12" />
-        <Component Subtype="Construction" Count="24" />
-        <Component Subtype="MetalGrid" Count="15" />
-        <Component Subtype="Motor" Count="8" />
-        <Component Subtype="Computer" Count="4" />
-      </Components>
-      <CriticalComponent Subtype="Computer" Index="0" />
-      <!-- Placed by the entry cell (back, Center), bottom mount points on the end cells, mount points on both ends. -->
-      <Center x="0" y="0" z="4" />
-      <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="4" EndX="1" EndY="5" Default="true" />
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
-      </MountPoints>
-      <BlockPairName>MagRail_Switch5</BlockPairName>
-      <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>26</BuildTimeSeconds>
-      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
-      <DamagedSound>ParticleHeavyMech</DamagedSound>
-      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
-      <DestroySound>WepSmallWarheadExpl</DestroySound>
-      <PCU>35</PCU>
-      <IsAirTight>false</IsAirTight>
-      <Upgrades />
-    </Definition>
-    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
-      <Id>
-        <TypeId>UpgradeModule</TypeId>
-        <SubtypeId>MagRail_Switch7</SubtypeId>
-      </Id>
-      <DisplayName>DisplayName_MagRail_Switch7</DisplayName>
-      <Description>Description_MagRail_Switch7</Description>
-      <Icon>Textures\Icons\Blocks\MagRail_Switch7.dds</Icon>
-      <CubeSize>Large</CubeSize>
-      <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="1" y="1" z="7" />
-      <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Large\MagRail_Switch7.mwm</Model>
-      <Components>
-        <Component Subtype="SteelPlate" Count="14" />
-        <Component Subtype="Construction" Count="32" />
-        <Component Subtype="MetalGrid" Count="21" />
-        <Component Subtype="Motor" Count="10" />
-        <Component Subtype="Computer" Count="4" />
-      </Components>
-      <CriticalComponent Subtype="Computer" Index="0" />
-      <!-- Placed by the entry cell (back, Center), bottom mount points on the end cells, mount points on both ends. -->
-      <Center x="0" y="0" z="6" />
-      <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="6" EndX="1" EndY="7" Default="true" />
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
-      </MountPoints>
-      <BlockPairName>MagRail_Switch7</BlockPairName>
-      <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>32</BuildTimeSeconds>
-      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
-      <DamagedSound>ParticleHeavyMech</DamagedSound>
-      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
-      <DestroySound>WepSmallWarheadExpl</DestroySound>
-      <PCU>40</PCU>
+      <PCU>15</PCU>
       <IsAirTight>false</IsAirTight>
       <Upgrades />
     </Definition>
@@ -642,34 +671,6 @@
       <FlameDamageLengthScale>0</FlameDamageLengthScale>
       <FlameDamage>0</FlameDamage>
       <FlameLengthScale>0</FlameLengthScale>
-    </Definition>
-    <!-- TEMPORARY design study (ModelSource/blocks/RailProfile.py, script RailProfileTest.cs): a 2.5 m piece
-         of the planned rail section to look at in game. Remove when the section goes into the track pieces. -->
-    <Definition>
-      <Id>
-        <TypeId>CubeBlock</TypeId>
-        <SubtypeId>MagRail_RailProfileTest</SubtypeId>
-      </Id>
-      <DisplayName>Rail Profile Test</DisplayName>
-      <Icon>Textures\Icons\Blocks\MagRail_RailBlock1.dds</Icon>
-      <CubeSize>Large</CubeSize>
-      <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="1" y="1" z="1" />
-      <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Large\MagRail_RailProfile.mwm</Model>
-      <Components>
-        <Component Subtype="SteelPlate" Count="2" />
-      </Components>
-      <CriticalComponent Subtype="SteelPlate" Index="0" />
-      <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
-        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
-      </MountPoints>
-      <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>2</BuildTimeSeconds>
-      <PCU>1</PCU>
-      <IsAirTight>false</IsAirTight>
     </Definition>
   </CubeBlocks>
 </Definitions>

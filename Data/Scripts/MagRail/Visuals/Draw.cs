@@ -22,20 +22,18 @@ namespace MagRail
         }
 
         // Prototype colour by how well the track pieces can follow the shape (TrackLayout), per module of
-        // rail: green = smooth; yellow = close to the limit; red = beyond it, the rail shows kinks (bend: the
-        // curve turns more than a bend model can take, radius under ~12 m) or steps (twist: the up turns more
-        // than ~2.5 degrees per module, e.g. a half roll in under ~45 m).
+        // rail: green = smooth; yellow = close to the limit; red = beyond it, joints show chamfers (the curve turns
+        // or twists more than a bend model can take: radius under ~12 m, a half roll in under ~40 m).
         public static readonly Color Green = new Color(60, 230, 90);
         public static readonly Color Yellow = new Color(255, 210, 60);
         public static readonly Color Red = new Color(255, 70, 50);
-        static readonly double YellowTwist = TrackLayout.MaxTwist, RedTwist = MathHelper.ToRadians(2.5);
 
         public static Color ByShape(double curvature, double twistRate)
         {
             double bend = curvature * TrackLayout.Module, twist = twistRate * TrackLayout.Module;
-            if (bend > TrackLayout.MaxBend || twist > RedTwist)
+            if (bend > TrackLayout.MaxBend || twist > TrackLayout.MaxTwist)
                 return Red;
-            return bend > 0.6 * TrackLayout.MaxBend || twist > YellowTwist ? Yellow : Green;
+            return bend > 0.6 * TrackLayout.MaxBend || twist > 0.6 * TrackLayout.MaxTwist ? Yellow : Green;
         }
 
         public static void Notify(string text, string font = MyFontEnum.White, int ms = 2000)

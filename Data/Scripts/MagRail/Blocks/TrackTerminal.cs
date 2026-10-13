@@ -18,7 +18,7 @@ namespace MagRail
     // ranges are chosen to give its step = our step (2.3 m -> 1 cm, 360 and 91 degrees -> 1 degree).
     public static class TrackTerminal
     {
-        const float MinHeight = 0.2f, MaxHeight = 2.5f, HeightStep = 0.01f;
+        const float MaxHeight = 2.5f, HeightStep = 0.01f;
         const float MaxSlope = 45f, MaxBank = 45f;
         // Slider limit for slope and bank: a 90 degree range would give Build Vision 0.1 degree steps.
         const float AngleSliderMargin = 0.5f;
@@ -90,8 +90,8 @@ namespace MagRail
             IMyTerminalControlSlider height = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyUpgradeModule>("MagRail_Height");
             height.Title = Loc.Id("MagRail_Term_Height");
             height.Tooltip = Loc.Id("MagRail_Term_Height_Tip");
-            height.SetLimits(MinHeight, MaxHeight);
-            height.Getter = b => Logic(b) != null && !float.IsNaN(Logic(b).Height) ? Logic(b).Height : MinHeight;
+            height.SetLimits(MinHeight, b => MaxHeight);
+            height.Getter = b => Logic(b) != null && !float.IsNaN(Logic(b).Height) ? Logic(b).Height : MinHeight(b);
             height.Setter = (b, v) => SetHeight(b, v);
             height.Writer = WriteHeight;
             height.Enabled = CanReshape;
@@ -131,13 +131,20 @@ namespace MagRail
             controls.Add(control);
         }
 
+        // Per rail style (TrackStyle.MinHeight).
+        static float MinHeight(IMyTerminalBlock b)
+        {
+            TrackBlockLogic logic = Logic(b);
+            return (logic != null ? logic.Style : TrackStyle.Narrow).MinHeight;
+        }
+
         static void SetHeight(IMyTerminalBlock b, float value)
         {
             TrackBlockLogic logic = Logic(b);
             if (logic == null || float.IsNaN(logic.StandardHeight))
                 return;
             float standard = logic.StandardHeight;
-            float height = Snap(MathHelper.Clamp(value, MinHeight, MaxHeight), HeightStep);
+            float height = Snap(MathHelper.Clamp(value, logic.Style.MinHeight, MaxHeight), HeightStep);
             Change(b, s => s.HeightOffset = Snap(height - standard, HeightStep));
         }
 

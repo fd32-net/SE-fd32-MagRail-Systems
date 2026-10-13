@@ -12,10 +12,18 @@
         <Block Type="UpgradeModule" Subtype="MagRail_RailBlock10" />
         <Block Type="UpgradeModule" Subtype="MagRail_RailBlock20" />
         <Block Type="UpgradeModule" Subtype="MagRail_FreeRail" />
-        <Block Type="UpgradeModule" Subtype="MagRail_Switch" />
-        <Block Type="UpgradeModule" Subtype="MagRail_Switch3" />
-        <Block Type="UpgradeModule" Subtype="MagRail_Switch5" />
-        <Block Type="UpgradeModule" Subtype="MagRail_Switch7" />
+        <Block Type="UpgradeModule" Subtype="MagRail_Switch1" />
+      </Blocks>
+    </BlockVariantGroup>
+    <BlockVariantGroup>
+      <Id Type="MyObjectBuilder_BlockVariantGroup" Subtype="MagRail_WideTrackGroup" />
+      <DisplayName>DisplayName_MagRail_WideTrackGroup</DisplayName>
+      <Description>Description_MagRail_WideTrackGroup</Description>
+      <Blocks>
+        <Block Type="UpgradeModule" Subtype="MagRail_WideRailBlock1" />
+        <Block Type="UpgradeModule" Subtype="MagRail_WideRailBlock5" />
+        <Block Type="UpgradeModule" Subtype="MagRail_WideFreeRail" />
+        <Block Type="UpgradeModule" Subtype="MagRail_WideSwitch1" />
       </Blocks>
     </BlockVariantGroup>
     <BlockVariantGroup>

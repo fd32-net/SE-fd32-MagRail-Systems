@@ -9,11 +9,35 @@
   <data name="Description_MagRail_TrackGroup" xml:space="preserve">
     <value>Blocks that carry the maglev track.</value>
   </data>
+  <data name="DisplayName_MagRail_WideTrackGroup" xml:space="preserve">
+    <value>Wide Track Blocks</value>
+  </data>
+  <data name="Description_MagRail_WideTrackGroup" xml:space="preserve">
+    <value>Blocks of the wide (2 m) maglev track.</value>
+  </data>
   <data name="DisplayName_MagRail_RailBlock1" xml:space="preserve">
     <value>Rail Block 1</value>
   </data>
   <data name="Description_MagRail_RailBlock1" xml:space="preserve">
     <value>Straight rail, 1 block long. Rails placed end to end join by themselves.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideRailBlock1" xml:space="preserve">
+    <value>Wide Rail Block 1</value>
+  </data>
+  <data name="Description_MagRail_WideRailBlock1" xml:space="preserve">
+    <value>Straight wide rail (2 m), 1 block long. Joins only wide rails: rails placed end to end join by themselves, the Rail Linker lays wide spans between them.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideRailBlock5" xml:space="preserve">
+    <value>Wide Rail Block 5</value>
+  </data>
+  <data name="Description_MagRail_WideRailBlock5" xml:space="preserve">
+    <value>Straight wide rail (2 m), 5 blocks long. Joins only wide rails; rails placed end to end join by themselves.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideFreeRail" xml:space="preserve">
+    <value>Wide Free Rail Block</value>
+  </data>
+  <data name="Description_MagRail_WideFreeRail" xml:space="preserve">
+    <value>Wide rail (2 m) with a turning head: any direction, slope and bank. Joins only wide rails.</value>
   </data>
   <data name="DisplayName_MagRail_RailBlock5" xml:space="preserve">
     <value>Rail Block 5</value>
@@ -39,29 +63,17 @@
   <data name="Description_MagRail_FreeRail" xml:space="preserve">
     <value>Rail with a turning head: any direction, slope and bank.</value>
   </data>
-  <data name="DisplayName_MagRail_Switch" xml:space="preserve">
-    <value>Rail Switch 2</value>
+  <data name="DisplayName_MagRail_Switch1" xml:space="preserve">
+    <value>Rail Switch 1</value>
   </data>
-  <data name="Description_MagRail_Switch" xml:space="preserve">
-    <value>One entry, three branches: left, centre, right. 2 blocks long: side branches at 11°, bend radius 20 m (slow).</value>
+  <data name="Description_MagRail_Switch1" xml:space="preserve">
+    <value>One entry, three branches: left, centre, right, all leaving the front end from one point. The branches are the spans laid from it with the Rail Linker (aim beside the end for the left and right one); the switch sends a train into the selected one.</value>
   </data>
-  <data name="DisplayName_MagRail_Switch3" xml:space="preserve">
-    <value>Rail Switch 3</value>
+  <data name="DisplayName_MagRail_WideSwitch1" xml:space="preserve">
+    <value>Wide Rail Switch 1</value>
   </data>
-  <data name="Description_MagRail_Switch3" xml:space="preserve">
-    <value>One entry, three branches: left, centre, right. 3 blocks long: side branches at 7.3°, bend radius 49 m.</value>
-  </data>
-  <data name="DisplayName_MagRail_Switch5" xml:space="preserve">
-    <value>Rail Switch 5</value>
-  </data>
-  <data name="Description_MagRail_Switch5" xml:space="preserve">
-    <value>One entry, three branches: left, centre, right. 5 blocks long: side branches at 4.4°, bend radius 146 m.</value>
-  </data>
-  <data name="DisplayName_MagRail_Switch7" xml:space="preserve">
-    <value>Rail Switch 7</value>
-  </data>
-  <data name="Description_MagRail_Switch7" xml:space="preserve">
-    <value>One entry, three branches: left, centre, right. 7 blocks long: side branches at 3.1°, bend radius 295 m.</value>
+  <data name="Description_MagRail_WideSwitch1" xml:space="preserve">
+    <value>Wide rail switch (2 m), 1 block long. One entry, three branches: left, centre, right, all leaving the front end from one point. The branches are the spans laid from it with the Rail Linker (aim beside the end for the left and right one); the switch sends a train into the selected one.</value>
   </data>
   <data name="DisplayName_MagRail_EngineGroup" xml:space="preserve">
     <value>Hover Engines</value>
@@ -236,6 +248,9 @@
   </data>
   <data name="MagRail_Problem_Damaged" xml:space="preserve">
     <value>a block is damaged</value>
+  </data>
+  <data name="MagRail_Problem_Style" xml:space="preserve">
+    <value>narrow and wide rails do not connect</value>
   </data>
   <data name="MagRail_Port_port_a" xml:space="preserve">
     <value>end A</value>

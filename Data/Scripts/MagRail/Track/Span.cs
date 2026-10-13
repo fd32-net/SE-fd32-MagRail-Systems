@@ -68,6 +68,8 @@ namespace MagRail
         public object CurveGrid;
         // Cache of TrackNetwork.LayoutOf (for the current Curve).
         public TrackLayout Layout;
+        // What the layout's FanLevel was built from (FanLevel.KeyChanged); null = nothing.
+        public List<object> FanKey;
 
         public Span(TrackBlockLogic owner, SpanRecord record)
         {

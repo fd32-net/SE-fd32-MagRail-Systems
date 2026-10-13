@@ -44,6 +44,12 @@ namespace MagRail
             };
         }
 
+        // The rail point and head are where they were (everything but the branch).
+        public bool SamePlace(TrackSettings other)
+        {
+            return HeightOffset == other.HeightOffset && Yaw == other.Yaw && Pitch == other.Pitch && Roll == other.Roll;
+        }
+
         // A requested change on top of the current settings: a locked block (a rail span touches it)
         // keeps its height and head angles.
         public static TrackSettings Merge(TrackSettings current, TrackSettings requested, bool locked)

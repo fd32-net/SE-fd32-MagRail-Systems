@@ -252,6 +252,8 @@ namespace MagRail
         {
             if (!a.Block.IsFunctional || !b.Block.IsFunctional)
                 return "MagRail_Problem_Damaged";
+            if (a.Style != b.Style)
+                return "MagRail_Problem_Style";
             return GridsOrLengthProblem(a, aPort, b, bPort);
         }
 
@@ -272,6 +274,8 @@ namespace MagRail
                 return "MagRail_Problem_SameBlock";
             if (SpanAt(a, aPort) != null || SpanAt(b, bPort) != null)
                 return "MagRail_Problem_PortBusy";
+            if (a.Style != b.Style)
+                return "MagRail_Problem_Style";
             return GridsOrLengthProblem(a, aPort, b, bPort);
         }
 
@@ -282,8 +286,8 @@ namespace MagRail
         static readonly double JointFacingCos = -Math.Cos(MathHelper.ToRadians(15));
         readonly List<TrackIndex.Entry> jointScratch = new List<TrackIndex.Entry>();
 
-        // A fixed block whose port meets this one end to end (on any grid), not computed ahead: found when a
-        // train gets there. A port with a span has no joint.
+        // A fixed block of the same style whose port meets this one end to end (on any grid), not computed ahead:
+        // found when a train gets there. A port with a span has no joint.
         public bool FindJoint(TrackBlockLogic block, int port, out TrackBlockLogic other, out int otherPort)
         {
             other = null;
@@ -297,7 +301,7 @@ namespace MagRail
             for (int i = 0; i < jointScratch.Count; i++)
             {
                 TrackBlockLogic b = jointScratch[i].Block;
-                if (b == null || b == block || !b.Rideable)
+                if (b == null || b == block || !b.Rideable || b.Style != block.Style)
                     continue;
                 for (int q = 0; q < b.PortCount; q++)
                 {
@@ -357,8 +361,9 @@ namespace MagRail
             SpanCurve c = CurveOf(s);
             if (c == null)
                 return null;
-            if (s.Layout == null || s.Layout.Curve != c)
-                s.Layout = TrackLayout.Build(c);
+            bool fanChanged = FanLevel.KeyChanged(this, s);
+            if (s.Layout == null || s.Layout.Curve != c || fanChanged)
+                s.Layout = TrackLayout.Build(c, s.Owner.Style, FanLevel.Build(this, s, c, s.Owner.Style.Width));
             return s.Layout;
         }
 
