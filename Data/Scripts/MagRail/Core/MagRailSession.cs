@@ -136,10 +136,7 @@ namespace MagRail
                 linker.DrawFrame();
                 LinkerDisplay.DrawOthers(MagRail.Draw.Camera);
                 if (Hud.Begin())
-                {
                     linker.DrawHud();
-                    HudTest.DrawCompare();
-                }
                 TrackDebug.DrawFrame(this);
                 DrawTime.Stop();
             }

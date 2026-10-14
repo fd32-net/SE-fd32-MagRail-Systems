@@ -19,9 +19,9 @@ namespace MagRail
     {
         public static readonly MyStringId Blank = MyStringId.GetOrCompute("MagRail_HudBlank");
 
-        // Billboards this far in front of the camera (m; TEMPORARY setting: /magrail hud depth); layers drawn later sit a
-        // little closer (LayerStep of the depth), the screen size stays the same.
-        public static double Depth = 0.1;
+        // Billboards this far in front of the camera (m; further, the hand and voxels cover the window); layers drawn later
+        // sit a little closer (LayerStep of the depth), the screen size stays the same.
+        const double Depth = 0.1;
         const double LayerStep = 0.005;
         // Wider than this is taken for three monitors side by side (the game knows it from its settings; 32:9 is 3.6).
         const float TripleHeadAspect = 3.9f;

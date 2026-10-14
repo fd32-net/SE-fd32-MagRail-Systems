@@ -9,10 +9,7 @@ namespace MagRail
     // Chat command /magrail: counts of track blocks, spans and track pieces, and the mod's time per tick.
     // /magrail debug, /magrail cursor [speed | off]: track checks, see TrackDebug.
     // /magrail log, /magrail mark <text>: the ride log, see RideLog.
-    // /magrail hud [compare | <text>]: TEMPORARY, checks the HUD windows, see HudTest.
     // /magrail skin: TEMPORARY probe - the player's build skin (P menu) as the game saves it, and how long that takes.
-    // /magrail emi <material> <r> <g> <b> <emissivity>: TEMPORARY - lights a material of the held Rail Linker
-    // (LinkerDisplay.Override), for the display tests.
     public static class Commands
     {
         public static void OnMessage(string text, ref bool sendToOthers)
@@ -44,16 +41,6 @@ namespace MagRail
                 ProbeSkin();
                 return;
             }
-            if (command == "hud")
-            {
-                HudTest.Command(text);
-                return;
-            }
-            if (command == "emi")
-            {
-                Emissive(words);
-                return;
-            }
             if (command == "cursor")
             {
                 MyAPIGateway.Utilities.ShowMessage("MagRail", TrackDebug.StartGhost(words.Length > 2 ? words[2].ToLowerInvariant() : ""));
@@ -78,22 +65,6 @@ namespace MagRail
                 session.RideTime.Average.ToString("0.00"), session.RideTime.Worst.ToString("0.00")));
             MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Terrain", TerrainLift.Calls, TerrainLift.Lifted,
                 TerrainLift.TotalMs.ToString("0.0"), TerrainLift.WorstMs.ToString("0.0"), (TerrainLift.Voxels / 1000).ToString()));
-        }
-
-        // /magrail emi <material> <r> <g> <b> <emissivity> (colour 0..255; plain text: a temporary test tool).
-        static void Emissive(string[] words)
-        {
-            int r, g, b;
-            float emissivity;
-            if (words.Length < 7 || !int.TryParse(words[3], out r) || !int.TryParse(words[4], out g)
-                || !int.TryParse(words[5], out b) || !float.TryParse(words[6], System.Globalization.NumberStyles.Float,
-                    System.Globalization.CultureInfo.InvariantCulture, out emissivity))
-            {
-                MyAPIGateway.Utilities.ShowMessage("MagRail", "/magrail emi <material> <r> <g> <b> <emissivity>, e.g. /magrail emi MagRail_Screen 255 230 70 1");
-                return;
-            }
-            LinkerDisplay.Override(words[2], new Color(r, g, b), emissivity);
-            MyAPIGateway.Utilities.ShowMessage("MagRail", string.Format("emi {0}: {1} {2} {3}, {4}", words[2], r, g, b, emissivity));
         }
 
         // How the Rail Linker reads the build skin (RailLinker.BuildSkin), and how long it takes.

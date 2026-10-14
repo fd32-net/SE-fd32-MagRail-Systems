@@ -496,8 +496,6 @@ namespace MagRail
             panel.Add("", HudPanel.White);
             panel.Add(what, whatColor, true);
             panel.Add(detail, detailColor);
-            if (HudTest.Text != null)
-                panel.Add(HudTest.Text, HudPanel.Blue);
             panel.Draw();
         }
 

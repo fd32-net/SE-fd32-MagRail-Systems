@@ -366,15 +366,6 @@
   <data name="MagRail_Cmd_Skin" xml:space="preserve">
     <value>Build skin: {0}; colour HSV {1}; read in {2} ms</value>
   </data>
-  <data name="MagRail_Cmd_HudSample" xml:space="preserve">
-    <value>Rail Linker window: sample {0} of {1} (0 = its own text)</value>
-  </data>
-  <data name="MagRail_Cmd_HudCompareOn" xml:space="preserve">
-    <value>Copy of the game tool window: on (take a welder or grinder)</value>
-  </data>
-  <data name="MagRail_Cmd_HudCompareOff" xml:space="preserve">
-    <value>Copy of the game tool window: off</value>
-  </data>
   <data name="MagRail_EngineTerm_Section" xml:space="preserve">
     <value>MagRail engine</value>
   </data>

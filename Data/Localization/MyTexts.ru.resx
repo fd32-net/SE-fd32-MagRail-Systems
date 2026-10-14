@@ -366,15 +366,6 @@
   <data name="MagRail_Cmd_Skin" xml:space="preserve">
     <value>Скин постройки: {0}; цвет HSV {1}; прочитан за {2} мс</value>
   </data>
-  <data name="MagRail_Cmd_HudSample" xml:space="preserve">
-    <value>Окно Rail Linker: пример {0} из {1} (0 = свой текст)</value>
-  </data>
-  <data name="MagRail_Cmd_HudCompareOn" xml:space="preserve">
-    <value>Копия окна инструмента игры: вкл. (возьмите сварщик или болгарку)</value>
-  </data>
-  <data name="MagRail_Cmd_HudCompareOff" xml:space="preserve">
-    <value>Копия окна инструмента игры: выкл.</value>
-  </data>
   <data name="MagRail_EngineTerm_Section" xml:space="preserve">
     <value>Двигатель MagRail</value>
   </data>

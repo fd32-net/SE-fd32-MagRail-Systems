@@ -144,16 +144,6 @@ namespace MagRail
         static readonly List<IMyPlayer> players = new List<IMyPlayer>();
         static int playersAge = PlayersRefresh;
         static readonly MyGameTimer clock = new MyGameTimer();
-        // TEST: material -> colour and emissivity from /magrail emi.
-        static readonly Dictionary<string, MyTuple<Color, float>> overrides = new Dictionary<string, MyTuple<Color, float>>();
-
-        // TEST: lights `material` of the local player's held tool now and on every relight.
-        public static void Override(string material, Color color, float emissivity)
-        {
-            overrides[material] = MyTuple.Create(color, emissivity);
-            tools.Clear();
-        }
-
         // A click's answer on the local player's screen, in the clicked button's hint's place: a small check (done:
         // laid, picked up, deleted, cancelled, switched, painted) or a small red cross (it cannot be done).
         public static void Flash(Button button, bool done)
@@ -215,9 +205,6 @@ namespace MagRail
                 tool.SetEmissiveParts(ButtonMaterial, button, button == ButtonOff ? 0 : GlowEmissivity);
                 g.Button = button;
                 g.ButtonSet = true;
-                if (relight)
-                    foreach (KeyValuePair<string, MyTuple<Color, float>> o in overrides)
-                        tool.SetEmissiveParts(o.Key, o.Value.Item1, o.Value.Item2);
             }
             bool mine = own && screen != null;
             Want(mine ? screen : empty, mine, mine && now < flashUntil);
