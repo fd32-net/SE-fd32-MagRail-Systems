@@ -6,10 +6,9 @@
          origin (PhysicalItems_MagRail.sbc): hand pose, sway and fingers copied from the vanilla Welder, and it is
          held by the welder's animation (TransformFromAnim; Data/AnimationControllers/AC_Astronaut*_MagRail.sbc
          plays it on the equip event MagRail_RailLinker; ironsight from this data, as the Paint Gun does).
-         While a mouse button is held the character "shoots" (HandToolBase.CanShoot: OK, GetShakeOnAction: true) and
-         the tool blends to ItemShoot* from this data: the welder's push forwards (the vanilla welder uses data for
-         every state), arms following by IK; without the welder's tilt (it points the welder's tip at the crosshair,
-         but tips the ruler down) and without its drop. -->
+         While a mouse button is held the character "shoots" (HandToolBase.CanShoot: OK, GetShakeOnAction: true); the
+         tool stays where the animation holds it (ItemPositioningShoot*: TransformFromAnim, ItemShoot* unused): no push
+         forwards - the display's button lights instead (Tools/LinkerDisplay.cs). -->
     <HandItem xsi:type="MyObjectBuilder_HandItemDefinition">
       <Id Type="MyObjectBuilder_HandToolBase" Subtype="MagRail_RailLinker" />
       <LeftHandOrientation>
@@ -65,7 +64,7 @@
       <ItemShootPosition>
         <X>0.100000024</X>
         <Y>-0.18</Y>
-        <Z>-0.338593721</Z>
+        <Z>-0.267437488</Z>
       </ItemShootPosition>
       <ItemIronsightOrientation>
         <X>0</X>
@@ -109,7 +108,7 @@
       <ItemShootPosition3rd>
         <X>0.100000024</X>
         <Y>-0.18</Y>
-        <Z>-0.318869</Z>
+        <Z>-0.2595476</Z>
       </ItemShootPosition3rd>
       <BlendTime>0.15</BlendTime>
       <ShootBlend>0.15</ShootBlend>
@@ -157,8 +156,8 @@
       <ItemPositioning3rd>TransformFromAnim</ItemPositioning3rd>
       <ItemPositioningWalk>TransformFromAnim</ItemPositioningWalk>
       <ItemPositioningWalk3rd>TransformFromAnim</ItemPositioningWalk3rd>
-      <ItemPositioningShoot>TransformFromData</ItemPositioningShoot>
-      <ItemPositioningShoot3rd>TransformFromData</ItemPositioningShoot3rd>
+      <ItemPositioningShoot>TransformFromAnim</ItemPositioningShoot>
+      <ItemPositioningShoot3rd>TransformFromAnim</ItemPositioningShoot3rd>
       <ItemPositioningIronsight>TransformFromData</ItemPositioningIronsight>
       <ItemPositioningIronsight3rd>TransformFromAnim</ItemPositioningIronsight3rd>
     </HandItem>

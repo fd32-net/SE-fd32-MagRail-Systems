@@ -28,27 +28,34 @@ namespace MagRail
         public const float FillAlpha = 0.2f;    // end faces: the inside under the outline
         static readonly Color Steel = new Color(175, 185, 200);
 
-        public static void DrawAll(TrackNetwork network, TrackPieces pieces, Span aimed)
+        // `aimed` (under the Linker's crosshair) pulses white, `marked` (a click on the aimed port takes it away) pulses
+        // red; a built rail is drawn only then (over its track pieces).
+        public static void DrawAll(TrackNetwork network, TrackPieces pieces, Span aimed, Span marked)
         {
             for (int i = 0; i < network.Spans.Count; i++)
             {
                 Span s = network.Spans[i];
-                if (!s.Bound || (s.IsRail && pieces.Complete(s)))
+                if (!s.Bound || (s.IsRail && pieces.Complete(s) && s != aimed && s != marked))
                     continue;
                 SpanCurve c = network.CurveOf(s);
                 MatrixD frame = TrackNetwork.FrameMatrix(s);
                 if (Vector3D.Distance(Vector3D.Transform(c.Bounds.Center, frame), Draw.Camera) - c.Bounds.Radius > DrawRange)
                     continue;
-                DrawCurve(c, frame, s.Owner.Style, s.IsRail ? LineStyle.Rail : LineStyle.Prototype, s == aimed);
+                DrawCurve(c, frame, s.Owner.Style, s.IsRail ? LineStyle.Rail : LineStyle.Prototype, s == aimed, s == marked);
                 if (s.Record.WantRail && s.Problem != null)
                     DrawCross(c, frame, c.Pos.Count / 2, Draw.Red);
             }
         }
 
-        public static void DrawCurve(SpanCurve c, MatrixD frame, TrackStyle style, LineStyle look, bool aimed = false)
+        public static void DrawCurve(SpanCurve c, MatrixD frame, TrackStyle style, LineStyle look, bool aimed = false,
+            bool marked = false)
         {
             int last = c.Pos.Count - 1;
-            float glow = aimed ? 0.45f * Draw.Pulse : 0;
+            float glow = marked ? 0.3f + 0.6f * Draw.Pulse : aimed ? 0.05f + 0.25f * Draw.Pulse : 0;
+            Color tint = marked ? Draw.Red : Color.White;
+            aimed |= marked;
+            // Aimed or marked: brighter too, pulsing (the colour alone hardly shows on a steel rail).
+            float bright = aimed ? 2 + 2 * Draw.Pulse : 1;
             double halfWidth = style.Width / 2;
             Vector3D a = Vector3D.Transform(c.Pos[0], frame);
             int i = 0;
@@ -58,7 +65,7 @@ namespace MagRail
                 int step = distance < 60 ? 2 : distance < 400 ? 4 : 8;
                 int j = Math.Min(i + step, last);
                 Vector3D b = Vector3D.Transform(c.Pos[j], frame);
-                Color color = ColorOf(c, i, j, look, glow);
+                Color color = ColorOf(c, i, j, look, glow, tint);
 
                 if (distance < DetailRange)
                 {
@@ -71,17 +78,18 @@ namespace MagRail
 
                 float fade = distance < FadeFrom ? 1 : (float)(1 - (1 - FarAlpha) * Math.Min(1, (distance - FadeFrom) / (DrawRange - FadeFrom)));
                 float near = look == LineStyle.Rail ? 0.12f : look == LineStyle.Preview ? 0.09f : 0.07f;
-                Draw.Line(a, b, color * fade, Draw.Width(distance, aimed ? near * 1.4f : near), distance < ThroughRange);
+                Draw.Line(a, b, color * fade, Draw.Width(distance, aimed ? near * 1.4f : near), distance < ThroughRange, bright);
                 a = b;
                 i = j;
             }
-            DrawSections(c, frame, style, look, glow);
+            DrawSections(c, frame, style, look, glow, tint, bright);
         }
 
-        static Color ColorOf(SpanCurve c, int i, int j, LineStyle look, float glow)
+        static Color ColorOf(SpanCurve c, int i, int j, LineStyle look, float glow, Color tint)
         {
+            // A rail is steel; aimed at, it shows its shape like a prototype.
             Color color;
-            if (look == LineStyle.Rail)
+            if (look == LineStyle.Rail && glow <= 0)
                 color = Steel;
             else
             {
@@ -90,13 +98,14 @@ namespace MagRail
                     k = Math.Max(k, c.Curvature[n]);
                 color = Draw.ByShape(k, c.TwistRate);
             }
-            return glow > 0 ? Color.Lerp(color, Color.White, glow) : color;
+            return glow > 0 ? Color.Lerp(color, tint, glow) : color;
         }
 
         // The end face texture (Draw.Face) every SectionModules modules, not on the ends (the ports are there): on the
         // module boundaries of a laid span (TrackLayout: whole modules, all stretched alike); while laying (Preview)
         // as far apart from the start, so they stand still while the free end moves.
-        static void DrawSections(SpanCurve c, MatrixD frame, TrackStyle style, LineStyle look, float glow)
+        static void DrawSections(SpanCurve c, MatrixD frame, TrackStyle style, LineStyle look, float glow, Color tint,
+            float bright)
         {
             int modules = Math.Max(1, (int)Math.Round(c.Length / TrackLayout.Module));
             double step = SectionModules * (look == LineStyle.Preview ? TrackLayout.Module : c.Length / modules);
@@ -110,10 +119,10 @@ namespace MagRail
                 Vector3D tan = c.TanAt(s), up = c.UpAt(s);
                 Vector3D right = Vector3D.TransformNormal(Vector3D.Cross(tan, up), frame);
                 Vector3D upward = Vector3D.TransformNormal(up, frame);
-                Color color = ColorOf(c, i, i + 1, look, glow) * 0.85f;
+                Color color = ColorOf(c, i, i + 1, look, glow, tint) * 0.85f;
                 bool through = distance < SectionThroughRange;
-                Draw.Face(style, -1, true, p, right, upward, color * FillAlpha, 1, through);
-                Draw.Face(style, -1, false, p, right, upward, color, 1, through);
+                Draw.Face(style, -1, true, p, right, upward, color * FillAlpha, 1, through, bright);
+                Draw.Face(style, -1, false, p, right, upward, color, 1, through, bright);
             }
         }
 

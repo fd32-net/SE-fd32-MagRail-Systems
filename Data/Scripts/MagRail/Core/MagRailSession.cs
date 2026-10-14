@@ -132,9 +132,9 @@ namespace MagRail
             {
                 DrawTime.Start();
                 MagRail.Draw.Begin(linker.Held);
-                SpanLines.DrawAll(Network, Pieces, linker.AimedSpan);
+                SpanLines.DrawAll(Network, Pieces, linker.AimedSpan, linker.MarkedSpan);
                 linker.DrawFrame();
-                LinkerRuler.DrawOthers(MagRail.Draw.Camera, RailLinker.FreeColor);
+                LinkerDisplay.DrawOthers(MagRail.Draw.Camera);
                 if (Hud.Begin())
                 {
                     linker.DrawHud();

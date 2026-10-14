@@ -224,11 +224,15 @@ namespace MagRail
                     if (s == null || !RailLinker.IsHolding(player.Character)
                         || (s.Partner != null && !s.Partner.Block.HasPlayerAccess(player.IdentityId)))
                         return;
+                    // A rail is deleted only as a prototype (the Linker switches it first).
                     if (p.Type == PacketType.UnlinkRequest)
-                        network.Unlink(s);
+                    {
+                        if (!s.Record.WantRail)
+                            network.Unlink(s);
+                    }
                     else if (p.Type == PacketType.ModeRequest)
                         network.SetMode(s, p.Flag);
-                    else if (p.Values != null && p.Values.Length == 3)
+                    else if (p.Values != null && p.Values.Length == 3 && s.Record.WantRail)     // prototypes are not painted
                         network.SetPaint(s, new Vector3(p.Values[0], p.Values[1], p.Values[2]), p.Skin ?? "");
                     break;
                 }

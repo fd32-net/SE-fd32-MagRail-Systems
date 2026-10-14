@@ -180,21 +180,6 @@
   <data name="Description_Item_MagRail_RailLinker" xml:space="preserve">
     <value>Прокладывает пролёты маглева между блоками пути и переключает их между прототипом и рельсом.</value>
   </data>
-  <data name="MagRail_Linker_Help1" xml:space="preserve">
-    <value>{0} по порту, затем {0} по другому порту: проложить пролёт.</value>
-  </data>
-  <data name="MagRail_Linker_Help2" xml:space="preserve">
-    <value>{0} по пролёту: прототип / рельс.</value>
-  </data>
-  <data name="MagRail_Linker_Help3" xml:space="preserve">
-    <value>{1}: отмена. По порту с пролётом: поднять его конец. По пролёту: удалить его.</value>
-  </data>
-  <data name="MagRail_Linker_Help4" xml:space="preserve">
-    <value>{3}+{1} по порту: удалить все пролёты блока.</value>
-  </data>
-  <data name="MagRail_Linker_Help5" xml:space="preserve">
-    <value>{2} по пролёту: покрасить (цвет и скин из {4}).</value>
-  </data>
   <data name="MagRail_Linker_From" xml:space="preserve">
     <value>От {0}</value>
   </data>
@@ -205,19 +190,49 @@
     <value>{0} м, прямой</value>
   </data>
   <data name="MagRail_Linker_AimFree" xml:space="preserve">
-    <value>свободен</value>
+    <value>Свободный порт</value>
   </data>
-  <data name="MagRail_Linker_AimBusy" xml:space="preserve">
-    <value>есть пролёт (ПКМ: поднять конец)</value>
+  <data name="MagRail_Linker_AimRail" xml:space="preserve">
+    <value>Рельс: чтобы менять — {0} по пролёту, в прототип</value>
+  </data>
+  <data name="MagRail_Linker_AimNothing" xml:space="preserve">
+    <value>Наведите на порт или пролёт</value>
+  </data>
+  <data name="MagRail_Linker_DoStart" xml:space="preserve">
+    <value>начать пролёт</value>
+  </data>
+  <data name="MagRail_Linker_DoGrab" xml:space="preserve">
+    <value>схватить конец</value>
+  </data>
+  <data name="MagRail_Linker_DoLay" xml:space="preserve">
+    <value>проложить прототип</value>
+  </data>
+  <data name="MagRail_Linker_DoReplace" xml:space="preserve">
+    <value>проложить, заменив прототип</value>
+  </data>
+  <data name="MagRail_Linker_DoCancel" xml:space="preserve">
+    <value>отменить пролёт</value>
+  </data>
+  <data name="MagRail_Linker_DoDelete" xml:space="preserve">
+    <value>удалить прототип</value>
+  </data>
+  <data name="MagRail_Linker_DoToRail" xml:space="preserve">
+    <value>сделать рельсом</value>
+  </data>
+  <data name="MagRail_Linker_DoToPrototype" xml:space="preserve">
+    <value>сделать прототипом</value>
+  </data>
+  <data name="MagRail_Linker_DoPaint" xml:space="preserve">
+    <value>покрасить (цвет и скин: {0})</value>
   </data>
   <data name="MagRail_Linker_Linked" xml:space="preserve">
     <value>Пролёт проложен (прототип)</value>
   </data>
+  <data name="MagRail_Linker_Replaced" xml:space="preserve">
+    <value>Пролёт проложен (прототип), старый прототип убран</value>
+  </data>
   <data name="MagRail_Linker_Started" xml:space="preserve">
     <value>Пролёт от {0}: наведите на второй порт</value>
-  </data>
-  <data name="MagRail_Linker_PortBusy" xml:space="preserve">
-    <value>У порта уже есть пролёт (ПКМ поднимает его конец)</value>
   </data>
   <data name="MagRail_Linker_Cancelled" xml:space="preserve">
     <value>Пролёт отменён</value>
@@ -228,14 +243,14 @@
   <data name="MagRail_Linker_Deleted" xml:space="preserve">
     <value>Пролёт удалён</value>
   </data>
-  <data name="MagRail_Linker_BlockCleared" xml:space="preserve">
-    <value>Пролёты блока удалены</value>
+  <data name="MagRail_Linker_RailFirst" xml:space="preserve">
+    <value>Это рельс: сначала {0} по пролёту — в прототип</value>
   </data>
   <data name="MagRail_Linker_ToRail" xml:space="preserve">
-    <value>Пролёт → рельс</value>
+    <value>Пролёт теперь рельс</value>
   </data>
   <data name="MagRail_Linker_ToPrototype" xml:space="preserve">
-    <value>Пролёт → прототип</value>
+    <value>Пролёт теперь прототип</value>
   </data>
   <data name="MagRail_Linker_RailWaits" xml:space="preserve">
     <value>станет рельсом, когда будет можно: {0}</value>
@@ -249,8 +264,8 @@
   <data name="MagRail_Problem_SameBlock" xml:space="preserve">
     <value>оба порта на одном блоке</value>
   </data>
-  <data name="MagRail_Problem_PortBusy" xml:space="preserve">
-    <value>у порта уже есть пролёт</value>
+  <data name="MagRail_Problem_PortRail" xml:space="preserve">
+    <value>у порта рельс (сначала переведите в прототип)</value>
   </data>
   <data name="MagRail_Problem_Grids" xml:space="preserve">
     <value>блоки должны быть на станциях или на одном гриде</value>

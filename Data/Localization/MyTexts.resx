@@ -180,21 +180,6 @@
   <data name="Description_Item_MagRail_RailLinker" xml:space="preserve">
     <value>Lays maglev spans between track blocks and switches them between prototype and rail.</value>
   </data>
-  <data name="MagRail_Linker_Help1" xml:space="preserve">
-    <value>{0} on a port, then {0} on another port: lay a span.</value>
-  </data>
-  <data name="MagRail_Linker_Help2" xml:space="preserve">
-    <value>{0} on a span: prototype / rail.</value>
-  </data>
-  <data name="MagRail_Linker_Help3" xml:space="preserve">
-    <value>{1}: cancel. On a port with a span: pick up its end. On a span: delete it.</value>
-  </data>
-  <data name="MagRail_Linker_Help4" xml:space="preserve">
-    <value>{3}+{1} on a port: delete all spans of the block.</value>
-  </data>
-  <data name="MagRail_Linker_Help5" xml:space="preserve">
-    <value>{2} on a span: paint it (colour and skin from {4}).</value>
-  </data>
   <data name="MagRail_Linker_From" xml:space="preserve">
     <value>From {0}</value>
   </data>
@@ -205,19 +190,49 @@
     <value>{0} m, straight</value>
   </data>
   <data name="MagRail_Linker_AimFree" xml:space="preserve">
-    <value>free</value>
+    <value>Free port</value>
   </data>
-  <data name="MagRail_Linker_AimBusy" xml:space="preserve">
-    <value>span laid (RMB: pick up the end)</value>
+  <data name="MagRail_Linker_AimRail" xml:space="preserve">
+    <value>Rail: to change it, {0} on the span (to prototype)</value>
+  </data>
+  <data name="MagRail_Linker_AimNothing" xml:space="preserve">
+    <value>Aim at a port or a span</value>
+  </data>
+  <data name="MagRail_Linker_DoStart" xml:space="preserve">
+    <value>start a span</value>
+  </data>
+  <data name="MagRail_Linker_DoGrab" xml:space="preserve">
+    <value>pick up the end</value>
+  </data>
+  <data name="MagRail_Linker_DoLay" xml:space="preserve">
+    <value>lay a prototype</value>
+  </data>
+  <data name="MagRail_Linker_DoReplace" xml:space="preserve">
+    <value>lay, replacing the prototype</value>
+  </data>
+  <data name="MagRail_Linker_DoCancel" xml:space="preserve">
+    <value>cancel the span</value>
+  </data>
+  <data name="MagRail_Linker_DoDelete" xml:space="preserve">
+    <value>delete the prototype</value>
+  </data>
+  <data name="MagRail_Linker_DoToRail" xml:space="preserve">
+    <value>make it a rail</value>
+  </data>
+  <data name="MagRail_Linker_DoToPrototype" xml:space="preserve">
+    <value>make it a prototype</value>
+  </data>
+  <data name="MagRail_Linker_DoPaint" xml:space="preserve">
+    <value>paint (colour and skin: {0})</value>
   </data>
   <data name="MagRail_Linker_Linked" xml:space="preserve">
     <value>Span laid (prototype)</value>
   </data>
+  <data name="MagRail_Linker_Replaced" xml:space="preserve">
+    <value>Span laid (prototype), the old prototype removed</value>
+  </data>
   <data name="MagRail_Linker_Started" xml:space="preserve">
     <value>Span from {0}: aim at the other port</value>
-  </data>
-  <data name="MagRail_Linker_PortBusy" xml:space="preserve">
-    <value>This port already has a span (RMB picks its end up)</value>
   </data>
   <data name="MagRail_Linker_Cancelled" xml:space="preserve">
     <value>Span cancelled</value>
@@ -228,14 +243,14 @@
   <data name="MagRail_Linker_Deleted" xml:space="preserve">
     <value>Span deleted</value>
   </data>
-  <data name="MagRail_Linker_BlockCleared" xml:space="preserve">
-    <value>Spans of the block deleted</value>
+  <data name="MagRail_Linker_RailFirst" xml:space="preserve">
+    <value>This is a rail: {0} on the span switches it to prototype first</value>
   </data>
   <data name="MagRail_Linker_ToRail" xml:space="preserve">
-    <value>Span → rail</value>
+    <value>Span is a rail now</value>
   </data>
   <data name="MagRail_Linker_ToPrototype" xml:space="preserve">
-    <value>Span → prototype</value>
+    <value>Span is a prototype now</value>
   </data>
   <data name="MagRail_Linker_RailWaits" xml:space="preserve">
     <value>rail as soon as possible: {0}</value>
@@ -249,8 +264,8 @@
   <data name="MagRail_Problem_SameBlock" xml:space="preserve">
     <value>both ports are on one block</value>
   </data>
-  <data name="MagRail_Problem_PortBusy" xml:space="preserve">
-    <value>the port already has a span</value>
+  <data name="MagRail_Problem_PortRail" xml:space="preserve">
+    <value>the port has a rail (switch it to prototype first)</value>
   </data>
   <data name="MagRail_Problem_Grids" xml:space="preserve">
     <value>blocks must be on stations or on one grid</value>

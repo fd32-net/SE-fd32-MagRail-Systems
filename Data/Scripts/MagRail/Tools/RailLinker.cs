@@ -14,10 +14,14 @@ namespace MagRail
 {
     // The Rail Linker hand tool (Data/PhysicalItems_, HandItems_, Blueprints_MagRail.sbc): a vanilla
     // HandToolBase without actions, so the game does nothing on LMB/RMB and this class reads them.
-    //   LMB on a port, LMB on another port: lay a span (always a prototype first).
-    //   LMB on a span: prototype <-> rail.
-    //   RMB: cancel; on a port with a span: pick that end up (the span goes, its other end is the new
-    //   start); Shift+RMB on a port: delete all spans of that block; on a span: delete it.
+    // Buttons (PLAN.md 10.16): two implicit modes by what is aimed at. Shape changes only on prototypes; a rail is
+    // switched back to prototype first (LMB on it), then changed or deleted.
+    //   Ports: LMB on a port, LMB on another port: lay a prototype (a prototype on either port is replaced; a port that
+    //   cannot take it flashes red). LMB on a port with a prototype: pick that end up (the span goes, its other end is
+    //   the new start). RMB: cancel; on a port with a prototype: delete it.
+    //   Spans: LMB: prototype <-> rail. RMB on a prototype: delete it. MMB on a rail: paint it.
+    // The tool's display draws what is going on (Screen, LinkerDisplay) and answers clicks with a check or a cross; the
+    // help window (DrawHud) says the same in words, with names, numbers and reasons the display has no room for.
     // Client side; changes go through TrackNetwork requests (the server checks the tool is in hand).
     public class RailLinker
     {
@@ -29,19 +33,29 @@ namespace MagRail
         // While laying with no port aimed, the free end of the preview: this far in front of the
         // camera, facing the start port (the curve does not swing when the player turns).
         const double FreeEndDistance = 7;
+        // The aimed span keeps the aim up to this much further out (AimScore 1 / SpanHold), and wins over a neighbour
+        // as close: no flicker with the crosshair on its edge.
+        const double SpanHold = 0.8;
 
         public static readonly Color FreeColor = new Color(70, 165, 255);
         static readonly Color LinkedColor = new Color(60, 230, 90);
+        static readonly Color RailPortColor = new Color(110, 115, 125);
         static readonly Color AimColor = new Color(255, 230, 70);
+        // A port that cannot take the span being laid flashes red and shakes this long after the click.
+        const double FlashSeconds = 0.5;
 
-        // The help window (top right, like the welder's): the state line, then the controls.
+        // The help window (top right, like the welder's): the mouse buttons, an empty line, then what is aimed at and its
+        // numbers or what is wrong (ShowInfo, DrawHud).
         readonly HudPanel panel = new HudPanel();
-        string status;
-        Vector4 statusColor;
+        string what, detail;
+        Vector4 whatColor, detailColor;
         bool held;
         TrackBlockLogic startBlock, aimBlock;
         int startPort = -1, aimPort = -1;
         Span aimSpan;
+        TrackBlockLogic flashBlock;
+        int flashPort;
+        double flashUntil;
         SpanCurve preview;          // while laying: start port -> aimed port or free end
         string previewProblem;      // why the aimed port cannot take the span (Loc key)
         // What the preview was built for (BuildPreview), and its lift over the ground (TerrainLift.Measure: reads voxels,
@@ -53,6 +67,7 @@ namespace MagRail
         float[] previewLift;
         double previewLiftTime = double.NegativeInfinity;
         bool previewLiftStale;      // the curve moved since its lift was measured
+        readonly LinkerDisplay.Screen screen = new LinkerDisplay.Screen();
 
         // In the local player's hand (overlays see through models: Draw.SeeThrough).
         public bool Held
@@ -64,6 +79,19 @@ namespace MagRail
         public Span AimedSpan
         {
             get { return held ? aimSpan : null; }
+        }
+
+        // The prototype the span being laid would replace (laying, aimed at a port with a prototype): it pulses red
+        // (SpanLines).
+        public Span MarkedSpan
+        {
+            get
+            {
+                if (!held || startBlock == null || aimBlock == null)
+                    return null;
+                Span s = Network.SpanAt(aimBlock, aimPort);
+                return s != null && !s.Record.WantRail ? s : null;
+            }
         }
 
         static TrackNetwork Network
@@ -93,11 +121,9 @@ namespace MagRail
             if (now != held)
             {
                 held = now;
+                panel.Reset();
                 if (!held)
-                {
                     startBlock = null;
-                    status = null;
-                }
             }
             if (!held)
                 return;
@@ -108,10 +134,12 @@ namespace MagRail
                 return;
 
             Aim();
+            VRage.ModAPI.IMyInput input = MyAPIGateway.Input;
+            LinkerDisplay.Press(input.IsLeftMousePressed() || input.IsRightMousePressed() || input.IsMiddleMousePressed());
             if (MyAPIGateway.Input.IsNewLeftMousePressed())
                 Left();
             else if (MyAPIGateway.Input.IsNewRightMousePressed())
-                Right(MyAPIGateway.Input.IsAnyShiftKeyPressed());
+                Right();
             else if (MyAPIGateway.Input.IsNewMiddleMousePressed())
                 Middle();
             BuildPreview(true);
@@ -189,6 +217,7 @@ namespace MagRail
 
         void Aim()
         {
+            Span was = aimSpan;
             aimBlock = null;
             aimPort = -1;
             aimSpan = null;
@@ -201,9 +230,9 @@ namespace MagRail
                     continue;
                 for (int i = 0; i < b.PortCount; i++)
                 {
-                    if (Joined(b, i))
+                    if (!Offered(b, i))
                         continue;
-                    double score = AimScore(b.PortAim(i), origin, dir, 0.3);
+                    double score = PortScore(b, i, origin, dir);
                     if (score < best)
                     {
                         best = score;
@@ -224,9 +253,16 @@ namespace MagRail
                 MatrixD frame = TrackNetwork.FrameMatrix(s);
                 if (Vector3D.Distance(Vector3D.Transform(c.Bounds.Center, frame), origin) - c.Bounds.Radius > AimRange)
                     continue;
+                TrackStyle style = s.Owner.Style;
+                double middle = (style.FaceTop + style.FaceBottom) * 0.5;
+                double tolerance = Math.Max(0.4, (style.FaceTop - style.FaceBottom) * 0.5);
                 for (int n = 0; n < c.Pos.Count; n += 2)
                 {
-                    double score = AimScore(Vector3D.Transform(c.Pos[n], frame), origin, dir, 0.4);
+                    // Across the rail's whole width (a wide rail is caught at its edges too).
+                    Vector3D up = Vector3D.TransformNormal(c.Up[n], frame);
+                    Vector3D side = Vector3D.TransformNormal(Vector3D.Cross(c.Tan[n], c.Up[n]), frame) * style.FaceHalfWidth;
+                    Vector3D centre = Vector3D.Transform(c.Pos[n], frame) + up * middle;
+                    double score = AimScore(centre - side, centre + side, origin, dir, tolerance) * (s == was ? SpanHold : 1);
                     if (score < best)
                     {
                         best = score;
@@ -234,6 +270,29 @@ namespace MagRail
                     }
                 }
             }
+        }
+
+        // The port's whole end face (a switch branch: its third) as drawn: a segment across its width at mid height,
+        // as thick as the face is high.
+        static double PortScore(TrackBlockLogic b, int port, Vector3D origin, Vector3D dir)
+        {
+            TrackStyle style = b.Style;
+            MatrixD m = b.PortWorld(port);
+            double scale = Math.Max(1, Vector3D.Distance(m.Translation, origin) * FaceOnScreen / style.Width);
+            double half = style.FaceHalfWidth * (b.FanRank(port) >= 0 ? 1.0 / 3 : 1) * scale;
+            Vector3D centre = b.PortAim(port) + m.Up * ((style.FaceTop + style.FaceBottom) * 0.5 * scale);
+            double tolerance = Math.Max(0.3, (style.FaceTop - style.FaceBottom) * 0.5 * scale);
+            return AimScore(centre - m.Right * half, centre + m.Right * half, origin, dir, tolerance);
+        }
+
+        // The segment a-b: its point closest to the view ray.
+        static double AimScore(Vector3D a, Vector3D b, Vector3D origin, Vector3D dir, double tolerance)
+        {
+            Vector3D v = b - a, w = origin - a;
+            double bv = Vector3D.Dot(dir, v), c = v.LengthSquared(), d = Vector3D.Dot(dir, w), e = Vector3D.Dot(v, w);
+            double denom = c - bv * bv;
+            double k = denom > 1e-9 ? MathHelper.Clamp((e - bv * d) / denom, 0, 1) : 0;
+            return AimScore(a + v * k, origin, dir, tolerance);
         }
 
         // < 1 when the point is within the aim tolerance of the view ray (grows with distance).
@@ -251,28 +310,47 @@ namespace MagRail
             if (startBlock != null)
             {
                 if (aimBlock == null || (aimBlock == startBlock && aimPort == startPort))
+                {
+                    LinkerDisplay.Flash(LinkerDisplay.Button.Left, false);
                     return;
+                }
                 string problem = Network.LinkProblem(startBlock, startPort, aimBlock, aimPort);
                 if (problem != null)
                 {
+                    flashBlock = aimBlock;
+                    flashPort = aimPort;
+                    flashUntil = Now + FlashSeconds;
                     Draw.Notify(Loc.T(problem), MyFontEnum.Red);
+                    LinkerDisplay.Flash(LinkerDisplay.Button.Left, false);
                     return;
                 }
+                bool replaces = Network.SpanAt(aimBlock, aimPort) != null;
                 Network.RequestLink(startBlock, startPort, aimBlock, aimPort);
                 startBlock = null;
-                Draw.Notify(Loc.T("MagRail_Linker_Linked"), MyFontEnum.Green);
+                Draw.Notify(Loc.T(replaces ? "MagRail_Linker_Replaced" : "MagRail_Linker_Linked"), MyFontEnum.Green);
+                LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);
                 return;
             }
             if (aimBlock != null)
             {
-                if (Network.SpanAt(aimBlock, aimPort) != null)
+                Span span = Network.SpanAt(aimBlock, aimPort);
+                if (span == null)
                 {
-                    Draw.Notify(Loc.T("MagRail_Linker_PortBusy"), MyFontEnum.Red);
-                    return;
+                    startBlock = aimBlock;
+                    startPort = aimPort;
+                    Draw.Notify(Loc.F("MagRail_Linker_Started", PortTitle(startBlock, startPort)), MyFontEnum.Green);
+                    LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);
                 }
-                startBlock = aimBlock;
-                startPort = aimPort;
-                Draw.Notify(Loc.F("MagRail_Linker_Started", PortTitle(startBlock, startPort)), MyFontEnum.Green);
+                else if (span.Record.WantRail)
+                    RailFirst(LinkerDisplay.Button.Left);
+                else
+                {
+                    startBlock = span.Other(aimBlock);
+                    startPort = startBlock == span.Owner ? span.OwnerPort : span.PartnerPort;
+                    Network.RequestUnlink(span);
+                    Draw.Notify(Loc.T("MagRail_Linker_PickedUp"), MyFontEnum.Green);
+                    LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);
+                }
                 return;
             }
             if (aimSpan != null)
@@ -283,55 +361,65 @@ namespace MagRail
                     Draw.Notify(Loc.F("MagRail_Linker_RailWaits", Loc.T(aimSpan.Problem)), MyFontEnum.Red, 3000);
                 else
                     Draw.Notify(Loc.T(rail ? "MagRail_Linker_ToRail" : "MagRail_Linker_ToPrototype"), MyFontEnum.Green);
+                LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);     // switched (a rail that waits shows its cross)
+                return;
             }
+            LinkerDisplay.Flash(LinkerDisplay.Button.Left, false);
         }
 
-        void Right(bool shift)
+        void Right()
         {
             if (startBlock != null)
             {
                 startBlock = null;
                 Draw.Notify(Loc.T("MagRail_Linker_Cancelled"));
+                LinkerDisplay.Flash(LinkerDisplay.Button.Right, true);
                 return;
             }
-            if (aimBlock != null)
-            {
-                if (shift)
-                {
-                    for (int i = 0; i < aimBlock.PortCount; i++)
-                    {
-                        Span s = Network.SpanAt(aimBlock, i);
-                        if (s != null)
-                            Network.RequestUnlink(s);
-                    }
-                    Draw.Notify(Loc.T("MagRail_Linker_BlockCleared"));
-                    return;
-                }
-                Span span = Network.SpanAt(aimBlock, aimPort);
-                if (span == null)
-                    return;
-                startBlock = span.Other(aimBlock);
-                startPort = startBlock == span.Owner ? span.OwnerPort : span.PartnerPort;
-                Network.RequestUnlink(span);
-                Draw.Notify(Loc.T("MagRail_Linker_PickedUp"), MyFontEnum.Green);
-                return;
-            }
-            if (aimSpan != null)
-            {
-                Network.RequestUnlink(aimSpan);
-                Draw.Notify(Loc.T("MagRail_Linker_Deleted"));
-            }
+            Delete(aimBlock != null ? Network.SpanAt(aimBlock, aimPort) : aimSpan);
         }
 
-        // Paint like the vanilla paint: MMB paints the aimed span with the player's colour and skin (picked with P).
+        // A prototype goes; a rail stays (it is switched to prototype first).
+        void Delete(Span span)
+        {
+            if (span == null)
+            {
+                LinkerDisplay.Flash(LinkerDisplay.Button.Right, false);
+                return;
+            }
+            if (span.Record.WantRail)
+            {
+                RailFirst(LinkerDisplay.Button.Right);
+                return;
+            }
+            Network.RequestUnlink(span);
+            Draw.Notify(Loc.T("MagRail_Linker_Deleted"));
+            LinkerDisplay.Flash(LinkerDisplay.Button.Right, true);
+        }
+
+        static void RailFirst(LinkerDisplay.Button button)
+        {
+            Draw.Notify(Loc.F("MagRail_Linker_RailFirst", Keys.Control(MyControlsSpace.PRIMARY_TOOL_ACTION)), MyFontEnum.Red);
+            LinkerDisplay.Flash(button, false);
+        }
+
+        static double Now
+        {
+            get { return MyAPIGateway.Session.ElapsedPlayTime.TotalSeconds; }
+        }
+
+        // Paint like the vanilla paint: MMB paints the aimed rail with the player's colour and skin (picked with P); a
+        // prototype is not painted.
         void Middle()
         {
-            if (startBlock != null || aimSpan == null || !aimSpan.Bound)
-                return;
             IMyPlayer player = MyAPIGateway.Session.Player;
-            if (player == null)
+            if (startBlock != null || aimSpan == null || !aimSpan.Bound || !aimSpan.Record.WantRail || player == null)
+            {
+                LinkerDisplay.Flash(LinkerDisplay.Button.Wheel, false);
                 return;
+            }
             Network.RequestPaint(aimSpan, player.SelectedBuildColor, BuildSkin(player));
+            LinkerDisplay.Flash(LinkerDisplay.Button.Wheel, true);
         }
 
         // The mod API has no getter for the player's build skin; the player's saved data has it
@@ -347,44 +435,54 @@ namespace MagRail
             return "";
         }
 
+        // The window's two state lines (every tick): what is aimed at or laid from, then its numbers or what is wrong.
         void ShowInfo()
         {
+            what = detail = "";
+            whatColor = detailColor = HudPanel.White;
             if (startBlock != null)
             {
-                string text = Loc.F("MagRail_Linker_From", PortTitle(startBlock, startPort));
-                if (preview != null)
-                    text += ": " + CurveText(preview);
+                what = Loc.F("MagRail_Linker_From", PortTitle(startBlock, startPort));
                 if (previewProblem != null)
-                    Status(text + " — " + Loc.T(previewProblem), HudPanel.Red);
-                else
-                    Status(text, aimBlock != null ? HudPanel.Green : HudPanel.White);
+                {
+                    detail = Loc.T(previewProblem);
+                    detailColor = HudPanel.Red;
+                }
+                else if (preview != null)
+                    detail = CurveText(preview);
                 return;
             }
             if (aimBlock != null)
             {
-                bool busy = Network.SpanAt(aimBlock, aimPort) != null;
-                Status(PortTitle(aimBlock, aimPort) + ": " + Loc.T(busy ? "MagRail_Linker_AimBusy" : "MagRail_Linker_AimFree"), HudPanel.White);
+                what = PortTitle(aimBlock, aimPort);
+                Span span = Network.SpanAt(aimBlock, aimPort);
+                if (span == null)
+                    detail = Loc.T("MagRail_Linker_AimFree");
+                else if (span.Record.WantRail)
+                    detail = Loc.F("MagRail_Linker_AimRail", Keys.Control(MyControlsSpace.PRIMARY_TOOL_ACTION));
+                else
+                    detail = Loc.T("MagRail_Mode_Prototype") + (span.Bound ? " · " + CurveText(Network.CurveOf(span)) : "");
                 return;
             }
             // The aimed span may have just been deleted (RMB) or lost its partner.
             if (aimSpan != null && aimSpan.Bound)
             {
-                string text = Loc.T(aimSpan.IsRail ? "MagRail_Mode_Rail" : "MagRail_Mode_Prototype") + ", " + CurveText(Network.CurveOf(aimSpan));
+                what = Loc.T(aimSpan.IsRail ? "MagRail_Mode_Rail" : "MagRail_Mode_Prototype");
                 if (aimSpan.Record.WantRail && aimSpan.Problem != null)
-                    text += " — " + Loc.F("MagRail_Linker_RailWaits", Loc.T(aimSpan.Problem));
-                Status(text, HudPanel.White);
+                {
+                    detail = Loc.F("MagRail_Linker_RailWaits", Loc.T(aimSpan.Problem));
+                    detailColor = HudPanel.Red;
+                }
+                else
+                    detail = CurveText(Network.CurveOf(aimSpan));
                 return;
             }
-            status = null;
+            what = Loc.T("MagRail_Linker_AimNothing");
         }
 
-        void Status(string text, Vector4 color)
-        {
-            status = text;
-            statusColor = color;
-        }
-
-        // The help window, every frame while the tool is in hand (Hud.Begin first).
+        // The help window, every frame while the tool is in hand (Hud.Begin first, after DrawFrame: the buttons are the
+        // display's hints). Always the same lines in the same places: each mouse button with what it does now (faded
+        // when it does nothing), an empty line, then the state (ShowInfo).
         public void DrawHud()
         {
             if (!held || !Hud.Visible)
@@ -392,18 +490,47 @@ namespace MagRail
             panel.Title = Loc.T("DisplayName_Item_MagRail_RailLinker");
             panel.Icon = Icon;
             panel.Clear();
-            if (status != null)
-                panel.Add(status, statusColor);
+            AddKey(LinkerDisplay.Button.Left, Keys.Control(MyControlsSpace.PRIMARY_TOOL_ACTION));
+            AddKey(LinkerDisplay.Button.Right, Keys.Control(MyControlsSpace.SECONDARY_TOOL_ACTION));
+            AddKey(LinkerDisplay.Button.Wheel, Keys.Mouse(MyMouseButtonsEnum.Middle));
+            panel.Add("", HudPanel.White);
+            panel.Add(what, whatColor, true);
+            panel.Add(detail, detailColor);
             if (HudTest.Text != null)
                 panel.Add(HudTest.Text, HudPanel.Blue);
-            else
-            {
-                string lmb = Keys.Control(MyControlsSpace.PRIMARY_TOOL_ACTION), rmb = Keys.Control(MyControlsSpace.SECONDARY_TOOL_ACTION),
-                    mmb = Keys.Mouse(MyMouseButtonsEnum.Middle), shift = Keys.Key(MyKeys.Shift), colours = Keys.Control(MyControlsSpace.LANDING_GEAR);
-                for (int i = 1; i <= 5; i++)
-                    panel.Add(Loc.F("MagRail_Linker_Help" + i, lmb, rmb, mmb, shift, colours), HudPanel.Blue);
-            }
             panel.Draw();
+        }
+
+        void AddKey(LinkerDisplay.Button button, string key)
+        {
+            string text = HintText(screen.Hints[(int)button]);
+            if (text == null)
+                panel.AddKey(key, "—", HudPanel.Dim, HudPanel.Dim);
+            else
+                panel.AddKey(key, text, HudPanel.Blue, HudPanel.Blue);
+        }
+
+        // What a display hint means here and now, in words (null: the button does nothing).
+        string HintText(LinkerDisplay.HintKind hint)
+        {
+            switch (hint)
+            {
+                case LinkerDisplay.HintKind.Grab:
+                    return Loc.T(aimBlock != null && Network.SpanAt(aimBlock, aimPort) == null ? "MagRail_Linker_DoStart" : "MagRail_Linker_DoGrab");
+                case LinkerDisplay.HintKind.Prototype:
+                    if (startBlock == null)
+                        return Loc.T("MagRail_Linker_DoToPrototype");
+                    return Loc.T(aimBlock != null && Network.SpanAt(aimBlock, aimPort) != null ? "MagRail_Linker_DoReplace" : "MagRail_Linker_DoLay");
+                case LinkerDisplay.HintKind.Rail:
+                    return Loc.T("MagRail_Linker_DoToRail");
+                case LinkerDisplay.HintKind.Break:
+                    return Loc.T("MagRail_Linker_DoDelete");
+                case LinkerDisplay.HintKind.Cancel:
+                    return Loc.T("MagRail_Linker_DoCancel");
+                case LinkerDisplay.HintKind.Paint:
+                    return Loc.F("MagRail_Linker_DoPaint", Keys.Control(MyControlsSpace.LANDING_GEAR));
+            }
+            return null;
         }
 
         static string CurveText(SpanCurve c)
@@ -444,7 +571,7 @@ namespace MagRail
                     int rank = b.FanRank(i);
                     if (rank == (int)SwitchBranch.Center)
                         DrawSwitchFace(b);
-                    else if (rank < 0 && !Joined(b, i))
+                    else if (rank < 0 && Offered(b, i))
                         DrawPort(b, i);
                 }
             }
@@ -452,27 +579,100 @@ namespace MagRail
                 SpanLines.DrawCurve(preview, MatrixD.Identity, startBlock.Style, LineStyle.Preview);
             IMyCharacter character = MyAPIGateway.Session.ControlledObject as IMyCharacter;
             if (character != null)
-                LinkerRuler.Draw(character.EquippedTool, RulerColor());
+                LinkerDisplay.Draw(character.EquippedTool, DisplayColor(), Screen(), true);
         }
 
-        // The running faces and glow of the tool, coloured like its state.
-        Color RulerColor()
+        // The display's picture of what the tool is doing (ModelSource/display/linker_screens.svg): the start or aimed
+        // port is the left stub's; laying - dashes in the preview's colours to the right (an arrow while no port is
+        // aimed; the aimed port's stub on the right, red with a cross if it cannot take the span); a port with a span or
+        // a span aimed at - both stubs with the prototype's line between (bars in its colours) or the rail; the length
+        // in the top right corner; the profile in the top left one (the style of what is aimed at or laid; nothing: none);
+        // the mouse with what its buttons would do now (PLAN.md 10.16).
+        LinkerDisplay.Screen Screen()
+        {
+            LinkerDisplay.Screen s = screen;
+            s.Clear();
+            Span span = startBlock != null ? null : aimBlock != null ? Network.SpanAt(aimBlock, aimPort) : aimSpan;
+            if (span != null && !span.Bound)
+                span = null;
+            s.Profile = startBlock != null ? startBlock.Style : aimBlock != null ? aimBlock.Style : span != null ? span.Owner.Style : null;
+            if (startBlock != null)
+            {
+                s.StubLeft = s.CapLeft = s.PortLeft = true;
+                s.Hints[(int)LinkerDisplay.Button.Right] = LinkerDisplay.HintKind.Cancel;
+                if (preview != null)
+                {
+                    LinkerDisplay.Line(s, LinkerDisplay.LineKind.Dash, preview);
+                    s.Text = LinkerDisplay.Length(preview.Length);
+                }
+                if (aimBlock != null && !(aimBlock == startBlock && aimPort == startPort))
+                {
+                    s.StubRight = s.PortRight = true;
+                    if (previewProblem == null)
+                        s.Hints[(int)LinkerDisplay.Button.Left] = LinkerDisplay.HintKind.Prototype;
+                    else
+                    {
+                        s.Right = MagRail.Draw.Red;
+                        s.Refused = true;
+                    }
+                }
+                else
+                    s.Arrow = preview != null;
+                return s;
+            }
+            if (span == null)
+            {
+                s.StubLeft = s.CapLeft = s.PortLeft = aimBlock != null;
+                if (aimBlock != null)
+                    s.Hints[(int)LinkerDisplay.Button.Left] = LinkerDisplay.HintKind.Grab;
+                return s;
+            }
+            SpanCurve curve = Network.CurveOf(span);
+            s.Text = LinkerDisplay.Length(curve.Length);
+            s.StubLeft = s.StubRight = true;
+            if (span.Record.WantRail)
+            {
+                s.Rail = true;
+                if (aimBlock == null)
+                {
+                    s.Hints[(int)LinkerDisplay.Button.Left] = LinkerDisplay.HintKind.Prototype;
+                    s.Hints[(int)LinkerDisplay.Button.Wheel] = LinkerDisplay.HintKind.Paint;
+                }
+                s.Refused = span.Problem != null;
+            }
+            else
+            {
+                s.CapLeft = s.PortLeft = s.PortRight = true;
+                LinkerDisplay.Line(s, LinkerDisplay.LineKind.Bar, curve);
+                s.Hints[(int)LinkerDisplay.Button.Left] = aimBlock != null ? LinkerDisplay.HintKind.Grab : LinkerDisplay.HintKind.Rail;
+                s.Hints[(int)LinkerDisplay.Button.Right] = LinkerDisplay.HintKind.Break;
+            }
+            return s;
+        }
+
+        // The display's button, coloured like the tool's state.
+        Color DisplayColor()
         {
             if (startBlock != null)
                 return previewProblem != null ? MagRail.Draw.Red : aimBlock != null ? LinkedColor : AimColor;
             return aimBlock != null || aimSpan != null ? AimColor : FreeColor;
         }
 
-        // 0 = none, 1 = start of the span being laid, 2 = aimed.
-        int Selection(TrackBlockLogic b, int port)
+        // Ports offered to the player (drawn and aimed at): not joined end to end, not on a damaged block (the model
+        // shows what is wrong); while laying, the start port and the ports of other blocks of the same style.
+        bool Offered(TrackBlockLogic b, int port)
         {
-            return b == aimBlock && port == aimPort ? 2 : b == startBlock && port == startPort ? 1 : 0;
+            if (!b.Block.IsFunctional || Joined(b, port))
+                return false;
+            if (startBlock == null)
+                return true;
+            return b == startBlock ? port == startPort : b.Style == startBlock.Style;
         }
 
         void DrawPort(TrackBlockLogic b, int port)
         {
             MatrixD m = b.PortWorld(port);
-            DrawEnd(b.Style, -1, m, m.Translation, m.Forward, Network.SpanAt(b, port) != null, Selection(b, port));
+            DrawEnd(b, port, -1, m, m.Translation);
         }
 
         // The branch ports of a Rail Switch 1 share one point: one end face, each third lit by its branch.
@@ -482,36 +682,51 @@ namespace MagRail
             for (int rank = 0; rank < TrackBlockLogic.BranchPorts.Length; rank++)
             {
                 int q = b.PortIndex(TrackBlockLogic.BranchPorts[rank]);
-                if (q >= 0 && !Joined(b, q))
-                    DrawEnd(b.Style, rank, face, b.PortAim(q), b.PortWorld(q).Forward, Network.SpanAt(b, q) != null, Selection(b, q));
+                if (q >= 0 && Offered(b, q))
+                    DrawEnd(b, q, rank, face, b.PortAim(q));
             }
         }
 
         // The rail's end face (or the switch's third `part`) in the port's plane, a dot where the port is aimed at and,
-        // unless linked, a stick outwards with a ball on its end. Bright and seen through models, so ports are easy to
-        // find along a long rail (as bright behind a model as in front of it); far away all of it keeps a size on
-        // screen. The outline, dot and stick show linked or
-        // free; the inside is yellow while the port is selected (selection: 1 = start, 2 = aimed, pulses).
-        static void DrawEnd(TrackStyle style, int part, MatrixD face, Vector3D aim, Vector3D forward, bool linked, int selection)
+        // on a free port, a stick outwards with a ball on its end - all of it one colour: free blue, with a prototype
+        // green, with a rail grey; aimed at, it pulses white. Bright and seen through models, so ports are easy to find
+        // along a long rail (as bright behind a model as in front of it); far away all of it keeps a size on screen.
+        // A port that refused the span being laid is red and shakes sideways for FlashSeconds.
+        void DrawEnd(TrackBlockLogic b, int port, int part, MatrixD face, Vector3D aim)
         {
             const float Bright = 3;
-            Color color = linked ? LinkedColor : FreeColor;
+            TrackStyle style = b.Style;
+            Span span = Network.SpanAt(b, port);
+            Color color = span == null ? FreeColor : span.Record.WantRail ? RailPortColor : LinkedColor;
+            float fill = SpanLines.FillAlpha, bright = Bright;
             double distance = Vector3D.Distance(face.Translation, MagRail.Draw.Camera);
             float scale = (float)Math.Max(1, distance * FaceOnScreen / style.Width);
-            float pulse = selection == 2 ? MagRail.Draw.Pulse : 0;
-            if (selection > 0)
-                MagRail.Draw.Face(style, part, true, face.Translation, face.Right, face.Up, AimColor * (0.6f + 0.25f * pulse), scale,
-                    true, Bright * (1 + pulse), throughAlpha: 1);
-            else
-                MagRail.Draw.Face(style, part, true, face.Translation, face.Right, face.Up, color * SpanLines.FillAlpha, scale, true, throughAlpha: 1);
-            MagRail.Draw.Face(style, part, false, face.Translation, face.Right, face.Up, color, scale, true, Bright, throughAlpha: 1);
+            double flash = b == flashBlock && port == flashPort ? flashUntil - Now : 0;
+            if (flash > 0)
+            {
+                color = MagRail.Draw.Red;
+                fill = 0.5f;
+                Vector3D shake = face.Right * (0.08 * scale * Math.Sin(flash * 2 * Math.PI * 16) * flash / FlashSeconds);
+                face.Translation += shake;
+                aim += shake;
+            }
+            else if (b == aimBlock && port == aimPort)
+            {
+                float pulse = MagRail.Draw.Pulse;
+                color = Color.Lerp(color, Color.White, 0.5f * pulse);
+                fill += 0.25f * pulse;
+                bright *= 1 + pulse;
+            }
+            Vector3D forward = b.PortWorld(port).Forward;
+            MagRail.Draw.Face(style, part, true, face.Translation, face.Right, face.Up, color * fill, scale, true, bright, throughAlpha: 1);
+            MagRail.Draw.Face(style, part, false, face.Translation, face.Right, face.Up, color, scale, true, bright, throughAlpha: 1);
             Vector3D p = face.Translation + (aim - face.Translation) * scale;
-            MagRail.Draw.Dot(p, color, Math.Max(0.1f * scale, (float)(distance * 0.004)), true, Bright, throughAlpha: 1);
-            if (linked)
+            MagRail.Draw.Dot(p, color, Math.Max(0.1f * scale, (float)(distance * 0.004)), true, bright, throughAlpha: 1);
+            if (span != null)
                 return;
             Vector3D tip = p + forward * 0.7 * scale;
-            MagRail.Draw.Line(p, tip, color, MagRail.Draw.Width(distance, 0.05f * scale), true, Bright, throughAlpha: 1);
-            MagRail.Draw.Dot(tip, color, Math.Max(0.13f * scale, (float)(distance * 0.005)), true, Bright, throughAlpha: 1);
+            MagRail.Draw.Line(p, tip, color, MagRail.Draw.Width(distance, 0.05f * scale), true, bright, throughAlpha: 1);
+            MagRail.Draw.Dot(tip, color, Math.Max(0.13f * scale, (float)(distance * 0.005)), true, bright, throughAlpha: 1);
         }
 
         // ---- joints ----

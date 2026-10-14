@@ -60,6 +60,13 @@ namespace MagRail
             return byPort.TryGetValue(PortKey(block, port), out s) ? s : null;
         }
 
+        // The port's span is in rail mode (built, or waiting to be): it is changed or deleted only as a prototype.
+        public bool HasRail(TrackBlockLogic block, int port)
+        {
+            Span s = SpanAt(block, port);
+            return s != null && s.Record.WantRail;
+        }
+
         // A block is locked while a span in rail mode touches it: its height and head stay as they are.
         public bool IsLocked(TrackBlockLogic block)
         {
@@ -267,13 +274,16 @@ namespace MagRail
             return null;
         }
 
-        // Whether a new span may be laid between two ports (Loc key of the reason, or null).
+        // Whether a new span may be laid between two ports (Loc key of the reason, or null). A prototype on either port
+        // is no obstacle: Link replaces it; a rail is (it goes back to prototype first).
         public string LinkProblem(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort)
         {
             if (a == b)
                 return "MagRail_Problem_SameBlock";
-            if (SpanAt(a, aPort) != null || SpanAt(b, bPort) != null)
-                return "MagRail_Problem_PortBusy";
+            if (!a.Block.IsFunctional || !b.Block.IsFunctional)
+                return "MagRail_Problem_Damaged";
+            if (HasRail(a, aPort) || HasRail(b, bPort))
+                return "MagRail_Problem_PortRail";
             if (a.Style != b.Style)
                 return "MagRail_Problem_Style";
             return GridsOrLengthProblem(a, aPort, b, bPort);
@@ -405,8 +415,11 @@ namespace MagRail
                 Net.SendModeRequest(s.Owner, s.Record.OwnerPort, wantRail);
         }
 
+        // Rails only (a prototype is not painted).
         public void RequestPaint(Span s, Vector3 hsv, string skin)
         {
+            if (!s.Record.WantRail)
+                return;
             if (Net.IsServer)
                 SetPaint(s, hsv, skin);
             else
@@ -417,6 +430,13 @@ namespace MagRail
         {
             if (LinkProblem(a, aPort, b, bPort) != null)
                 return;
+            // Prototypes on the two ports give way to the new span.
+            Span replaced = SpanAt(a, aPort);
+            if (replaced != null)
+                Unlink(replaced);
+            replaced = SpanAt(b, bPort);
+            if (replaced != null)
+                Unlink(replaced);
             string portName = a.PortName(aPort);
             // An unbound record on this port (its partner is gone) gives way to the new span.
             for (int i = spans.Count - 1; i >= 0; i--)
