@@ -25,19 +25,19 @@
     <value>Wide Rail Block 1</value>
   </data>
   <data name="Description_MagRail_WideRailBlock1" xml:space="preserve">
-    <value>Straight wide rail (2 m), 1 block long. Joins only wide rails: rails placed end to end join by themselves, the Rail Linker lays wide spans between them.</value>
+    <value>Straight wide rail (2 m), 1 block long. Rails placed end to end join by themselves, of any type; the Rail Linker lays spans only between wide rails.</value>
   </data>
   <data name="DisplayName_MagRail_WideRailBlock5" xml:space="preserve">
     <value>Wide Rail Block 5</value>
   </data>
   <data name="Description_MagRail_WideRailBlock5" xml:space="preserve">
-    <value>Straight wide rail (2 m), 5 blocks long. Joins only wide rails; rails placed end to end join by themselves.</value>
+    <value>Straight wide rail (2 m), 5 blocks long. Rails placed end to end join by themselves, of any type; the Rail Linker lays spans only between wide rails.</value>
   </data>
   <data name="DisplayName_MagRail_WideFreeRail" xml:space="preserve">
     <value>Wide Free Rail Block</value>
   </data>
   <data name="Description_MagRail_WideFreeRail" xml:space="preserve">
-    <value>Wide rail (2 m) with a turning head: any direction, slope and bank. Joins only wide rails.</value>
+    <value>Wide rail (2 m) with a turning head: any direction, slope and bank. The Rail Linker lays spans only between wide rails.</value>
   </data>
   <data name="DisplayName_MagRail_RailBlock5" xml:space="preserve">
     <value>Rail Block 5</value>
@@ -277,7 +277,7 @@
     <value>a block is damaged</value>
   </data>
   <data name="MagRail_Problem_Style" xml:space="preserve">
-    <value>narrow and wide rails do not connect</value>
+    <value>a span joins only rails of one type</value>
   </data>
   <data name="MagRail_Port_port_a" xml:space="preserve">
     <value>end A</value>

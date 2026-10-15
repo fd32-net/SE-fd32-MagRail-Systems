@@ -24,10 +24,6 @@ namespace MagRail
         const double Step = 1.0;
         // Near an end the lift is at most an arc of this radius from it (the rail leaves its ports level), m.
         const double EndRadius = 60;
-        // The rail may sink this much into the ground (half its height: feet -0.24 to copper 0.35), m.
-        const double Tolerance = 0.295;
-        // Rail point over the bottom of the feet, m (TrackStyle).
-        const double Feet = 0.24;
         // Window searched for the ground around the height map, m; moved up or down at most MaxMoves times.
         const double Window = 4;
         const int MaxMoves = 12;
@@ -47,16 +43,16 @@ namespace MagRail
         static double[] need = new double[0], lift = new double[0];
 
         // The curve lifted over the ground as it is now (a prototype, the Rail Linker's preview).
-        public static SpanCurve Live(SpanCurve c, MatrixD frame, double width, bool freeEnd = false)
+        public static SpanCurve Live(SpanCurve c, MatrixD frame, TrackStyle style, bool freeEnd = false)
         {
-            return Apply(c, frame, Measure(c, frame, width, freeEnd));
+            return Apply(c, frame, Measure(c, frame, style, freeEnd));
         }
 
         // The lift over the ground along the curve, m, at points evenly over its length (about every Step); null
         // where nothing needs lifting or no planet is near. frame: the span's frame (the curve's points are in it).
         // freeEnd: the end is no node (the Rail Linker's preview aiming at no port, its end hanging in the air): the
-        // start's clearance holds all along.
-        public static float[] Measure(SpanCurve c, MatrixD frame, double width, bool freeEnd = false)
+        // start's clearance holds all along. style: the rail's width, feet and height (TrackStyle).
+        public static float[] Measure(SpanCurve c, MatrixD frame, TrackStyle style, bool freeEnd = false)
         {
             Vector3D center = Vector3D.Transform(c.Bounds.Center, frame);
             MyPlanet planet = MyGamePruningStructure.GetClosestPlanet(center);
@@ -74,7 +70,7 @@ namespace MagRail
             boxMin = Vector3I.Zero;
             try
             {
-                return Rope(c, frame, width, freeEnd, planet, pc);
+                return Rope(c, frame, style, freeEnd, planet, pc);
             }
             finally
             {
@@ -111,9 +107,11 @@ namespace MagRail
             return c.Shifted(offset);
         }
 
-        static float[] Rope(SpanCurve c, MatrixD frame, double width, bool freeEnd, MyPlanet planet, Vector3D pc)
+        static float[] Rope(SpanCurve c, MatrixD frame, TrackStyle style, bool freeEnd, MyPlanet planet, Vector3D pc)
         {
             int n = Math.Max(2, (int)Math.Ceiling(c.Length / Step));
+            // The rail may sink this much into the ground: half its height, feet to copper top.
+            double tolerance = (style.Feet + style.Top) * 0.5;
             if (need.Length < n + 1)
             {
                 need = new double[n + 1];
@@ -128,8 +126,8 @@ namespace MagRail
                 Vector3D p = Vector3D.Transform(c.PosAt(s), frame);
                 Vector3D up = Vector3D.Normalize(p - pc);
                 Vector3D side = Vector3D.Cross(Vector3D.TransformNormal(c.TanAt(s), frame), up);
-                side = side.LengthSquared() > 1e-8 ? Vector3D.Normalize(side) * (width * 0.5) : Vector3D.Zero;
-                double r = Vector3D.Distance(p, pc) - Feet;
+                side = side.LengthSquared() > 1e-8 ? Vector3D.Normalize(side) * (style.Width * 0.5) : Vector3D.Zero;
+                double r = Vector3D.Distance(p, pc) - style.Feet;
                 double ground = Ground(planet, pc, p);
                 ground = Math.Max(ground, Ground(planet, pc, p + side));
                 ground = Math.Max(ground, Ground(planet, pc, p - side));
@@ -143,7 +141,7 @@ namespace MagRail
             for (int k = 0; k <= n; k++)
             {
                 double want = c0 + (c1 - c0) * k / n;
-                need[k] = Math.Max(0, want - clear[k] - Tolerance);
+                need[k] = Math.Max(0, want - clear[k] - tolerance);
                 most = Math.Max(most, need[k]);
             }
             if (most <= 0)

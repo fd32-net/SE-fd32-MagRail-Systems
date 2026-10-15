@@ -296,7 +296,7 @@ namespace MagRail
         static readonly double JointFacingCos = -Math.Cos(MathHelper.ToRadians(15));
         readonly List<TrackIndex.Entry> jointScratch = new List<TrackIndex.Entry>();
 
-        // A fixed block whose port meets this one end to end (on any grid, of either style: narrow and wide join),
+        // A fixed block whose port meets this one end to end (on any grid, of any style: a train would drive across anyway),
         // not computed ahead: found when a train gets there. A port with a span has no joint.
         public bool FindJoint(TrackBlockLogic block, int port, out TrackBlockLogic other, out int otherPort)
         {
@@ -361,7 +361,7 @@ namespace MagRail
             if (s.Owner.Block.CubeGrid.IsStatic && s.Partner.Block.CubeGrid.IsStatic)
                 s.Curve = s.Record.WantRail
                     ? TerrainLift.Apply(s.Curve, FrameMatrix(s), s.Record.Lift)
-                    : TerrainLift.Live(s.Curve, FrameMatrix(s), s.Owner.Style.Width);
+                    : TerrainLift.Live(s.Curve, FrameMatrix(s), s.Owner.Style);
             s.CurveOwnerRevision = s.Owner.Revision;
             s.CurvePartnerRevision = s.Partner.Revision;
             s.CurveGrid = grid;
@@ -472,7 +472,7 @@ namespace MagRail
             // Built as it lies now: the prototype's lift over the ground is kept with the rail.
             s.Record.Lift = null;
             if (wantRail && s.Bound && s.Owner.Block.CubeGrid.IsStatic && s.Partner.Block.CubeGrid.IsStatic)
-                s.Record.Lift = TerrainLift.Measure(BaseCurve(s), FrameMatrix(s), s.Owner.Style.Width);
+                s.Record.Lift = TerrainLift.Measure(BaseCurve(s), FrameMatrix(s), s.Owner.Style);
             s.Record.WantRail = wantRail;
             s.Curve = null;
             Changed(s.Owner);

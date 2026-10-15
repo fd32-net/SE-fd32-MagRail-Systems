@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
@@ -131,11 +132,11 @@ namespace MagRail
             controls.Add(control);
         }
 
-        // Per rail style (TrackStyle.MinHeight).
+        // Per rail style (TrackStyle.MinHeight); a block without logic shows the lowest of all.
         static float MinHeight(IMyTerminalBlock b)
         {
             TrackBlockLogic logic = Logic(b);
-            return (logic != null ? logic.Style : TrackStyle.Narrow).MinHeight;
+            return logic != null ? logic.Style.MinHeight : TrackStyle.All.Min(s => s.MinHeight);
         }
 
         static void SetHeight(IMyTerminalBlock b, float value)

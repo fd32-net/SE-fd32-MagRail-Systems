@@ -20,6 +20,7 @@ namespace MagRail
     // The script moves the part by the height setting (and turns the Free Rail head about the rail point = the
     // part's origin), gives it physics (the game gives subparts none) and lights its copper (material "Emissive").
     // Ports are the dummies of the part's model: position = rail point, Forward = outwards, Up = rail up.
+    // The descriptor lists the subtypes of TrackStyle's registry (an attribute takes constants only): keep both alike.
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_UpgradeModule), false,
         "MagRail_RailBlock1", "MagRail_RailBlock5", "MagRail_RailBlock10", "MagRail_RailBlock20", "MagRail_FreeRail",
         "MagRail_Switch1", "MagRail_WideRailBlock1", "MagRail_WideRailBlock5", "MagRail_WideFreeRail", "MagRail_WideSwitch1")]
@@ -72,20 +73,19 @@ namespace MagRail
             get { return MagRailSession.Instance.Network; }
         }
 
-        public static TrackKind KindOf(string subtype)
-        {
-            if (subtype == "MagRail_FreeRail" || subtype == "MagRail_WideFreeRail")
-                return TrackKind.FreeRail;
-            if (subtype == "MagRail_Switch1" || subtype == "MagRail_WideSwitch1")
-                return TrackKind.Switch;
-            return TrackKind.Rail;
-        }
-
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
         {
             Block = (IMyUpgradeModule)Entity;
-            Kind = KindOf(Block.BlockDefinition.SubtypeId);
-            Style = TrackStyle.Of(Block.BlockDefinition.SubtypeId);
+            TrackStyle style;
+            TrackKind kind;
+            if (!TrackStyle.TryGet(Block.BlockDefinition.SubtypeId, out style, out kind))
+            {
+                // In the descriptor but not in the registry: a block without logic, not a guessed style.
+                Log.Error("TrackBlockLogic.Init", "track block " + Block.BlockDefinition.SubtypeId + " is not in TrackStyle");
+                return;
+            }
+            Style = style;
+            Kind = kind;
             NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
         }
 

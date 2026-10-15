@@ -13,7 +13,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.10.0";
+        public const string Version = "V0.10.1";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -37,6 +37,7 @@ namespace MagRail
             client = !MyAPIGateway.Utilities.IsDedicated;
             Loc.Load(ModContext != null ? ModContext.ModPath : null);
             PieceEntities.Load(ModContext.ModPath);
+            TrackStyle.Check();
             Net.Load();
             if (client)
             {

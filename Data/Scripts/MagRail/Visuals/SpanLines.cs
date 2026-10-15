@@ -72,7 +72,7 @@ namespace MagRail
                     Vector3D upA = Vector3D.TransformNormal(c.Up[i], frame), upB = Vector3D.TransformNormal(c.Up[j], frame);
                     Vector3D sideA = Vector3D.TransformNormal(Vector3D.Cross(c.Tan[i], c.Up[i]), frame) * halfWidth;
                     Vector3D sideB = Vector3D.TransformNormal(Vector3D.Cross(c.Tan[j], c.Up[j]), frame) * halfWidth;
-                    Vector3D crestA = a + upA * TrackStyle.CrestHeight, crestB = b + upB * TrackStyle.CrestHeight;
+                    Vector3D crestA = a + upA * style.CrestHeight, crestB = b + upB * style.CrestHeight;
                     Draw.Quad(crestA - sideA, crestA + sideA, crestB + sideB, crestB - sideB, color * RibbonAlpha);
                 }
 

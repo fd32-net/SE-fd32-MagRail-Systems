@@ -23,6 +23,14 @@ namespace MagRail
             MyLog.Default.WriteLineAndConsole(Prefix + "ERROR in " + where + ": " + e);
         }
 
+        // A failure without an exception (once per place and message).
+        public static void Error(string where, string message)
+        {
+            if (!reported.Add(where + ": " + message))
+                return;
+            MyLog.Default.WriteLineAndConsole(Prefix + "ERROR in " + where + ": " + message);
+        }
+
         public static void Clear()
         {
             reported.Clear();

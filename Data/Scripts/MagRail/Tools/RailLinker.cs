@@ -208,7 +208,7 @@ namespace MagRail
             }
             if (remeasure)
             {
-                previewLift = TerrainLift.Measure(curve, MatrixD.Identity, startBlock.Style.Width, freeEnd);
+                previewLift = TerrainLift.Measure(curve, MatrixD.Identity, startBlock.Style, freeEnd);
                 previewLiftTime = now;
             }
             previewLiftStale = !remeasure;

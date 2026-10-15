@@ -86,22 +86,24 @@ namespace MagRail
             }
         }
 
-        // The glyph subparts, in this order (RailLinker.py glyph_subparts): the single ones, the line segments, the digits.
+        // The glyph subparts (found by name, RailLinker.py glyph_subparts): the single ones, the line segments, the
+        // digits, the profiles (one per TrackStyle, in the order of TrackStyle.All: G_profile_<name>).
         enum G
         {
-            StubLeft, CapLeft, StubRight, Rail, PortLeft, PortRight, Arrow, CheckSmall, CrossSmall, Cross, M, ProfileNarrow,
-            ProfileWide, Mouse, MouseLeft, MouseRight, MouseWheel, HintGrab, HintBreak, HintPrototype, HintRail, HintPaint,
-            HintCancel, Dash0
+            StubLeft, CapLeft, StubRight, Rail, PortLeft, PortRight, Arrow, CheckSmall, CrossSmall, Cross, M, Mouse,
+            MouseLeft, MouseRight, MouseWheel, HintGrab, HintBreak, HintPrototype, HintRail, HintPaint, HintCancel, Dash0
         }
-        const int Bar0 = (int)G.Dash0 + Segments, Digit0 = Bar0 + Segments, GlyphCount = Digit0 + 10 * DigitCopies;
+        const int Bar0 = (int)G.Dash0 + Segments, Digit0 = Bar0 + Segments, Profile0 = Digit0 + 10 * DigitCopies;
+        // Before the arrays sized by it.
+        static readonly int GlyphCount = Profile0 + TrackStyle.All.Length;
         static readonly string[] names = Names();
 
         static string[] Names()
         {
             string[] n = new string[GlyphCount];
             string[] single = { "stub_left", "cap_left", "stub_right", "rail", "port_left", "port_right", "arrow", "check_s",
-                "cross_s", "cross", "m", "profile_narrow", "profile_wide", "mouse", "mouse_l", "mouse_r", "mouse_w",
-                "hint_grab", "hint_break", "hint_proto", "hint_rail", "hint_paint", "cross_hint" };
+                "cross_s", "cross", "m", "mouse", "mouse_l", "mouse_r", "mouse_w", "hint_grab", "hint_break", "hint_proto",
+                "hint_rail", "hint_paint", "cross_hint" };
             for (int i = 0; i < single.Length; i++)
                 n[i] = Prefix + single[i];
             for (int k = 0; k < Segments; k++)
@@ -112,6 +114,8 @@ namespace MagRail
             for (int d = 0; d < 10; d++)
                 for (int c = 0; c < DigitCopies; c++)
                     n[Digit0 + d * DigitCopies + c] = Prefix + "d" + d + "_" + c;
+            for (int k = 0; k < TrackStyle.All.Length; k++)
+                n[Profile0 + k] = Prefix + "profile_" + TrackStyle.All[k].Name.ToLowerInvariant();
             return n;
         }
 
@@ -252,8 +256,11 @@ namespace MagRail
                     wantColor[i] = s.Grades[k];
                 }
             Set(G.Arrow, s.Arrow, s.Grades[Segments - 1]);
-            Set(G.ProfileNarrow, s.Profile == TrackStyle.Narrow, White);
-            Set(G.ProfileWide, s.Profile == TrackStyle.Wide, White);
+            for (int k = 0; k < TrackStyle.All.Length; k++)
+            {
+                want[Profile0 + k] = s.Profile == TrackStyle.All[k];
+                wantColor[Profile0 + k] = White;
+            }
             if (s.Refused)
                 Move(G.Cross, MagRail.Draw.Red, RefusedAt);
             Set(G.Mouse, mouse, White);
@@ -369,7 +376,7 @@ namespace MagRail
                 if (relight || wantColor[i] != g.Colors[i])
                 {
                     g.Colors[i] = wantColor[i];
-                    part.SetEmissiveParts(i == (int)G.ProfileNarrow || i == (int)G.ProfileWide ? ProfileMaterial : GlyphMaterial,
+                    part.SetEmissiveParts(i >= Profile0 ? ProfileMaterial : GlyphMaterial,
                         wantColor[i], GlowEmissivity);
                 }
             }
