@@ -153,6 +153,12 @@
   <data name="MagRail_Branch_Right" xml:space="preserve">
     <value>Right</value>
   </data>
+  <data name="MagRail_Term_Flipped" xml:space="preserve">
+    <value>Switch flipped</value>
+  </data>
+  <data name="MagRail_Term_Flipped_Tip" xml:space="preserve">
+    <value>For a switch placed upside down: swaps left and right in the terminal and actions.</value>
+  </data>
   <data name="MagRail_Act_HeightUp" xml:space="preserve">
     <value>Rail height +</value>
   </data>

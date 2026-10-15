@@ -34,13 +34,16 @@ namespace MagRail
         [ProtoMember(6)] public float Roll;
         // 7 was the angle step (test builds of V0.3.0): do not reuse.
         [ProtoMember(8)] public SwitchBranch Branch;
+        // Rail Switch placed upside down: the player's left is the model's right. Branch stays the model's;
+        // only the terminal and the actions swap left and right (TrackTerminal.Shown).
+        [ProtoMember(9)] public bool Flipped;
 
         public TrackSettings Copy()
         {
             return new TrackSettings
             {
                 Version = Version, HeightOffset = HeightOffset,
-                Yaw = Yaw, Pitch = Pitch, Roll = Roll, Branch = Branch,
+                Yaw = Yaw, Pitch = Pitch, Roll = Roll, Branch = Branch, Flipped = Flipped,
             };
         }
 

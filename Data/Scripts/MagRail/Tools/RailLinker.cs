@@ -544,10 +544,14 @@ namespace MagRail
             return block.Block.CustomName + " · " + PortLabel(block, port);
         }
 
-        // The port's name for players (the dummy name if there is no translation).
+        // The port's name for players (the dummy name if there is no translation); a flipped switch
+        // (TrackSettings.Flipped) names its left branch right and back.
         public static string PortLabel(TrackBlockLogic block, int port)
         {
-            string key = "MagRail_Port_" + block.PortName(port);
+            string dummy = block.PortName(port);
+            if (block.Settings != null && block.Settings.Flipped)
+                dummy = dummy == "branch_l" ? "branch_r" : dummy == "branch_r" ? "branch_l" : dummy;
+            string key = "MagRail_Port_" + dummy;
             string name = Loc.T(key);
             return name == key ? block.PortName(port) : name;
         }

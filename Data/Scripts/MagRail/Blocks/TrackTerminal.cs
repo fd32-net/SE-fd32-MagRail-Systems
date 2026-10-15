@@ -118,9 +118,16 @@ namespace MagRail
                 items.Add(new MyTerminalControlComboBoxItem { Key = (long)SwitchBranch.Center, Value = Loc.Id("MagRail_Branch_Center") });
                 items.Add(new MyTerminalControlComboBoxItem { Key = (long)SwitchBranch.Right, Value = Loc.Id("MagRail_Branch_Right") });
             };
-            branch.Getter = b => Logic(b) != null ? (long)Logic(b).Settings.Branch : 0;
-            branch.Setter = (b, v) => Change(b, s => s.Branch = (SwitchBranch)v);
+            branch.Getter = b => Logic(b) != null ? (long)Shown(Logic(b).Settings) : 0;
+            branch.Setter = (b, v) => SetBranch(b, (SwitchBranch)v);
             Add(branch, b => IsKind(b, TrackKind.Switch));
+
+            IMyTerminalControlCheckbox flipped = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCheckbox, IMyUpgradeModule>("MagRail_Flipped");
+            flipped.Title = Loc.Id("MagRail_Term_Flipped");
+            flipped.Tooltip = Loc.Id("MagRail_Term_Flipped_Tip");
+            flipped.Getter = b => Logic(b) != null && Logic(b).Settings.Flipped;
+            flipped.Setter = (b, v) => Change(b, s => s.Flipped = v);
+            Add(flipped, b => IsKind(b, TrackKind.Switch));
 
             CreateActions();
         }
@@ -186,13 +193,18 @@ namespace MagRail
             AddAction("MagRail_HeightDown", "MagRail_Act_HeightDown", IconDown, IsTrack, b => StepHeight(b, -HeightStep), WriteHeight);
 
             Func<IMyTerminalBlock, bool> sw = b => IsKind(b, TrackKind.Switch);
-            AddAction("MagRail_BranchLeft", "MagRail_Act_BranchLeft", IconOn, sw, b => Change(b, s => s.Branch = SwitchBranch.Left), WriteBranch);
-            AddAction("MagRail_BranchCenter", "MagRail_Act_BranchCenter", IconOn, sw, b => Change(b, s => s.Branch = SwitchBranch.Center), WriteBranch);
-            AddAction("MagRail_BranchRight", "MagRail_Act_BranchRight", IconOn, sw, b => Change(b, s => s.Branch = SwitchBranch.Right), WriteBranch);
-            // Left -> Center -> Right -> Left.
-            AddAction("MagRail_BranchNext", "MagRail_Act_BranchNext", IconToggle, sw,
-                b => Change(b, s => s.Branch = s.Branch == SwitchBranch.Left ? SwitchBranch.Center
-                    : s.Branch == SwitchBranch.Center ? SwitchBranch.Right : SwitchBranch.Left), WriteBranch);
+            AddAction("MagRail_BranchLeft", "MagRail_Act_BranchLeft", IconOn, sw, b => SetBranch(b, SwitchBranch.Left), WriteBranch);
+            AddAction("MagRail_BranchCenter", "MagRail_Act_BranchCenter", IconOn, sw, b => SetBranch(b, SwitchBranch.Center), WriteBranch);
+            AddAction("MagRail_BranchRight", "MagRail_Act_BranchRight", IconOn, sw, b => SetBranch(b, SwitchBranch.Right), WriteBranch);
+            // Left -> Center -> Right -> Left, as the player sees them.
+            AddAction("MagRail_BranchNext", "MagRail_Act_BranchNext", IconToggle, sw, b =>
+            {
+                TrackBlockLogic logic = Logic(b);
+                if (logic == null)
+                    return;
+                SwitchBranch shown = Shown(logic.Settings);
+                SetBranch(b, shown == SwitchBranch.Left ? SwitchBranch.Center : shown == SwitchBranch.Center ? SwitchBranch.Right : SwitchBranch.Left);
+            }, WriteBranch);
         }
 
         static void AddAction(string id, string nameKey, string icon, Func<IMyTerminalBlock, bool> enabled,
@@ -214,12 +226,32 @@ namespace MagRail
                 SetHeight(b, logic.Height + delta);
         }
 
+        // Left and right swapped on a flipped switch (TrackSettings.Flipped): the same both ways.
+        static SwitchBranch Mirror(SwitchBranch branch, bool flipped)
+        {
+            if (!flipped || branch == SwitchBranch.Center)
+                return branch;
+            return branch == SwitchBranch.Left ? SwitchBranch.Right : SwitchBranch.Left;
+        }
+
+        // The selected branch as the player sees it.
+        static SwitchBranch Shown(TrackSettings s)
+        {
+            return Mirror(s.Branch, s.Flipped);
+        }
+
+        // Selects a branch as the player sees it.
+        static void SetBranch(IMyTerminalBlock b, SwitchBranch shown)
+        {
+            Change(b, s => s.Branch = Mirror(shown, s.Flipped));
+        }
+
         static void WriteBranch(IMyTerminalBlock b, StringBuilder sb)
         {
             TrackBlockLogic logic = Logic(b);
             if (logic == null)
                 return;
-            SwitchBranch branch = logic.Settings.Branch;
+            SwitchBranch branch = Shown(logic.Settings);
             sb.Append(branch == SwitchBranch.Left ? "L" : branch == SwitchBranch.Right ? "R" : "C");
         }
     }

@@ -153,6 +153,12 @@
   <data name="MagRail_Branch_Right" xml:space="preserve">
     <value>Правая</value>
   </data>
+  <data name="MagRail_Term_Flipped" xml:space="preserve">
+    <value>Стрелка перевёрнута</value>
+  </data>
+  <data name="MagRail_Term_Flipped_Tip" xml:space="preserve">
+    <value>Для стрелки, поставленной вверх ногами: меняет местами лево и право в терминале и действиях.</value>
+  </data>
   <data name="MagRail_Act_HeightUp" xml:space="preserve">
     <value>Высота рельса +</value>
   </data>
