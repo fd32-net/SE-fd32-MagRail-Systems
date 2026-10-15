@@ -465,7 +465,8 @@ namespace MagRail
 
         // The rail part. Rebuilt on every move: moves are rare (settings changes) and a
         // static body does not follow its entity. On a moving grid the part has no collision (see
-        // PieceEntities: it would hit the ship); it only keeps its world matrix up to date.
+        // PieceEntities: it would hit the ship); it only keeps its world matrix up to date. A style that is not
+        // Solid has none anywhere.
         void RebuildPhysics(MyEntity e)
         {
             if (e.Physics != null)
@@ -473,7 +474,7 @@ namespace MagRail
                 e.Physics.Close();
                 e.Physics = null;
             }
-            if (partOnStatic)
+            if (partOnStatic && Style.Solid)
             {
                 e.InitModelPhysics(RigidBodyFlag.RBF_STATIC, PieceEntities.StaticLayer);
             }

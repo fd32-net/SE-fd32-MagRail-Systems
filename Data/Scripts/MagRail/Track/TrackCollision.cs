@@ -35,6 +35,8 @@ namespace MagRail
                 if (!s.Bound || !s.IsRail)
                     continue;
                 TrackLayout layout = network.LayoutOf(s);
+                if (!layout.Style.Solid)
+                    continue;
                 MatrixD frame = TrackNetwork.FrameMatrix(s);
                 BoundingSphereD bounds = layout.Curve.Bounds;
                 if (Nearest(Vector3D.Transform(bounds.Center, frame)) - bounds.Radius > ExitRange)

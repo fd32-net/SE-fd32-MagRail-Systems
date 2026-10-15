@@ -58,11 +58,15 @@ namespace MagRail
         // ModelSource/overlay_textures.py, which draws the section's outline into it).
         public readonly float FaceHalfWidth, FaceBottom, FaceTop;
         readonly MyStringId[] faceLines, faceFills;
+        // Players can walk on it: its spans get collision pieces (TrackCollision) and its blocks' rail parts physics
+        // (TrackBlockLogic). Without it (an energy beam) a player falls through; trains ride as always (they do not
+        // touch collision). The blocks themselves keep theirs.
+        public readonly bool Solid;
         // It has the whole set of strip models (StripModels; found at session load, Check).
         public bool HasStrips { get; private set; }
 
         TrackStyle(string name, string prefix, float minHeight, double width, double crestHeight, double top, double feet,
-            float faceHalfWidth, float faceBottom, float faceTop)
+            float faceHalfWidth, float faceBottom, float faceTop, bool solid = true)
         {
             Name = name;
             this.prefix = prefix;
@@ -74,6 +78,7 @@ namespace MagRail
             FaceHalfWidth = faceHalfWidth;
             FaceBottom = faceBottom;
             FaceTop = faceTop;
+            Solid = solid;
             string[] parts = { "", "C", "L", "R" };
             faceLines = parts.Select(s => MyStringId.GetOrCompute("MagRail_Face" + name + s + "Line")).ToArray();
             faceFills = parts.Select(s => MyStringId.GetOrCompute("MagRail_Face" + name + s + "Fill")).ToArray();
