@@ -27,7 +27,8 @@ namespace MagRail
     // Speed Limit, Propulsion override, Braking, Parking.
     // - Thrust is game-like, as a thruster's: along the rail at the centre of mass, so an engine at one end never
     //   turns the grid. An engine has no direction of its own: W pushes the way the controller faces along the
-    //   rail; a controller facing across the rail (more than 60 degrees off) is an error and nothing pushes.
+    //   rail; a controller facing across the rail (more than 60 degrees off) is an error and nothing pushes. In a
+    //   curve the push comes with the curve's turn (RailBody.AlongResponse), so the grid's ends stay on the rail.
     // - The controller is looked up on the grids mechanically joined to this one (rotor, hinge, piston), as the
     //   game's wheel control reaches. Every grid of a train pushes itself with its own engines: couplers carry
     //   little.

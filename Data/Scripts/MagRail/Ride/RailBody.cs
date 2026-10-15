@@ -37,6 +37,8 @@ namespace MagRail
         // A point spring at lever r weighs r^2 on rotation: with engines a few metres apart the points steer
         // yaw and pitch and the rail frame mostly keeps roll (and everything on a single-engine grid).
         const double OrientationRowWeight = 1.0, AlongRowWeight = 100.0;
+        // The along push's turn (AlongResponse): weak, only so engines in a line do not leave the roll open.
+        const double AlongTurnDamping = 0.01;
         // Guards.
         const double MaxHoldAccel = 100.0;              // m/s^2 from the hold, whatever the engines' force
         const double MaxAngularAccel = 20.0;            // rad/s^2 of the whole solve
@@ -209,16 +211,23 @@ namespace MagRail
 
             double along = Vector3D.Dot(v + linearChange - carrierVelocity, pathForward);
             double drag = Math.Min(Math.Abs(along), (RollingDrag + AirDrag * along * along) * Step * ramp);
-            linearChange -= pathForward * (Math.Sign(along) * drag);
-            along -= Math.Sign(along) * drag;
+            double alongChange = -Math.Sign(along) * drag;
+            along += alongChange;
 
-            // The drive: thrust at the centre of mass, then the brakes (Drive).
+            // The drive: thrust at the centre of mass, then the brakes (Drive); in a curve with the curve's turn.
             Drive.ReadInput(tick);
             double thrust = Drive.Thrust(held, pathForward, along, physics.Mass, ramp, tick);
-            linearChange += pathForward * thrust;
+            alongChange += thrust;
             along += thrust;
             double carriedAlong = Vector3D.Dot(carried - carrierVelocity, pathForward);
-            linearChange += pathForward * Drive.Brake(carriedAlong, along, physics.Mass, ramp, thrust == 0, lastWrittenTick == tick - 1);
+            alongChange += Drive.Brake(carriedAlong, along, physics.Mass, ramp, thrust == 0, lastWrittenTick == tick - 1);
+            if (alongChange != 0)
+            {
+                Vector3D alongLinear, alongAngular;
+                AlongResponse(com, pathForward, out alongLinear, out alongAngular);
+                linearChange += alongLinear * alongChange;
+                angularChange += alongAngular * alongChange;
+            }
 
             Vector3D newLinear = v + linearChange, newAngular = w + angularChange;
             if (!IsFinite(newLinear) || !IsFinite(newAngular))
@@ -657,6 +666,44 @@ namespace MagRail
                 rhs[r] = sum / matrix[r * 6 + r];
             }
             return true;
+        }
+
+        // The velocity change of 1 m/s along the rail (thrust, brakes, drag): the change at the centre of mass and
+        // the turn that keeps every guide point moving along its own rail. In a curve the grid turns at a rate that
+        // grows with its speed; a push along the chord alone carried its ends off the rail (front out, rear in) until
+        // the springs caught up, a lurch off the rail on every throttle in tight curves. The turn is the curve's
+        // own, so it is not counted against the hold or spin limits. A single engine at the centre of mass gets no
+        // turn here (the orientation wish follows the curve).
+        void AlongResponse(Vector3D com, Vector3D pathForward, out Vector3D linear, out Vector3D angular)
+        {
+            linear = pathForward;
+            angular = Vector3D.Zero;
+            Array.Clear(matrix, 0, 36);
+            Array.Clear(rhs, 0, 6);
+            for (int i = 0; i < points.Count; i++)
+            {
+                GuidePoint g = points[i];
+                Vector3D r = g.Position - com;
+                Vector3D n1 = Reject(g.Up, g.Tangent);
+                Vector3D n2 = Vector3D.Cross(g.Tangent, n1);
+                AddRow(n1, Vector3D.Cross(r, n1), 0.0, 1.0);
+                AddRow(n2, Vector3D.Cross(r, n2), 0.0, 1.0);
+            }
+            AddRow(pathForward, Vector3D.Zero, 1.0, AlongRowWeight);
+            // Engines in a line leave the roll about it open: no roll from the push.
+            AddRow(Vector3D.Zero, Vector3D.UnitX, 0.0, AlongTurnDamping);
+            AddRow(Vector3D.Zero, Vector3D.UnitY, 0.0, AlongTurnDamping);
+            AddRow(Vector3D.Zero, Vector3D.UnitZ, 0.0, AlongTurnDamping);
+            for (int i = 0; i < 6; i++)
+                matrix[i * 6 + i] += 1e-6;
+            if (!Solve6())
+                return;
+            Vector3D l = new Vector3D(rhs[0], rhs[1], rhs[2]), a = new Vector3D(rhs[3], rhs[4], rhs[5]);
+            double scale = Vector3D.Dot(l, pathForward);
+            if (!IsFinite(l) || !IsFinite(a) || scale < 0.5)
+                return;
+            linear = l / scale;
+            angular = a / scale;
         }
 
         // The linear velocity change the engines on the rail can push in one tick.
