@@ -9,35 +9,11 @@
   <data name="Description_MagRail_TrackGroup" xml:space="preserve">
     <value>Blocks that carry the maglev track.</value>
   </data>
-  <data name="DisplayName_MagRail_WideTrackGroup" xml:space="preserve">
-    <value>Wide Track Blocks</value>
-  </data>
-  <data name="Description_MagRail_WideTrackGroup" xml:space="preserve">
-    <value>Blocks of the wide (2 m) maglev track.</value>
-  </data>
   <data name="DisplayName_MagRail_RailBlock1" xml:space="preserve">
     <value>Rail Block 1</value>
   </data>
   <data name="Description_MagRail_RailBlock1" xml:space="preserve">
     <value>Straight rail, 1 block long. Rails placed end to end join by themselves.</value>
-  </data>
-  <data name="DisplayName_MagRail_WideRailBlock1" xml:space="preserve">
-    <value>Wide Rail Block 1</value>
-  </data>
-  <data name="Description_MagRail_WideRailBlock1" xml:space="preserve">
-    <value>Straight wide rail (2 m), 1 block long. Rails placed end to end join by themselves, of any type; the Rail Linker lays spans only between wide rails.</value>
-  </data>
-  <data name="DisplayName_MagRail_WideRailBlock5" xml:space="preserve">
-    <value>Wide Rail Block 5</value>
-  </data>
-  <data name="Description_MagRail_WideRailBlock5" xml:space="preserve">
-    <value>Straight wide rail (2 m), 5 blocks long. Rails placed end to end join by themselves, of any type; the Rail Linker lays spans only between wide rails.</value>
-  </data>
-  <data name="DisplayName_MagRail_WideFreeRail" xml:space="preserve">
-    <value>Wide Free Rail Block</value>
-  </data>
-  <data name="Description_MagRail_WideFreeRail" xml:space="preserve">
-    <value>Wide rail (2 m) with a turning head: any direction, slope and bank. The Rail Linker lays spans only between wide rails.</value>
   </data>
   <data name="DisplayName_MagRail_RailBlock5" xml:space="preserve">
     <value>Rail Block 5</value>
@@ -68,6 +44,30 @@
   </data>
   <data name="Description_MagRail_Switch1" xml:space="preserve">
     <value>One entry, three branches: left, centre, right, all leaving the front end from one point. The branches are the spans laid from it with the Rail Linker (aim beside the end for the left and right one); the switch sends a train into the selected one.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideTrackGroup" xml:space="preserve">
+    <value>Wide Track Blocks</value>
+  </data>
+  <data name="Description_MagRail_WideTrackGroup" xml:space="preserve">
+    <value>Blocks of the wide (2 m) maglev track.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideRailBlock1" xml:space="preserve">
+    <value>Wide Rail Block 1</value>
+  </data>
+  <data name="Description_MagRail_WideRailBlock1" xml:space="preserve">
+    <value>Straight wide rail (2 m), 1 block long. Rails placed end to end join by themselves, of any type; the Rail Linker lays spans only between wide rails.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideRailBlock5" xml:space="preserve">
+    <value>Wide Rail Block 5</value>
+  </data>
+  <data name="Description_MagRail_WideRailBlock5" xml:space="preserve">
+    <value>Straight wide rail (2 m), 5 blocks long. Rails placed end to end join by themselves, of any type; the Rail Linker lays spans only between wide rails.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideFreeRail" xml:space="preserve">
+    <value>Wide Free Rail Block</value>
+  </data>
+  <data name="Description_MagRail_WideFreeRail" xml:space="preserve">
+    <value>Wide rail (2 m) with a turning head: any direction, slope and bank. The Rail Linker lays spans only between wide rails.</value>
   </data>
   <data name="DisplayName_MagRail_WideSwitch1" xml:space="preserve">
     <value>Wide Rail Switch</value>

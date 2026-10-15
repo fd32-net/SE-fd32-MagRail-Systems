@@ -11,6 +11,7 @@ namespace MagRail
     // present: C, L, R) and a millimetre or so below and outside it by rank, so the reference is on top and no two
     // surfaces lie in one plane. Once the span is clear of the others the shift fades out. Only the look: trains ride
     // the span's curve. The level is held up to MaxLevel: spans that part in height faster part as they are.
+    // Only for a style with strip models (TrackStyle.HasStrips); without them the branches are drawn as they are.
     public class FanLevel
     {
         const double Drop = 0.001;                              // below the reference per rank, m

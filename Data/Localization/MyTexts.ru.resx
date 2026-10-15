@@ -9,35 +9,11 @@
   <data name="Description_MagRail_TrackGroup" xml:space="preserve">
     <value>Блоки, на которых держится путь маглева.</value>
   </data>
-  <data name="DisplayName_MagRail_WideTrackGroup" xml:space="preserve">
-    <value>Блоки широкого пути</value>
-  </data>
-  <data name="Description_MagRail_WideTrackGroup" xml:space="preserve">
-    <value>Блоки широкого (2 м) пути маглева.</value>
-  </data>
   <data name="DisplayName_MagRail_RailBlock1" xml:space="preserve">
     <value>Рельс 1</value>
   </data>
   <data name="Description_MagRail_RailBlock1" xml:space="preserve">
     <value>Прямой рельс длиной 1 блок. Рельсы, поставленные торец к торцу, соединяются сами.</value>
-  </data>
-  <data name="DisplayName_MagRail_WideRailBlock1" xml:space="preserve">
-    <value>Широкий рельс 1</value>
-  </data>
-  <data name="Description_MagRail_WideRailBlock1" xml:space="preserve">
-    <value>Прямой широкий рельс (2 м) длиной 1 блок. Рельсы, поставленные торец к торцу, соединяются сами, любого типа; Rail Linker прокладывает пролёты только между широкими рельсами.</value>
-  </data>
-  <data name="DisplayName_MagRail_WideRailBlock5" xml:space="preserve">
-    <value>Широкий рельс 5</value>
-  </data>
-  <data name="Description_MagRail_WideRailBlock5" xml:space="preserve">
-    <value>Прямой широкий рельс (2 м) длиной 5 блоков. Рельсы, поставленные торец к торцу, соединяются сами, любого типа; Rail Linker прокладывает пролёты только между широкими рельсами.</value>
-  </data>
-  <data name="DisplayName_MagRail_WideFreeRail" xml:space="preserve">
-    <value>Широкий поворотный рельс</value>
-  </data>
-  <data name="Description_MagRail_WideFreeRail" xml:space="preserve">
-    <value>Широкий рельс (2 м) с поворотной головой: любое направление, уклон и крен. Rail Linker прокладывает пролёты только между широкими рельсами.</value>
   </data>
   <data name="DisplayName_MagRail_RailBlock5" xml:space="preserve">
     <value>Рельс 5</value>
@@ -68,6 +44,30 @@
   </data>
   <data name="Description_MagRail_Switch1" xml:space="preserve">
     <value>Один вход, три ветки: левая, прямая, правая, все выходят из одной точки на переднем торце. Ветки — это пролёты, проложенные от неё Rail Linker'ом (левую и правую выбирают прицелом сбоку от торца); стрелка направляет поезд в выбранную.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideTrackGroup" xml:space="preserve">
+    <value>Блоки широкого пути</value>
+  </data>
+  <data name="Description_MagRail_WideTrackGroup" xml:space="preserve">
+    <value>Блоки широкого (2 м) пути маглева.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideRailBlock1" xml:space="preserve">
+    <value>Широкий рельс 1</value>
+  </data>
+  <data name="Description_MagRail_WideRailBlock1" xml:space="preserve">
+    <value>Прямой широкий рельс (2 м) длиной 1 блок. Рельсы, поставленные торец к торцу, соединяются сами, любого типа; Rail Linker прокладывает пролёты только между широкими рельсами.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideRailBlock5" xml:space="preserve">
+    <value>Широкий рельс 5</value>
+  </data>
+  <data name="Description_MagRail_WideRailBlock5" xml:space="preserve">
+    <value>Прямой широкий рельс (2 м) длиной 5 блоков. Рельсы, поставленные торец к торцу, соединяются сами, любого типа; Rail Linker прокладывает пролёты только между широкими рельсами.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideFreeRail" xml:space="preserve">
+    <value>Широкий поворотный рельс</value>
+  </data>
+  <data name="Description_MagRail_WideFreeRail" xml:space="preserve">
+    <value>Широкий рельс (2 м) с поворотной головой: любое направление, уклон и крен. Rail Linker прокладывает пролёты только между широкими рельсами.</value>
   </data>
   <data name="DisplayName_MagRail_WideSwitch1" xml:space="preserve">
     <value>Широкая стрелка</value>

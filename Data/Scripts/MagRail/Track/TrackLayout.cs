@@ -17,7 +17,8 @@ namespace MagRail
     // Matrices are in the span's frame (see SpanCurve): origin = rail point in the middle of the piece's chord,
     // Forward along the chord, Up. A FanLevel shifts the drawn pieces (not the collision) near a Rail Switch; where
     // the span still overlaps another branch there, its modules are laid one by one with a continuous copper strip
-    // instead of plates (TrackStyle: strip models), as the other branch's are.
+    // instead of plates (TrackStyle: strip models), as the other branch's are. A style without strip models gets no
+    // FanLevel (TrackNetwork.LayoutOf): its switch branches are laid as they are.
     public class TrackLayout
     {
         public const double Module = 0.625;
@@ -26,7 +27,7 @@ namespace MagRail
         static readonly int[] StraightModules = { 64, 32, 16, 8, 4, 2, 1 };
         // Bend models turn by yaw, pitch or roll in steps of BendStep, at most BendSteps (TrackBends.py, WideTrack.py)
         // per module: MaxBend (radius about 12 m), MaxTwist (half a roll in about 40 m); prototype colours (Draw).
-        const int BendSteps = 6;
+        public const int BendSteps = 6;
         static readonly double BendStep = MathHelper.ToRadians(0.5);
         public static readonly double MaxBend = BendSteps * BendStep;
         public static readonly double MaxTwist = BendSteps * BendStep;

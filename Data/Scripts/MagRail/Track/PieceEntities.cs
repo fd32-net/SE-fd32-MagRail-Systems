@@ -45,6 +45,12 @@ namespace MagRail
             return modelFolder + name + ".mwm";
         }
 
+        // Path in the mod's folder (FileExistsInModLocation).
+        public static string ModelFile(string name)
+        {
+            return "Models\\Cubes\\Large\\" + name + ".mwm";
+        }
+
         // The span's pieces are children of this grid (null: world entities).
         public static MyEntity ParentOf(Span s)
         {

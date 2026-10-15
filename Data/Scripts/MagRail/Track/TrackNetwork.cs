@@ -383,9 +383,11 @@ namespace MagRail
             SpanCurve c = CurveOf(s);
             if (c == null)
                 return null;
-            bool fanChanged = FanLevel.KeyChanged(this, s);
+            // A style without strip models lays its switch branches as they are (no FanLevel).
+            TrackStyle style = s.Owner.Style;
+            bool fanChanged = style.HasStrips && FanLevel.KeyChanged(this, s);
             if (s.Layout == null || s.Layout.Curve != c || fanChanged)
-                s.Layout = TrackLayout.Build(c, s.Owner.Style, FanLevel.Build(this, s, c, s.Owner.Style.Width));
+                s.Layout = TrackLayout.Build(c, style, style.HasStrips ? FanLevel.Build(this, s, c, style.Width) : null);
             return s.Layout;
         }
 

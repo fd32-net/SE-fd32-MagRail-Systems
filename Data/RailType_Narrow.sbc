@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <!-- Rail type Narrow (0.74 m; ModelSource/blocks/TrackBlocks.py, TrackPieces.py, TrackBends.py).
+       Track blocks are UpgradeModule: a functional terminal block without inventory or vanilla behaviour; the
+       mod script gives it its logic (TrackStyle lists the subtypes). The rail is a subpart of the model (ports are
+       dummies in it). Large grid only. What a rail type must have: ModelSource/README.md, "Adding a rail type". -->
+  <CubeBlocks>
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_RailBlock1</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_RailBlock1</DisplayName>
+      <Description>Description_MagRail_RailBlock1</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_RailBlock1.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_RailBlock1.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="4" />
+        <Component Subtype="Construction" Count="6" />
+        <Component Subtype="MetalGrid" Count="4" />
+      </Components>
+      <CriticalComponent Subtype="MetalGrid" Index="0" />
+      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <Center x="0" y="0" z="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
+      </MountPoints>
+      <BlockPairName>MagRail_RailBlock1</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>8</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>10</PCU>
+      <IsAirTight>false</IsAirTight>
+      <Upgrades />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_RailBlock5</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_RailBlock5</DisplayName>
+      <Description>Description_MagRail_RailBlock5</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_RailBlock5.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="5" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_RailBlock5.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="10" />
+        <Component Subtype="Construction" Count="20" />
+        <Component Subtype="MetalGrid" Count="15" />
+      </Components>
+      <CriticalComponent Subtype="MetalGrid" Index="0" />
+      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <Center x="0" y="0" z="4" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="4" EndX="1" EndY="5" Default="true" />
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
+      </MountPoints>
+      <BlockPairName>MagRail_RailBlock5</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>20</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>15</PCU>
+      <IsAirTight>false</IsAirTight>
+      <Upgrades />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_RailBlock10</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_RailBlock10</DisplayName>
+      <Description>Description_MagRail_RailBlock10</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_RailBlock10.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="10" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_RailBlock10.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="14" />
+        <Component Subtype="Construction" Count="35" />
+        <Component Subtype="MetalGrid" Count="30" />
+      </Components>
+      <CriticalComponent Subtype="MetalGrid" Index="0" />
+      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <Center x="0" y="0" z="9" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="9" EndX="1" EndY="10" Default="true" />
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
+      </MountPoints>
+      <BlockPairName>MagRail_RailBlock10</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>30</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>20</PCU>
+      <IsAirTight>false</IsAirTight>
+      <Upgrades />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_RailBlock20</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_RailBlock20</DisplayName>
+      <Description>Description_MagRail_RailBlock20</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_RailBlock20.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="20" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_RailBlock20.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="18" />
+        <Component Subtype="Construction" Count="65" />
+        <Component Subtype="MetalGrid" Count="60" />
+      </Components>
+      <CriticalComponent Subtype="MetalGrid" Index="0" />
+      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <Center x="0" y="0" z="19" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="19" EndX="1" EndY="20" Default="true" />
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
+      </MountPoints>
+      <BlockPairName>MagRail_RailBlock20</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>50</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>30</PCU>
+      <IsAirTight>false</IsAirTight>
+      <Upgrades />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_FreeRail</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_FreeRail</DisplayName>
+      <Description>Description_MagRail_FreeRail</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_FreeRail.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_FreeRail.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="4" />
+        <Component Subtype="Construction" Count="8" />
+        <Component Subtype="MetalGrid" Count="4" />
+        <Component Subtype="Motor" Count="2" />
+        <Component Subtype="Computer" Count="2" />
+      </Components>
+      <CriticalComponent Subtype="Computer" Index="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+      </MountPoints>
+      <BlockPairName>MagRail_FreeRail</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>12</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>15</PCU>
+      <IsAirTight>false</IsAirTight>
+      <Upgrades />
+    </Definition>
+    <!-- The switch: the model of the type's Rail Block 1, one entry and three branch ports in one point at the
+         front end (like the old Maglev junction), see ModelSource/blocks/Switch1.py. -->
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_Switch1</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_Switch1</DisplayName>
+      <Description>Description_MagRail_Switch1</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_Switch1.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_Switch1.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="4" />
+        <Component Subtype="Construction" Count="6" />
+        <Component Subtype="MetalGrid" Count="4" />
+        <Component Subtype="Computer" Count="2" />
+      </Components>
+      <CriticalComponent Subtype="Computer" Index="0" />
+      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <Center x="0" y="0" z="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
+      </MountPoints>
+      <BlockPairName>MagRail_Switch1</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>10</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>15</PCU>
+      <IsAirTight>false</IsAirTight>
+      <Upgrades />
+    </Definition>
+  </CubeBlocks>
+  <!-- G menu: the type's blocks in one group; the first block is the group icon. -->
+  <BlockVariantGroups>
+    <BlockVariantGroup>
+      <Id Type="MyObjectBuilder_BlockVariantGroup" Subtype="MagRail_TrackGroup" />
+      <DisplayName>DisplayName_MagRail_TrackGroup</DisplayName>
+      <Description>Description_MagRail_TrackGroup</Description>
+      <Blocks>
+        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock1" />
+        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock5" />
+        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock10" />
+        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock20" />
+        <Block Type="UpgradeModule" Subtype="MagRail_FreeRail" />
+        <Block Type="UpgradeModule" Subtype="MagRail_Switch1" />
+      </Blocks>
+    </BlockVariantGroup>
+  </BlockVariantGroups>
+  <!-- Progression: research group 16, like the old Maglev blocks. -->
+  <ResearchBlocks>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock1" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock5" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock10" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock20" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_FreeRail" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_Switch1" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+  </ResearchBlocks>
+  <!-- Rail Linker end face overlays (TrackStyle.Face, Visuals/Draw.cs): MagRail_FaceNarrow<part><Line|Fill>,
+       textures from ModelSource/overlay_textures.py. -->
+  <TransparentMaterials>
+    <TransparentMaterial>
+      <Id>
+        <TypeId>TransparentMaterialDefinition</TypeId>
+        <SubtypeId>MagRail_FaceNarrowLine</SubtypeId>
+      </Id>
+      <AlphaMistingEnable>false</AlphaMistingEnable>
+      <AlphaSaturation>1</AlphaSaturation>
+      <CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+      <IgnoreDepth>false</IgnoreDepth>
+      <SoftParticleDistanceScale>0.1</SoftParticleDistanceScale>
+      <Texture>Textures\Overlay\FaceNarrowLine.dds</Texture>
+      <UseAtlas>false</UseAtlas>
+      <Reflectivity>0</Reflectivity>
+    </TransparentMaterial>
+    <TransparentMaterial>
+      <Id>
+        <TypeId>TransparentMaterialDefinition</TypeId>
+        <SubtypeId>MagRail_FaceNarrowFill</SubtypeId>
+      </Id>
+      <AlphaMistingEnable>false</AlphaMistingEnable>
+      <AlphaSaturation>1</AlphaSaturation>
+      <CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+      <IgnoreDepth>false</IgnoreDepth>
+      <SoftParticleDistanceScale>0.1</SoftParticleDistanceScale>
+      <Texture>Textures\Overlay\FaceNarrowFill.dds</Texture>
+      <UseAtlas>false</UseAtlas>
+      <Reflectivity>0</Reflectivity>
+    </TransparentMaterial>
+    <TransparentMaterial>
+      <Id>
+        <TypeId>TransparentMaterialDefinition</TypeId>
+        <SubtypeId>MagRail_FaceNarrowCLine</SubtypeId>
+      </Id>
+      <AlphaMistingEnable>false</AlphaMistingEnable>
+      <AlphaSaturation>1</AlphaSaturation>
+      <CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+      <IgnoreDepth>false</IgnoreDepth>
+      <SoftParticleDistanceScale>0.1</SoftParticleDistanceScale>
+      <Texture>Textures\Overlay\FaceNarrowCLine.dds</Texture>
+      <UseAtlas>false</UseAtlas>
+      <Reflectivity>0</Reflectivity>
+    </TransparentMaterial>
+    <TransparentMaterial>
+      <Id>
+        <TypeId>TransparentMaterialDefinition</TypeId>
+        <SubtypeId>MagRail_FaceNarrowCFill</SubtypeId>
+      </Id>
+      <AlphaMistingEnable>false</AlphaMistingEnable>
+      <AlphaSaturation>1</AlphaSaturation>
+      <CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+      <IgnoreDepth>false</IgnoreDepth>
+      <SoftParticleDistanceScale>0.1</SoftParticleDistanceScale>
+      <Texture>Textures\Overlay\FaceNarrowCFill.dds</Texture>
+      <UseAtlas>false</UseAtlas>
+      <Reflectivity>0</Reflectivity>
+    </TransparentMaterial>
+    <TransparentMaterial>
+      <Id>
+        <TypeId>TransparentMaterialDefinition</TypeId>
+        <SubtypeId>MagRail_FaceNarrowLLine</SubtypeId>
+      </Id>
+      <AlphaMistingEnable>false</AlphaMistingEnable>
+      <AlphaSaturation>1</AlphaSaturation>
+      <CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+      <IgnoreDepth>false</IgnoreDepth>
+      <SoftParticleDistanceScale>0.1</SoftParticleDistanceScale>
+      <Texture>Textures\Overlay\FaceNarrowLLine.dds</Texture>
+      <UseAtlas>false</UseAtlas>
+      <Reflectivity>0</Reflectivity>
+    </TransparentMaterial>
+    <TransparentMaterial>
+      <Id>
+        <TypeId>TransparentMaterialDefinition</TypeId>
+        <SubtypeId>MagRail_FaceNarrowLFill</SubtypeId>
+      </Id>
+      <AlphaMistingEnable>false</AlphaMistingEnable>
+      <AlphaSaturation>1</AlphaSaturation>
+      <CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+      <IgnoreDepth>false</IgnoreDepth>
+      <SoftParticleDistanceScale>0.1</SoftParticleDistanceScale>
+      <Texture>Textures\Overlay\FaceNarrowLFill.dds</Texture>
+      <UseAtlas>false</UseAtlas>
+      <Reflectivity>0</Reflectivity>
+    </TransparentMaterial>
+    <TransparentMaterial>
+      <Id>
+        <TypeId>TransparentMaterialDefinition</TypeId>
+        <SubtypeId>MagRail_FaceNarrowRLine</SubtypeId>
+      </Id>
+      <AlphaMistingEnable>false</AlphaMistingEnable>
+      <AlphaSaturation>1</AlphaSaturation>
+      <CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+      <IgnoreDepth>false</IgnoreDepth>
+      <SoftParticleDistanceScale>0.1</SoftParticleDistanceScale>
+      <Texture>Textures\Overlay\FaceNarrowRLine.dds</Texture>
+      <UseAtlas>false</UseAtlas>
+      <Reflectivity>0</Reflectivity>
+    </TransparentMaterial>
+    <TransparentMaterial>
+      <Id>
+        <TypeId>TransparentMaterialDefinition</TypeId>
+        <SubtypeId>MagRail_FaceNarrowRFill</SubtypeId>
+      </Id>
+      <AlphaMistingEnable>false</AlphaMistingEnable>
+      <AlphaSaturation>1</AlphaSaturation>
+      <CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+      <IgnoreDepth>false</IgnoreDepth>
+      <SoftParticleDistanceScale>0.1</SoftParticleDistanceScale>
+      <Texture>Textures\Overlay\FaceNarrowRFill.dds</Texture>
+      <UseAtlas>false</UseAtlas>
+      <Reflectivity>0</Reflectivity>
+    </TransparentMaterial>
+  </TransparentMaterials>
+</Definitions>

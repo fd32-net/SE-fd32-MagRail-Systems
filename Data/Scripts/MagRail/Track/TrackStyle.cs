@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Definitions;
+using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Utils;
 
@@ -14,10 +15,13 @@ namespace MagRail
     // listed under its style with its kind (a subtype listed nowhere is an error, never a default style). Spans only
     // connect blocks of one style; joints (end to end) join any styles: a train would drive across anyway.
     // Both styles repeat their texture every module, so every piece fits anywhere and a left bend is the right one
-    // turned round. The copper is a plate per module; the 0.625 m module and the bends also come with a continuous
-    // strip instead (strip: where the branches of a Rail Switch overlap, see TrackLayout).
-    // A new style: an entry here (and in All), its subtypes in TrackBlockLogic's descriptor, its end face materials
-    // (MagRail_Face<Name>...), its profile glyph on the Rail Linker (subpart G_profile_<name>, LinkerDisplay).
+    // turned round. The copper is a plate per module; the 0.625 m module and the bends may also come with a continuous
+    // strip instead (strip models, optional per style: where the branches of a Rail Switch overlap they are laid
+    // level and a millimetre apart, FanLevel and TrackLayout; a style without them lays its switch branches as they
+    // are, overlapping).
+    // A new style: an entry here (and in All), its subtypes in TrackBlockLogic's descriptor, its data in
+    // Data/RailType_<Name>.sbc, its end face textures and Linker glyph: the checklist "Adding a rail type" in
+    // ModelSource/README.md.
     public class TrackStyle
     {
         // Before the styles: they fill them as they are made.
@@ -54,6 +58,8 @@ namespace MagRail
         // ModelSource/overlay_textures.py, which draws the section's outline into it).
         public readonly float FaceHalfWidth, FaceBottom, FaceTop;
         readonly MyStringId[] faceLines, faceFills;
+        // It has the whole set of strip models (StripModels; found at session load, Check).
+        public bool HasStrips { get; private set; }
 
         TrackStyle(string name, string prefix, float minHeight, double width, double crestHeight, double top, double feet,
             float faceHalfWidth, float faceBottom, float faceTop)
@@ -92,8 +98,9 @@ namespace MagRail
 
         // Session load: every registered subtype must be a block the game knows (a typo here or in the .sbc).
         // A subtype in the registry but not in TrackBlockLogic's descriptor cannot be seen from here: such a block
-        // gets no logic at all (no rail part, no ports).
-        public static void Check()
+        // gets no logic at all (no rail part, no ports). Which styles have their strip models: all of them, or none
+        // used (a part of the set is an error).
+        public static void Check(MyObjectBuilder_Checkpoint.ModItem mod)
         {
             foreach (string subtype in styleOf.Keys)
             {
@@ -101,6 +108,30 @@ namespace MagRail
                 if (!MyDefinitionManager.Static.TryGetCubeBlockDefinition(
                         new MyDefinitionId(typeof(MyObjectBuilder_UpgradeModule), subtype), out def))
                     Log.Error("TrackStyle.Check", "track block " + subtype + " is registered but has no block definition");
+            }
+            foreach (TrackStyle style in All)
+            {
+                List<string> missing = style.StripModels()
+                    .Where(m => !MyAPIGateway.Utilities.FileExistsInModLocation(PieceEntities.ModelFile(m), mod)).ToList();
+                style.HasStrips = missing.Count == 0;
+                if (missing.Count > 0 && missing.Count < style.StripModels().Count())
+                    Log.Error("TrackStyle.Check", style.Name + ": strip models missing (" + string.Join(", ", missing)
+                        + "), switch branches are laid without strips");
+                Log.Info("Rail type " + style.Name + (style.HasStrips ? ": strip models found" : ": no strip models"));
+            }
+        }
+
+        // The strip variants of the module and of every bend.
+        IEnumerable<string> StripModels()
+        {
+            yield return Straight(1, true);
+            for (int steps = 1; steps <= TrackLayout.BendSteps; steps++)
+            {
+                yield return Bend(steps, 0, 0, true);
+                yield return Bend(0, steps, 0, true);
+                yield return Bend(0, -steps, 0, true);
+                yield return Bend(0, 0, steps, true);
+                yield return Bend(0, 0, -steps, true);
             }
         }
 
