@@ -481,7 +481,7 @@
     <value>Блок управления поездом</value>
   </data>
   <data name="Description_MagRail_TrainControl" xml:space="preserve">
-    <value>Ставится на грид кокпита поезда: даёт поезду ванильные гасители инерции (Z). Гасители включены: отпустил W/S — поезд тормозит до остановки и стоит. Выключены — катится. Модель блока полёта ИИ (заглушка).</value>
+    <value>Ставится на грид кокпита поезда: даёт поезду ванильные гасители инерции (Z) и круиз-контроль. Гасители включены: отпустил W/S — поезд тормозит до остановки и стоит. Выключены — катится. Круиз: его действия на панели держат скорость. Модель блока полёта ИИ (заглушка).</value>
   </data>
   <data name="MagRail_Control_DampersOn" xml:space="preserve">
     <value>Гасители инерции: вкл.</value>
@@ -497,6 +497,315 @@
   </data>
   <data name="MagRail_Drive_NoControlUnit" xml:space="preserve">
     <value>Гасители (Z): нет блока управления поездом на гриде кокпита</value>
+  </data>
+  <data name="MagRail_Drive_Cruise" xml:space="preserve">
+    <value>Привод: круиз {0}</value>
+  </data>
+  <data name="MagRail_Cruise_Section" xml:space="preserve">
+    <value>Круиз-контроль</value>
+  </data>
+  <data name="MagRail_Cruise_BtnSet" xml:space="preserve">
+    <value>Задать</value>
+  </data>
+  <data name="MagRail_Cruise_BtnSet_Tip" xml:space="preserve">
+    <value>Включает круиз с текущей скоростью поезда.</value>
+  </data>
+  <data name="MagRail_Cruise_BtnResume" xml:space="preserve">
+    <value>Продолжить</value>
+  </data>
+  <data name="MagRail_Cruise_BtnResume_Tip" xml:space="preserve">
+    <value>Включает круиз с запомненной скоростью (если её нет — с текущей).</value>
+  </data>
+  <data name="MagRail_Cruise_BtnCancel" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="MagRail_Cruise_BtnCancel_Tip" xml:space="preserve">
+    <value>Выключает круиз; скорость запоминается.</value>
+  </data>
+  <data name="MagRail_Cruise_Speed" xml:space="preserve">
+    <value>Скорость круиза</value>
+  </data>
+  <data name="MagRail_Cruise_Speed_Tip" xml:space="preserve">
+    <value>Скорость, которую держит круиз, м/с, до максимальной скорости кораблей мира; круиз не включает. Круиз тянет туда, куда толкает этот блок: это видно после его имени в списке блоков («Вперёд» — вперёд от кокпита). У каждого блока свой круиз, но в поезде работает только один.</value>
+  </data>
+  <data name="MagRail_Cruise_ActSet" xml:space="preserve">
+    <value>Круиз: задать</value>
+  </data>
+  <data name="MagRail_Cruise_ActResume" xml:space="preserve">
+    <value>Круиз: продолжить</value>
+  </data>
+  <data name="MagRail_Cruise_ActCancel" xml:space="preserve">
+    <value>Круиз: отменить</value>
+  </data>
+  <data name="MagRail_Cruise_ActPlus" xml:space="preserve">
+    <value>Круиз +1 м/с</value>
+  </data>
+  <data name="MagRail_Cruise_ActMinus" xml:space="preserve">
+    <value>Круиз −1 м/с</value>
+  </data>
+  <data name="MagRail_Cruise_SlotOff" xml:space="preserve">
+    <value>Выкл</value>
+  </data>
+  <data name="MagRail_Cruise_On" xml:space="preserve">
+    <value>Круиз: {0}</value>
+  </data>
+  <data name="MagRail_Cruise_OffResume" xml:space="preserve">
+    <value>Круиз выключен ({0} — для «Продолжить»)</value>
+  </data>
+  <data name="MagRail_Cruise_Off" xml:space="preserve">
+    <value>Круиз выключен</value>
+  </data>
+  <data name="MagRail_Cruise_CancelBrake" xml:space="preserve">
+    <value>Круиз отменён: тормоз</value>
+  </data>
+  <data name="MagRail_Cruise_CancelParking" xml:space="preserve">
+    <value>Круиз отменён: ручной тормоз</value>
+  </data>
+  <data name="MagRail_Cruise_InfoOn" xml:space="preserve">
+    <value>Круиз: вкл., {0}</value>
+  </data>
+  <data name="MagRail_Cruise_InfoPaused" xml:space="preserve">
+    <value>Круиз: выкл. ({0} запомнено)</value>
+  </data>
+  <data name="MagRail_Cruise_InfoOff" xml:space="preserve">
+    <value>Круиз: выкл.</value>
+  </data>
+  <data name="DisplayName_MagRail_Autopilot" xml:space="preserve">
+    <value>Автопилот поезда</value>
+  </data>
+  <data name="Description_MagRail_Autopilot" xml:space="preserve">
+    <value>Ведёт поезд по пути к его станциям при текущем положении стрелок. Поставь поезд так, чтобы блок был над нужным местом, и нажми «Запомнить» — это станция. Перед поворотами сбрасывает скорость. Модель блока записи пути ИИ (заглушка).</value>
+  </data>
+  <data name="MagRail_Drive_Autopilot" xml:space="preserve">
+    <value>Привод: автопилот {0}</value>
+  </data>
+  <data name="MagRail_Ap_Hud" xml:space="preserve">
+    <value>Автопилот: {0}</value>
+  </data>
+  <data name="MagRail_Ap_StationN" xml:space="preserve">
+    <value>Станция {0}</value>
+  </data>
+  <data name="MagRail_Ap_Idle" xml:space="preserve">
+    <value>ожидание</value>
+  </data>
+  <data name="MagRail_Ap_Starting" xml:space="preserve">
+    <value>старт</value>
+  </data>
+  <data name="MagRail_Ap_DrivingTo" xml:space="preserve">
+    <value>едет к: {0}</value>
+  </data>
+  <data name="MagRail_Ap_DrivingMax" xml:space="preserve">
+    <value>едет к: {0}, осталось {1} м · {2} м/с (макс. скорость)</value>
+  </data>
+  <data name="MagRail_Ap_DrivingStation" xml:space="preserve">
+    <value>едет к: {0}, осталось {1} м · {2} м/с (торможение к станции)</value>
+  </data>
+  <data name="MagRail_Ap_DrivingCurve" xml:space="preserve">
+    <value>едет к: {0}, осталось {1} м · {2} м/с (поворот R {3} м)</value>
+  </data>
+  <data name="MagRail_Ap_DrivingAccel" xml:space="preserve">
+    <value>едет к: {0}, осталось {1} м · {2} м/с (разгон)</value>
+  </data>
+  <data name="MagRail_Ap_Arrived" xml:space="preserve">
+    <value>прибыл: {0}</value>
+  </data>
+  <data name="MagRail_Ap_ArrivedParked" xml:space="preserve">
+    <value>прибыл: {0}, на стоянке</value>
+  </data>
+  <data name="MagRail_Ap_Stopped" xml:space="preserve">
+    <value>остановлен</value>
+  </data>
+  <data name="MagRail_Ap_StoppedDeleted" xml:space="preserve">
+    <value>остановлен: станция удалена</value>
+  </data>
+  <data name="MagRail_Ap_Off" xml:space="preserve">
+    <value>остановлен: блок выключен</value>
+  </data>
+  <data name="MagRail_Ap_Damaged" xml:space="preserve">
+    <value>остановлен: блок повреждён</value>
+  </data>
+  <data name="MagRail_Ap_StoppingError" xml:space="preserve">
+    <value>тормозит: {0}</value>
+  </data>
+  <data name="MagRail_Ap_Error" xml:space="preserve">
+    <value>ОШИБКА: {0}</value>
+  </data>
+  <data name="MagRail_Ap_InternalError" xml:space="preserve">
+    <value>ОШИБКА: внутренняя ошибка (см. лог)</value>
+  </data>
+  <data name="MagRail_Ap_Remembered" xml:space="preserve">
+    <value>запомнено: {0}</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoStations" xml:space="preserve">
+    <value>нет станций</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoStation" xml:space="preserve">
+    <value>ОШИБКА: нет станции {0}</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoTarget" xml:space="preserve">
+    <value>не выбрана станция</value>
+  </data>
+  <data name="MagRail_Ap_ErrOtherAutopilot" xml:space="preserve">
+    <value>этим поездом уже управляет другой автопилот</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoEngine" xml:space="preserve">
+    <value>ни один двигатель поезда не держит рельс</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoRail" xml:space="preserve">
+    <value>под блоком нет рельса</value>
+  </data>
+  <data name="MagRail_Ap_ErrStationRail" xml:space="preserve">
+    <value>у станции нет рельса</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoRoute" xml:space="preserve">
+    <value>до станции не доехать при текущем положении стрелок</value>
+  </data>
+  <data name="MagRail_Ap_ErrRouteLost" xml:space="preserve">
+    <value>путь к станции прервался (стрелка, рельс)</value>
+  </data>
+  <data name="MagRail_Ap_ErrParkingBrake" xml:space="preserve">
+    <value>включён ручной тормоз</value>
+  </data>
+  <data name="MagRail_Ap_ErrMaxStations" xml:space="preserve">
+    <value>ОШИБКА: не больше {0} станций</value>
+  </data>
+  <data name="MagRail_Ap_InfoStations" xml:space="preserve">
+    <value>Станций: {0}, выбрана: {1}</value>
+  </data>
+  <data name="MagRail_Ap_InfoPark" xml:space="preserve">
+    <value>Стоянка по прибытии: {0}</value>
+  </data>
+  <data name="MagRail_Ap_InfoMaxSpeed" xml:space="preserve">
+    <value>Макс. скорость: {0}</value>
+  </data>
+  <data name="MagRail_Ap_InfoRoute" xml:space="preserve">
+    <value>Осталось: {0} м, заданная скорость {1}</value>
+  </data>
+  <data name="MagRail_Yes" xml:space="preserve">
+    <value>да</value>
+  </data>
+  <data name="MagRail_No" xml:space="preserve">
+    <value>нет</value>
+  </data>
+  <data name="MagRail_Ap_GpsDescription" xml:space="preserve">
+    <value>Станция автопилота {0}</value>
+  </data>
+  <data name="MagRail_Ap_Go" xml:space="preserve">
+    <value>Ехать</value>
+  </data>
+  <data name="MagRail_Ap_Go_Tip" xml:space="preserve">
+    <value>Ведёт поезд к выбранной станции.</value>
+  </data>
+  <data name="MagRail_Ap_Stop" xml:space="preserve">
+    <value>Стоп</value>
+  </data>
+  <data name="MagRail_Ap_Stop_Tip" xml:space="preserve">
+    <value>Сразу выключает автопилот: поезд снова у пилота.</value>
+  </data>
+  <data name="MagRail_Ap_Stations" xml:space="preserve">
+    <value>Станции</value>
+  </data>
+  <data name="MagRail_Ap_Stations_Tip" xml:space="preserve">
+    <value>До 10 станций. Выбери станцию, чтобы переименовать, перенести, удалить её или выбрать ей таймер.</value>
+  </data>
+  <data name="MagRail_Ap_Name" xml:space="preserve">
+    <value>Имя станции</value>
+  </data>
+  <data name="MagRail_Ap_Name_Tip" xml:space="preserve">
+    <value>Имя выбранной станции.</value>
+  </data>
+  <data name="MagRail_Ap_Remember" xml:space="preserve">
+    <value>Запомнить станцию здесь</value>
+  </data>
+  <data name="MagRail_Ap_Remember_Tip" xml:space="preserve">
+    <value>Добавляет точку рельса под этим блоком как новую станцию.</value>
+  </data>
+  <data name="MagRail_Ap_Move" xml:space="preserve">
+    <value>Перенести станцию сюда</value>
+  </data>
+  <data name="MagRail_Ap_Move_Tip" xml:space="preserve">
+    <value>Переносит выбранную станцию в точку рельса под этим блоком.</value>
+  </data>
+  <data name="MagRail_Ap_Delete" xml:space="preserve">
+    <value>Удалить станцию</value>
+  </data>
+  <data name="MagRail_Ap_Delete_Tip" xml:space="preserve">
+    <value>Удаляет выбранную станцию.</value>
+  </data>
+  <data name="MagRail_Ap_Timer" xml:space="preserve">
+    <value>Таймер по прибытии</value>
+  </data>
+  <data name="MagRail_Ap_Timer_Tip" xml:space="preserve">
+    <value>Блок таймера, который запускается, когда поезд прибывает на выбранную станцию.</value>
+  </data>
+  <data name="MagRail_Ap_TimerNone" xml:space="preserve">
+    <value>(нет)</value>
+  </data>
+  <data name="MagRail_Ap_MaxSpeed" xml:space="preserve">
+    <value>Макс. скорость</value>
+  </data>
+  <data name="MagRail_Ap_MaxSpeed_Tip" xml:space="preserve">
+    <value>Наибольшая скорость автопилота, м/с. Перед поворотами он сам сбрасывает скорость.</value>
+  </data>
+  <data name="MagRail_Ap_Accel" xml:space="preserve">
+    <value>Разгон</value>
+  </data>
+  <data name="MagRail_Ap_Accel_Tip" xml:space="preserve">
+    <value>Как быстро автопилот разгоняет поезд, м/с² (1–50). Двигатели могут дать меньше (тяга на массу).</value>
+  </data>
+  <data name="MagRail_Ap_Brake" xml:space="preserve">
+    <value>Торможение</value>
+  </data>
+  <data name="MagRail_Ap_Brake_Tip" xml:space="preserve">
+    <value>С каким замедлением автопилот планирует тормозить к станции и перед поворотами, м/с². Не выше, чем двигатели могут затормозить поезд, иначе он проскочит станцию и сдаст назад.</value>
+  </data>
+  <data name="MagRail_Ap_Lateral" xml:space="preserve">
+    <value>Макс. боковая сила на поворотах</value>
+  </data>
+  <data name="MagRail_Ap_Lateral_Tip" xml:space="preserve">
+    <value>Перед поворотом автопилот сбрасывает скорость так, чтобы боковая сила (v²/R) не превышала это значение, пока весь поезд не выйдет из поворота. Неограничено: повороты не замедляют (рельс держит поезд в любом повороте). 1 g: R 160 м — 40 м/с, R 1000 м — 99 м/с; 3 g: R 160 м — 69 м/с.</value>
+  </data>
+  <data name="MagRail_Ap_NoLimit" xml:space="preserve">
+    <value>Неограничено</value>
+  </data>
+  <data name="MagRail_Unit_g" xml:space="preserve">
+    <value>{0} g</value>
+  </data>
+  <data name="MagRail_Ap_Park" xml:space="preserve">
+    <value>Стоянка по прибытии</value>
+  </data>
+  <data name="MagRail_Ap_Park_Tip" xml:space="preserve">
+    <value>Включает ручной тормоз поезда по прибытии.</value>
+  </data>
+  <data name="MagRail_Ap_ShowGps" xml:space="preserve">
+    <value>Показывать станции</value>
+  </data>
+  <data name="MagRail_Ap_ShowGps_Tip" xml:space="preserve">
+    <value>Показывает станции GPS-метками (только тебе, не сохраняются).</value>
+  </data>
+  <data name="MagRail_Ap_ActGoStation" xml:space="preserve">
+    <value>Ехать к станции {0}</value>
+  </data>
+  <data name="MagRail_Ap_ActGoNext" xml:space="preserve">
+    <value>Ехать к следующей станции</value>
+  </data>
+  <data name="MagRail_Ap_ActStop" xml:space="preserve">
+    <value>Стоп автопилота</value>
+  </data>
+  <data name="MagRail_Ap_ActPark" xml:space="preserve">
+    <value>Стоянка по прибытии вкл/выкл</value>
+  </data>
+  <data name="MagRail_Ap_SlotParkOn" xml:space="preserve">
+    <value>Стоянка</value>
+  </data>
+  <data name="MagRail_Ap_SlotParkOff" xml:space="preserve">
+    <value>Без стоянки</value>
+  </data>
+  <data name="MagRail_Ap_SlotRun" xml:space="preserve">
+    <value>Едет</value>
+  </data>
+  <data name="MagRail_Ap_SlotIdle" xml:space="preserve">
+    <value>Ждёт</value>
   </data>
   <data name="MagRail_Unit_s" xml:space="preserve">
     <value>{0} с</value>

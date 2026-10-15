@@ -14,6 +14,10 @@
         <guid>b0b3f1c2-6f7e-4d84-9a51-2c8e7d3f4a60</guid>
         <!-- Hover engine settings (HoverEngineLogic) -->
         <guid>680eadb9-ba93-4634-accb-e32545f16dc7</guid>
+        <!-- Train cruise control on a Train Control Unit (TrainControlLogic) -->
+        <guid>42b0d51d-5b05-4f56-83c7-99f840a40ff0</guid>
+        <!-- Autopilot stations and settings (AutopilotLogic) -->
+        <guid>7c1e4a90-3d2b-4f86-a5e1-9b0c6d2f8e47</guid>
       </RegisteredStorageGuids>
     </EntityComponent>
   </EntityComponents>

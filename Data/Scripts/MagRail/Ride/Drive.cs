@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
 using VRageMath;
 
 namespace MagRail
@@ -16,6 +17,8 @@ namespace MagRail
         Dampers,        // inertia dampeners (Z) on and nothing pushes: the engines' thrust stops the train
         NoController,   // the engines are asked to push but no controller gives the direction
         Sideways,       // the controller faces across the rail
+        Cruise,         // the train's cruise control holds the speed
+        Autopilot,      // the train's autopilot drives
     }
 
     // The drive of one grid on the rail (part of its RailBody), ported from the old Maglev (MaglevDrive,
@@ -48,6 +51,9 @@ namespace MagRail
         public const double ThrustShare = 1.0, BrakeShare = 1.0, ParkShare = 1.5, BrakeFactor = 2.0;
         // Controller forward vs rail: |cos| below this counts as sideways (60 degrees).
         const double AlignMin = 0.5;
+        // Cruise brake (downhill, over the target) as a share of the engine's thrust: gentle, so pushing wagons do
+        // not fold up the train; a slope steeper than that speeds the train up (the old Maglev's number).
+        const double CruiseBrakeShare = 0.3;
         // Thrust fades out over the last m/s below the speed limit.
         const double SpeedLimitBand = 1.0;
         const int ControllerRefreshTicks = 30, HandBrakeRefreshTicks = 10;
@@ -62,8 +68,17 @@ namespace MagRail
         // pilot).
         IMyShipController pilot, reference;
         int controllerTick = -999;
-        // The reference controller's grid has a Train Control Unit (else it has no dampeners to read).
+        // The reference controller's grid has a Train Control Unit (else it has no dampeners to read); the train's
+        // units, and the one whose cruise is on this tick.
         bool unit;
+        readonly List<TrainControlLogic> trainUnits = new List<TrainControlLogic>();
+        TrainControlLogic trainUnit;
+        // This tick: the cruise drives, and the pilot's W/S along the cruise direction (+1 = the way it pulls).
+        bool cruising;
+        double cruiseMove;
+        // This tick: the autopilot's order (AutopilotLogic), if it drives the train.
+        bool autopilot;
+        AutopilotLogic.Command order;
         DriveTuning tuning = DriveTuning.Default;
         bool handBrake;
         int handBrakeTick = -999;
@@ -113,9 +128,152 @@ namespace MagRail
                 move = MathHelper.Clamp(-m.Z, -1f, 1f);
                 brakeKey = m.Y > 0.5f;
             }
+            bool trainParked = reference != null && !reference.MarkedForClose && reference.HandBrake;
             // Parked train: W/S pushes no grid of it (else the wagons push the parked locomotive along).
-            if (move != 0 && tuning.ParkStopsDrive && reference != null && !reference.MarkedForClose && reference.HandBrake)
+            if (move != 0 && tuning.ParkStopsDrive && trainParked)
                 move = 0;
+            // The autopilot drives: the pilot's keys do nothing, and the cruise would drive on after it.
+            trainUnit = CruisingUnit();
+            autopilot = AutopilotLogic.TryGetCommand(grid, out order);
+            if (autopilot)
+            {
+                move = 0;
+                brakeKey = false;
+                cruising = false;
+                if (trainUnit != null)
+                    Cruise.CancelTrain(grid, null);
+                return;
+            }
+            ReadCruise(trainParked);
+        }
+
+        // ---- autopilot ----
+
+        // The autopilot's speed along its direction (minus = back), held as the cruise holds its own: pushing the
+        // way the grid moves takes the engines' thrust (Power, Speed Limit), against it their full force. A grid
+        // square to the direction (a far wagon in a tight curve) goes the way it moves.
+        double AutopilotThrust(List<HoverEngineLogic> held, Vector3D pathForward, double along, double mass, double ramp, int tick)
+        {
+            State = DriveState.Autopilot;
+            double facing = Vector3D.Dot(order.Direction, pathForward);
+            double sign = Math.Abs(facing) >= 0.3 ? Math.Sign(facing) : Math.Abs(along) > 0.1 ? Math.Sign(along) * Math.Sign(order.Speed) : 0;
+            if (sign == 0)
+                return 0;
+            double speed = along * sign;
+            double wanted = (order.Speed - speed) * mass / Step;
+            bool pushing = Math.Abs(speed) < 0.05 || (wanted > 0) == (speed > 0);
+            forces.Clear();
+            double limit = 0;
+            for (int i = 0; i < held.Count; i++)
+            {
+                HoverEngineLogic e = held[i];
+                double force = 0;
+                if (e.Block.Propulsion && e.Block.PropulsionOverride == 0)
+                {
+                    if (!pushing)
+                        force = e.Force * tuning.ThrustShare;
+                    else
+                    {
+                        force = e.Force * tuning.ThrustShare * PowerSlider(e);
+                        double speedLimit = SpeedLimit(e);
+                        if (Math.Abs(speed) > 0 && speedLimit < double.MaxValue)
+                            force *= MathHelper.Clamp((speedLimit - Math.Abs(speed)) / SpeedLimitBand, 0.0, 1.0);
+                    }
+                }
+                forces.Add(force * (wanted > 0 ? sign : -sign));
+                limit += force;
+            }
+            double cap = Math.Min(Math.Abs(wanted), (pushing ? tuning.MaxThrustAccel : tuning.MaxBrakeAccel) * mass);
+            double share = limit > 0 ? Math.Min(cap / limit, 1.0) : 0;
+            return Push(held, share, mass, ramp);
+        }
+
+        // ---- cruise ----
+
+        // The train's unit with its cruise on (two after a merge of trains: the lowest id), or null.
+        TrainControlLogic CruisingUnit()
+        {
+            TrainControlLogic best = null;
+            for (int i = 0; i < trainUnits.Count; i++)
+            {
+                TrainControlLogic u = trainUnits[i];
+                if (u.Cruise.Engaged && !u.Block.MarkedForClose && u.Block.IsFunctional && (best == null || u.Block.EntityId < best.Block.EntityId))
+                    best = u;
+            }
+            return best;
+        }
+
+        // The train's cruise (on its Train Control Unit, Cruise): S, Space and the train's hand brake cancel it, the
+        // target is kept for Resume.
+        void ReadCruise(bool trainParked)
+        {
+            cruising = false;
+            cruiseMove = 0;
+            if (trainUnit == null)
+                return;
+            // W/S are the cockpit's; the cruise pulls the way its unit pushes. A cockpit facing the other way: S is
+            // gas over the target and W cancels; one facing across it: either cancels.
+            if (pilot != null && move != 0)
+            {
+                double facing = Vector3D.Dot(pilot.WorldMatrix.Forward, Cruise.Direction(trainUnit));
+                cruiseMove = Math.Abs(facing) < AlignMin ? -Math.Abs(move) : move * Math.Sign(facing);
+            }
+            int cancel = Cruise.NoteNone;
+            if (cruiseMove < -0.1 || (pilot != null && brakeKey))
+                cancel = Cruise.NoteBrake;
+            else if (trainParked)
+                cancel = Cruise.NoteParking;
+            if (cancel != Cruise.NoteNone)
+            {
+                Cruise s = trainUnit.Cruise;
+                s.Engaged = false;
+                Cruise.Publish(trainUnit, s, cancel);
+                return;
+            }
+            cruising = true;
+        }
+
+        // Cruise thrust: every tick the engines put this grid back on the target speed, as far as their thrust (or
+        // the gentle cruise brake) reaches on this grid's own mass; whatever the wagons, slopes and drag take away is
+        // made up on the next tick, so nothing is learned and nothing swings (the old Maglev's cruise). Engines with
+        // Propulsion off or an override do not cruise.
+        double CruiseThrust(List<HoverEngineLogic> held, Vector3D pathForward, double along, double mass, double ramp, int tick)
+        {
+            State = DriveState.Cruise;
+            double facing = Vector3D.Dot(Cruise.Direction(trainUnit), pathForward);
+            if (Math.Abs(facing) < AlignMin)
+            {
+                State = DriveState.Sideways;
+                return 0;
+            }
+            double sign = facing > 0 ? 1 : -1;
+            double speed = along * sign;
+            double wanted = (trainUnit.Cruise.Target - speed) * mass / Step;
+            bool pushing = wanted >= 0;
+            forces.Clear();
+            double limit = 0;
+            for (int i = 0; i < held.Count; i++)
+            {
+                HoverEngineLogic e = held[i];
+                double force = 0;
+                if (e.Block.Propulsion && e.Block.PropulsionOverride == 0 && !Braking(e, tick))
+                {
+                    if (!pushing)
+                        force = e.Force * tuning.ThrustShare * CruiseBrakeShare;
+                    else
+                    {
+                        force = e.Force * tuning.ThrustShare * PowerSlider(e);
+                        double speedLimit = SpeedLimit(e);
+                        if (speed > 0 && speedLimit < double.MaxValue)
+                            force *= MathHelper.Clamp((speedLimit - speed) / SpeedLimitBand, 0.0, 1.0);
+                    }
+                }
+                forces.Add(force * (pushing ? sign : -sign));
+                limit += force;
+            }
+            double cap = Math.Min(Math.Abs(wanted), (pushing ? tuning.MaxThrustAccel : tuning.MaxBrakeAccel) * mass);
+            double share = limit > 0 ? Math.Min(cap / limit, 1.0) : 0;
+            return Push(held, share, mass, ramp);
         }
 
         // Native ShouldBrake: Braking on, and Space held or the engine parked.
@@ -148,6 +306,11 @@ namespace MagRail
             parked = BrakeForce > 0 && !brakeKey;
             if (BrakeForce > 0)
                 State = parked ? DriveState.Parked : DriveState.Braking;
+            if (autopilot && BrakeForce <= 0)
+                return AutopilotThrust(held, pathForward, along, mass, ramp, tick);
+            // W over the cruise is gas over the target: the pilot's thrust instead.
+            if (cruising && cruiseMove <= 0.1 && BrakeForce <= 0)
+                return CruiseThrust(held, pathForward, along, mass, ramp, tick);
             if (!anyInput)
                 return BrakeForce <= 0 && Dampers() ? Damp(held, along, mass, ramp) : 0;
             if (reference == null || reference.MarkedForClose)
@@ -263,6 +426,9 @@ namespace MagRail
 
         public void Release()
         {
+            cruising = false;
+            cruiseMove = 0;
+            autopilot = false;
             brakeHistory = false;
             brakeTicks = 0;
             BrakeCapped = false;
@@ -314,8 +480,19 @@ namespace MagRail
                 && (pilot == null || (!pilot.MarkedForClose && pilot.IsUnderControl)))
                 return;
             controllerTick = tick;
+            FindControllers(grid, out pilot, out reference);
+            unit = reference != null && TrainControlLogic.OnGrid(reference.CubeGrid);
+            TrainControlLogic.CollectTrain(grid, trainUnits);
+            tuning = DriveTuning.For(reference);
+        }
+
+        // The train's controllers (the grids mechanically joined to this one): the one a player drives from (or
+        // null) and the one whose facing sets the direction: the pilot, else the main cockpit, else any controller
+        // that controls wheels (the lowest id, so every grid of the train picks the same one).
+        public static void FindControllers(IMyCubeGrid grid, out IMyShipController pilot, out IMyShipController reference)
+        {
             IMyShipController main = null, any = null, piloted = null;
-            CollectGroupControllers();
+            CollectGroupControllers(grid);
             for (int i = 0; i < scratch.Count; i++)
             {
                 IMyShipController s = scratch[i];
@@ -334,12 +511,10 @@ namespace MagRail
                 piloted = null;
             pilot = piloted;
             reference = piloted ?? main ?? any;
-            unit = reference != null && TrainControlLogic.OnGrid(reference.CubeGrid);
-            tuning = DriveTuning.For(reference);
         }
 
         // Every ship controller on the grids mechanically joined to this one (not over connectors).
-        void CollectGroupControllers()
+        static void CollectGroupControllers(IMyCubeGrid grid)
         {
             scratch.Clear();
             groupScratch.Clear();

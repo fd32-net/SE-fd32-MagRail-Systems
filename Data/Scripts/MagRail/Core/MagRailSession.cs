@@ -13,7 +13,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.9.9";
+        public const string Version = "V0.10.0";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -58,6 +58,7 @@ namespace MagRail
             Collision.Clear();
             Engines.Clear();
             ControlUnits.Clear();
+            AutopilotLogic.Clear();
             Rides.Clear();
             TrackDebug.Clear();
             DriveTuning.Clear();
@@ -75,6 +76,7 @@ namespace MagRail
             try
             {
                 RideTime.Start();
+                AutopilotLogic.UpdateAll();
                 Rides.Update(Engines);
                 RideTime.Stop();
             }

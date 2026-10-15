@@ -20,6 +20,10 @@ namespace MagRail
         EngineSettings = 8,         // server -> clients: the engine settings the server applied
         PowerDemand = 9,            // server -> clients: hover engines' power demand (Ids, Values)
         PaintRequest = 10,          // client -> server: paint the span on owner Block's Port: colour mask HSV in Values, Skin
+        CruiseRequest = 11,         // client -> server: cruise command on a Train Control Unit: Values = command, value
+        Cruise = 12,                // server -> clients: a unit's cruise: Values = engaged, has target, target, note
+        AutopilotRequest = 13,      // client -> server: autopilot command: Values = command, value; Block2 = argument; Text = text
+        Autopilot = 14,             // server -> clients: an autopilot's settings (Text) and status (Port); Flag = show it as a note
     }
 
     [ProtoContract]
@@ -37,6 +41,7 @@ namespace MagRail
         [ProtoMember(10)] public long[] Ids;
         [ProtoMember(11)] public float[] Values;
         [ProtoMember(12)] public string Skin;
+        [ProtoMember(13)] public string Text;
     }
 
     // The mod's network channel. The server decides; clients send requests and apply what the
@@ -135,6 +140,67 @@ namespace MagRail
             }
         }
 
+        public static void SendCruiseRequest(TrainControlLogic unit, int command, double value)
+        {
+            ToServer(new Packet { Type = PacketType.CruiseRequest, Block = unit.Block.EntityId, Values = new[] { command, (float)value } });
+        }
+
+        public static void BroadcastCruise(TrainControlLogic unit, Cruise s, int note)
+        {
+            ToClients(new Packet { Type = PacketType.Cruise, Block = unit.Block.EntityId,
+                Values = new[] { s.Engaged ? 1f : 0f, s.HasTarget ? 1f : 0f, (float)s.Target, note } });
+        }
+
+        static void ReceiveCruise(Packet p, ulong sender, bool fromServer)
+        {
+            IMyEntity entity;
+            TrainControlLogic unit = MyAPIGateway.Entities.TryGetEntityById(p.Block, out entity) ? TrainControlLogic.Get(entity as IMyTerminalBlock) : null;
+            if (unit == null || p.Values == null)
+                return;
+            if (IsServer)
+            {
+                IMyPlayer player = FindPlayer(sender);
+                if (p.Type == PacketType.CruiseRequest && p.Values.Length >= 2 && player != null && unit.Block.HasPlayerAccess(player.IdentityId))
+                    Cruise.ServerCommand(unit, (int)p.Values[0], p.Values[1]);
+            }
+            else if (fromServer && p.Type == PacketType.Cruise && p.Values.Length >= 4)
+            {
+                Cruise.Apply(unit, new Cruise { Engaged = p.Values[0] > 0.5f, HasTarget = p.Values[1] > 0.5f, Target = p.Values[2] },
+                    (int)p.Values[3]);
+            }
+        }
+
+        public static void SendAutopilotRequest(AutopilotLogic autopilot, int command, int value, long arg, string text)
+        {
+            ToServer(new Packet { Type = PacketType.AutopilotRequest, Block = autopilot.Block.EntityId, Block2 = arg, Text = text,
+                Values = new float[] { command, value } });
+        }
+
+        public static void BroadcastAutopilot(AutopilotLogic autopilot, bool notify)
+        {
+            ToClients(new Packet { Type = PacketType.Autopilot, Block = autopilot.Block.EntityId, Text = autopilot.Config.Save(), Port = autopilot.Status,
+                Flag = notify });
+        }
+
+        static void ReceiveAutopilot(Packet p, ulong sender, bool fromServer)
+        {
+            IMyEntity entity;
+            AutopilotLogic autopilot = MyAPIGateway.Entities.TryGetEntityById(p.Block, out entity) ? AutopilotLogic.Get(entity as IMyTerminalBlock) : null;
+            if (autopilot == null)
+                return;
+            if (IsServer)
+            {
+                IMyPlayer player = FindPlayer(sender);
+                if (p.Type == PacketType.AutopilotRequest && p.Values != null && p.Values.Length >= 2 && player != null
+                    && autopilot.Block.HasPlayerAccess(player.IdentityId))
+                    autopilot.ServerCommand((int)p.Values[0], (int)p.Values[1], p.Block2, p.Text);
+            }
+            else if (fromServer && p.Type == PacketType.Autopilot)
+            {
+                autopilot.Apply(p.Text, p.Port, p.Flag);
+            }
+        }
+
         public static void SendLinkRequest(TrackBlockLogic a, string aPort, TrackBlockLogic b, string bPort)
         {
             ToServer(new Packet { Type = PacketType.LinkRequest, Block = a.Block.EntityId, Port = aPort, Block2 = b.Block.EntityId, Port2 = bPort });
@@ -177,6 +243,16 @@ namespace MagRail
                 if (p.Type == PacketType.EngineSettingsRequest || p.Type == PacketType.EngineSettings)
                 {
                     ReceiveEngine(p, sender, fromServer);
+                    return;
+                }
+                if (p.Type == PacketType.CruiseRequest || p.Type == PacketType.Cruise)
+                {
+                    ReceiveCruise(p, sender, fromServer);
+                    return;
+                }
+                if (p.Type == PacketType.AutopilotRequest || p.Type == PacketType.Autopilot)
+                {
+                    ReceiveAutopilot(p, sender, fromServer);
                     return;
                 }
                 TrackNetwork network = MagRailSession.Instance.Network;

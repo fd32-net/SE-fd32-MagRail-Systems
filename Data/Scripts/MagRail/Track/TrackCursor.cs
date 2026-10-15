@@ -338,6 +338,27 @@ namespace MagRail
             return false;
         }
 
+        // Metres from S to the end of the piece the cursor faces.
+        public double PieceLeft
+        {
+            get { return Dir > 0 ? Curve.Length - S : S; }
+        }
+
+        public bool SamePiece(TrackCursor other)
+        {
+            return Span == other.Span && Lane == other.Lane;
+        }
+
+        // Moves to the start of the next piece the cursor faces (route walks: Route). False: the end of the track,
+        // or the piece is no rail any more.
+        public bool NextPiece()
+        {
+            if (!Valid || !Rideable)
+                return false;
+            int move = Dir;
+            return Cross(Dir > 0 ? 1 : 0, ref move);
+        }
+
         // Leaves the piece through `end` (0 = S 0, 1 = S Length) moving `move` (+1 / -1 along S); on the next
         // piece `move` is its own and Dir keeps facing the same way along the track. False: nothing there
         // (the cursor stays at the end).

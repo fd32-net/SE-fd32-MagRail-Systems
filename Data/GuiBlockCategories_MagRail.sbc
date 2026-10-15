@@ -54,6 +54,8 @@
         <string>MotorSuspension/MagRail_HoverMini</string>
         <string>Thrust/MagRail_TrainControlLarge</string>
         <string>Thrust/MagRail_TrainControlSmall</string>
+        <string>UpgradeModule/MagRail_AutopilotLarge</string>
+        <string>UpgradeModule/MagRail_AutopilotSmall</string>
       </ItemIds>
     </Category>
   </CategoryClasses>

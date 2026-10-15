@@ -481,7 +481,7 @@
     <value>Train Control Unit</value>
   </data>
   <data name="Description_MagRail_TrainControl" xml:space="preserve">
-    <value>Put it on the grid of the train's cockpit: it gives the train the vanilla inertia dampeners (Z). Dampeners on: release W/S and the train brakes to a stop and holds. Off: it coasts. Model of the AI Flight block (placeholder).</value>
+    <value>Put it on the grid of the train's cockpit: it gives the train the vanilla inertia dampeners (Z) and the cruise control. Dampeners on: release W/S and the train brakes to a stop and holds. Off: it coasts. Cruise: its toolbar actions hold the speed. Model of the AI Flight block (placeholder).</value>
   </data>
   <data name="MagRail_Control_DampersOn" xml:space="preserve">
     <value>Inertia dampeners: on</value>
@@ -497,6 +497,315 @@
   </data>
   <data name="MagRail_Drive_NoControlUnit" xml:space="preserve">
     <value>Dampeners (Z): no Train Control Unit on the cockpit's grid</value>
+  </data>
+  <data name="MagRail_Drive_Cruise" xml:space="preserve">
+    <value>Drive: cruise {0}</value>
+  </data>
+  <data name="MagRail_Cruise_Section" xml:space="preserve">
+    <value>Cruise control</value>
+  </data>
+  <data name="MagRail_Cruise_BtnSet" xml:space="preserve">
+    <value>Set</value>
+  </data>
+  <data name="MagRail_Cruise_BtnSet_Tip" xml:space="preserve">
+    <value>Switches the cruise on at the train's current speed.</value>
+  </data>
+  <data name="MagRail_Cruise_BtnResume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="MagRail_Cruise_BtnResume_Tip" xml:space="preserve">
+    <value>Switches the cruise on at the remembered speed (the current one if there is none).</value>
+  </data>
+  <data name="MagRail_Cruise_BtnCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="MagRail_Cruise_BtnCancel_Tip" xml:space="preserve">
+    <value>Switches the cruise off; the speed is remembered.</value>
+  </data>
+  <data name="MagRail_Cruise_Speed" xml:space="preserve">
+    <value>Cruise speed</value>
+  </data>
+  <data name="MagRail_Cruise_Speed_Tip" xml:space="preserve">
+    <value>The speed the cruise holds, m/s, up to the world's max ship speed; it does not switch the cruise on. The cruise pushes the way this block pushes: shown after its name in the block list (Forward = forward of the cockpit). Each unit has its own cruise, but only one works on a train at a time.</value>
+  </data>
+  <data name="MagRail_Cruise_ActSet" xml:space="preserve">
+    <value>Cruise Set</value>
+  </data>
+  <data name="MagRail_Cruise_ActResume" xml:space="preserve">
+    <value>Cruise Resume</value>
+  </data>
+  <data name="MagRail_Cruise_ActCancel" xml:space="preserve">
+    <value>Cruise Cancel</value>
+  </data>
+  <data name="MagRail_Cruise_ActPlus" xml:space="preserve">
+    <value>Cruise +1 m/s</value>
+  </data>
+  <data name="MagRail_Cruise_ActMinus" xml:space="preserve">
+    <value>Cruise -1 m/s</value>
+  </data>
+  <data name="MagRail_Cruise_SlotOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="MagRail_Cruise_On" xml:space="preserve">
+    <value>Cruise: {0}</value>
+  </data>
+  <data name="MagRail_Cruise_OffResume" xml:space="preserve">
+    <value>Cruise off ({0} kept for Resume)</value>
+  </data>
+  <data name="MagRail_Cruise_Off" xml:space="preserve">
+    <value>Cruise off</value>
+  </data>
+  <data name="MagRail_Cruise_CancelBrake" xml:space="preserve">
+    <value>Cruise cancelled: brake</value>
+  </data>
+  <data name="MagRail_Cruise_CancelParking" xml:space="preserve">
+    <value>Cruise cancelled: hand brake</value>
+  </data>
+  <data name="MagRail_Cruise_InfoOn" xml:space="preserve">
+    <value>Cruise: on, {0}</value>
+  </data>
+  <data name="MagRail_Cruise_InfoPaused" xml:space="preserve">
+    <value>Cruise: off ({0} kept)</value>
+  </data>
+  <data name="MagRail_Cruise_InfoOff" xml:space="preserve">
+    <value>Cruise: off</value>
+  </data>
+  <data name="DisplayName_MagRail_Autopilot" xml:space="preserve">
+    <value>Train Autopilot</value>
+  </data>
+  <data name="Description_MagRail_Autopilot" xml:space="preserve">
+    <value>Drives the train to its stations along the track, with the switches as they are. Stop the train with the block over a place and press Remember: that is a station. Slows down before curves. Model of the AI Recorder block (placeholder).</value>
+  </data>
+  <data name="MagRail_Drive_Autopilot" xml:space="preserve">
+    <value>Drive: autopilot {0}</value>
+  </data>
+  <data name="MagRail_Ap_Hud" xml:space="preserve">
+    <value>Autopilot: {0}</value>
+  </data>
+  <data name="MagRail_Ap_StationN" xml:space="preserve">
+    <value>Station {0}</value>
+  </data>
+  <data name="MagRail_Ap_Idle" xml:space="preserve">
+    <value>idle</value>
+  </data>
+  <data name="MagRail_Ap_Starting" xml:space="preserve">
+    <value>starting</value>
+  </data>
+  <data name="MagRail_Ap_DrivingTo" xml:space="preserve">
+    <value>driving to {0}</value>
+  </data>
+  <data name="MagRail_Ap_DrivingMax" xml:space="preserve">
+    <value>driving to {0}, {1} m to go · {2} m/s (max speed)</value>
+  </data>
+  <data name="MagRail_Ap_DrivingStation" xml:space="preserve">
+    <value>driving to {0}, {1} m to go · {2} m/s (braking for the station)</value>
+  </data>
+  <data name="MagRail_Ap_DrivingCurve" xml:space="preserve">
+    <value>driving to {0}, {1} m to go · {2} m/s (curve R {3} m)</value>
+  </data>
+  <data name="MagRail_Ap_DrivingAccel" xml:space="preserve">
+    <value>driving to {0}, {1} m to go · {2} m/s (speeding up)</value>
+  </data>
+  <data name="MagRail_Ap_Arrived" xml:space="preserve">
+    <value>arrived at {0}</value>
+  </data>
+  <data name="MagRail_Ap_ArrivedParked" xml:space="preserve">
+    <value>arrived at {0}, parked</value>
+  </data>
+  <data name="MagRail_Ap_Stopped" xml:space="preserve">
+    <value>stopped</value>
+  </data>
+  <data name="MagRail_Ap_StoppedDeleted" xml:space="preserve">
+    <value>stopped: the station was deleted</value>
+  </data>
+  <data name="MagRail_Ap_Off" xml:space="preserve">
+    <value>stopped: the block is off</value>
+  </data>
+  <data name="MagRail_Ap_Damaged" xml:space="preserve">
+    <value>stopped: the block is damaged</value>
+  </data>
+  <data name="MagRail_Ap_StoppingError" xml:space="preserve">
+    <value>braking: {0}</value>
+  </data>
+  <data name="MagRail_Ap_Error" xml:space="preserve">
+    <value>ERROR: {0}</value>
+  </data>
+  <data name="MagRail_Ap_InternalError" xml:space="preserve">
+    <value>ERROR: internal error (see the log)</value>
+  </data>
+  <data name="MagRail_Ap_Remembered" xml:space="preserve">
+    <value>{0} remembered</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoStations" xml:space="preserve">
+    <value>no stations</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoStation" xml:space="preserve">
+    <value>ERROR: no station {0}</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoTarget" xml:space="preserve">
+    <value>no station to drive to</value>
+  </data>
+  <data name="MagRail_Ap_ErrOtherAutopilot" xml:space="preserve">
+    <value>another autopilot drives this train</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoEngine" xml:space="preserve">
+    <value>no hover engine of the train holds the rail</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoRail" xml:space="preserve">
+    <value>no rail under the block</value>
+  </data>
+  <data name="MagRail_Ap_ErrStationRail" xml:space="preserve">
+    <value>no rail at the station</value>
+  </data>
+  <data name="MagRail_Ap_ErrNoRoute" xml:space="preserve">
+    <value>the station cannot be reached with the switches as they are</value>
+  </data>
+  <data name="MagRail_Ap_ErrRouteLost" xml:space="preserve">
+    <value>the way to the station is broken (a switch, a rail)</value>
+  </data>
+  <data name="MagRail_Ap_ErrParkingBrake" xml:space="preserve">
+    <value>the hand brake is on</value>
+  </data>
+  <data name="MagRail_Ap_ErrMaxStations" xml:space="preserve">
+    <value>ERROR: at most {0} stations</value>
+  </data>
+  <data name="MagRail_Ap_InfoStations" xml:space="preserve">
+    <value>Stations: {0}, selected: {1}</value>
+  </data>
+  <data name="MagRail_Ap_InfoPark" xml:space="preserve">
+    <value>Park on arrival: {0}</value>
+  </data>
+  <data name="MagRail_Ap_InfoMaxSpeed" xml:space="preserve">
+    <value>Max speed: {0}</value>
+  </data>
+  <data name="MagRail_Ap_InfoRoute" xml:space="preserve">
+    <value>To go: {0} m, speed asked {1}</value>
+  </data>
+  <data name="MagRail_Yes" xml:space="preserve">
+    <value>yes</value>
+  </data>
+  <data name="MagRail_No" xml:space="preserve">
+    <value>no</value>
+  </data>
+  <data name="MagRail_Ap_GpsDescription" xml:space="preserve">
+    <value>Station of the autopilot {0}</value>
+  </data>
+  <data name="MagRail_Ap_Go" xml:space="preserve">
+    <value>Go</value>
+  </data>
+  <data name="MagRail_Ap_Go_Tip" xml:space="preserve">
+    <value>Drives the train to the selected station.</value>
+  </data>
+  <data name="MagRail_Ap_Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="MagRail_Ap_Stop_Tip" xml:space="preserve">
+    <value>Stops the autopilot at once: the train is the pilot's again.</value>
+  </data>
+  <data name="MagRail_Ap_Stations" xml:space="preserve">
+    <value>Stations</value>
+  </data>
+  <data name="MagRail_Ap_Stations_Tip" xml:space="preserve">
+    <value>Up to 10 stations. Select one to rename it, move it, delete it or pick its timer.</value>
+  </data>
+  <data name="MagRail_Ap_Name" xml:space="preserve">
+    <value>Station name</value>
+  </data>
+  <data name="MagRail_Ap_Name_Tip" xml:space="preserve">
+    <value>Name of the selected station.</value>
+  </data>
+  <data name="MagRail_Ap_Remember" xml:space="preserve">
+    <value>Remember station here</value>
+  </data>
+  <data name="MagRail_Ap_Remember_Tip" xml:space="preserve">
+    <value>Adds the rail point under this block as a new station.</value>
+  </data>
+  <data name="MagRail_Ap_Move" xml:space="preserve">
+    <value>Move station here</value>
+  </data>
+  <data name="MagRail_Ap_Move_Tip" xml:space="preserve">
+    <value>Moves the selected station to the rail point under this block.</value>
+  </data>
+  <data name="MagRail_Ap_Delete" xml:space="preserve">
+    <value>Delete station</value>
+  </data>
+  <data name="MagRail_Ap_Delete_Tip" xml:space="preserve">
+    <value>Deletes the selected station.</value>
+  </data>
+  <data name="MagRail_Ap_Timer" xml:space="preserve">
+    <value>Timer on arrival</value>
+  </data>
+  <data name="MagRail_Ap_Timer_Tip" xml:space="preserve">
+    <value>The timer block triggered when the train arrives at the selected station.</value>
+  </data>
+  <data name="MagRail_Ap_TimerNone" xml:space="preserve">
+    <value>(none)</value>
+  </data>
+  <data name="MagRail_Ap_MaxSpeed" xml:space="preserve">
+    <value>Max speed</value>
+  </data>
+  <data name="MagRail_Ap_MaxSpeed_Tip" xml:space="preserve">
+    <value>The autopilot's top speed, m/s. Before curves it slows down by itself.</value>
+  </data>
+  <data name="MagRail_Ap_Accel" xml:space="preserve">
+    <value>Acceleration</value>
+  </data>
+  <data name="MagRail_Ap_Accel_Tip" xml:space="preserve">
+    <value>How fast the autopilot speeds the train up, m/s² (1-50). The engines may give less (thrust over mass).</value>
+  </data>
+  <data name="MagRail_Ap_Brake" xml:space="preserve">
+    <value>Braking</value>
+  </data>
+  <data name="MagRail_Ap_Brake_Tip" xml:space="preserve">
+    <value>How hard the autopilot plans to brake for the station and before curves, m/s². Set it no higher than the engines can brake the train, or it overshoots and backs up.</value>
+  </data>
+  <data name="MagRail_Ap_Lateral" xml:space="preserve">
+    <value>Max side force in curves</value>
+  </data>
+  <data name="MagRail_Ap_Lateral_Tip" xml:space="preserve">
+    <value>Before a curve the autopilot slows down so that the side force (v²/R) stays within this, until the whole train has left the curve. No limit: curves do not slow it (the rail holds the train in any curve). 1 g: R 160 m - 40 m/s, R 1000 m - 99 m/s; 3 g: R 160 m - 69 m/s.</value>
+  </data>
+  <data name="MagRail_Ap_NoLimit" xml:space="preserve">
+    <value>No limit</value>
+  </data>
+  <data name="MagRail_Unit_g" xml:space="preserve">
+    <value>{0} g</value>
+  </data>
+  <data name="MagRail_Ap_Park" xml:space="preserve">
+    <value>Park on arrival</value>
+  </data>
+  <data name="MagRail_Ap_Park_Tip" xml:space="preserve">
+    <value>Puts the train's hand brake on when it arrives.</value>
+  </data>
+  <data name="MagRail_Ap_ShowGps" xml:space="preserve">
+    <value>Show stations</value>
+  </data>
+  <data name="MagRail_Ap_ShowGps_Tip" xml:space="preserve">
+    <value>Shows the stations as GPS marks (only to you, not saved).</value>
+  </data>
+  <data name="MagRail_Ap_ActGoStation" xml:space="preserve">
+    <value>Go to station {0}</value>
+  </data>
+  <data name="MagRail_Ap_ActGoNext" xml:space="preserve">
+    <value>Go to the next station</value>
+  </data>
+  <data name="MagRail_Ap_ActStop" xml:space="preserve">
+    <value>Stop autopilot</value>
+  </data>
+  <data name="MagRail_Ap_ActPark" xml:space="preserve">
+    <value>Park on arrival on/off</value>
+  </data>
+  <data name="MagRail_Ap_SlotParkOn" xml:space="preserve">
+    <value>Park</value>
+  </data>
+  <data name="MagRail_Ap_SlotParkOff" xml:space="preserve">
+    <value>No park</value>
+  </data>
+  <data name="MagRail_Ap_SlotRun" xml:space="preserve">
+    <value>Driving</value>
+  </data>
+  <data name="MagRail_Ap_SlotIdle" xml:space="preserve">
+    <value>Idle</value>
   </data>
   <data name="MagRail_Unit_s" xml:space="preserve">
     <value>{0} s</value>

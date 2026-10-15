@@ -81,6 +81,8 @@ namespace MagRail
                 case DriveState.Braking: return Loc.F("MagRail_Drive_Braking", Force(d.BrakeForce));
                 case DriveState.Parked: return Loc.F("MagRail_Drive_Parked", Force(d.BrakeForce));
                 case DriveState.Dampers: return Loc.F("MagRail_Drive_Dampers", Force(Math.Abs(d.Force))) + PowerNote(d);
+                case DriveState.Autopilot: return Loc.F("MagRail_Drive_Autopilot", Force(Math.Abs(d.Force))) + PowerNote(d);
+                case DriveState.Cruise: return Loc.F("MagRail_Drive_Cruise", Force(Math.Abs(d.Force))) + PowerNote(d);
                 case DriveState.NoController: return Loc.T("MagRail_Drive_NoController");
                 case DriveState.Sideways: return Loc.T("MagRail_Drive_Sideways");
             }

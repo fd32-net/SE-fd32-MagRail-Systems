@@ -672,5 +672,102 @@
       <FlameDamage>0</FlameDamage>
       <FlameLengthScale>0</FlameLengthScale>
     </Definition>
+    <!-- Autopilot (AutopilotLogic): the vanilla AI Recorder's model (placeholder), own logic. -->
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_AutopilotLarge</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_Autopilot</DisplayName>
+      <Description>Description_MagRail_Autopilot</Description>
+      <Icon>Textures\GUI\Icons\Cubes\PathRecorderBlock_Task.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\PathRecorderBlock.mwm</Model>
+      <Components>
+        <Component Subtype="InteriorPlate" Count="20" />
+        <Component Subtype="Construction" Count="30" />
+        <Component Subtype="Detector" Count="20" />
+        <Component Subtype="Motor" Count="4" />
+        <Component Subtype="Computer" Count="20" />
+        <Component Subtype="SteelPlate" Count="20" />
+      </Components>
+      <CriticalComponent Subtype="Computer" Index="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="0.3" EndY="1" Default="true" />
+        <MountPoint Side="Bottom" StartX="0.7" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Bottom" StartX="0.3" StartY="0.15" EndX="0.7" EndY="0.85" />
+        <MountPoint Side="Left" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Right" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="0.3" EndY="1" />
+        <MountPoint Side="Back" StartX="0.7" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0.3" StartY="0.15" EndX="0.7" EndY="0.85" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="0.3" EndY="1" />
+        <MountPoint Side="Front" StartX="0.7" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0.3" StartY="0.15" EndX="0.7" EndY="0.85" />
+        <MountPoint Side="Top" StartX="0" StartY="0" EndX="0.3" EndY="1" />
+        <MountPoint Side="Top" StartX="0.7" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Top" StartX="0.3" StartY="0.15" EndX="0.7" EndY="0.85" />
+      </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Large\DroneFeatureBlockConstruction_1.mwm" />
+        <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Large\DroneFeatureBlockConstruction_2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Large\DroneFeatureBlockConstruction_3.mwm" />
+      </BuildProgressModels>
+      <BlockPairName>MagRail_Autopilot</BlockPairName>
+      <MirroringZ>Y</MirroringZ>
+      <MirroringY>Z</MirroringY>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>24</BuildTimeSeconds>
+      <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
+      <DamagedSound>ParticleElectrical</DamagedSound>
+      <PCU>25</PCU>
+    </Definition>
+    <!-- Autopilot (AutopilotLogic): the vanilla AI Recorder's model (placeholder), own logic. -->
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_AutopilotSmall</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_Autopilot</DisplayName>
+      <Description>Description_MagRail_Autopilot</Description>
+      <Icon>Textures\GUI\Icons\Cubes\PathRecorderBlock_Task.dds</Icon>
+      <CubeSize>Small</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Small\PathRecorderBlock.mwm</Model>
+      <Components>
+        <Component Subtype="InteriorPlate" Count="2" />
+        <Component Subtype="Construction" Count="5" />
+        <Component Subtype="Detector" Count="4" />
+        <Component Subtype="Motor" Count="2" />
+        <Component Subtype="Computer" Count="10" />
+        <Component Subtype="SteelPlate" Count="2" />
+      </Components>
+      <CriticalComponent Subtype="Computer" Index="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Right" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Left" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Top" StartX="0" StartY="0" EndX="1" EndY="1" />
+      </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.50" File="Models\Cubes\Small\DroneFeatureBlockConstruction_1.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Small\DroneFeatureBlockConstruction_2.mwm" />
+      </BuildProgressModels>
+      <BlockPairName>MagRail_Autopilot</BlockPairName>
+      <MirroringZ>Y</MirroringZ>
+      <MirroringY>Z</MirroringY>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>10</BuildTimeSeconds>
+      <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
+      <DamagedSound>ParticleElectrical</DamagedSound>
+      <PCU>25</PCU>
+    </Definition>
   </CubeBlocks>
 </Definitions>
