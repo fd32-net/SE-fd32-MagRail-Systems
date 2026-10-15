@@ -6,11 +6,11 @@ namespace MagRail
 {
     // A rail style: the section its blocks and spans are made of, and the names of its track piece models.
     // Narrow: ModelSource/rail_profile.py (blocks/TrackPieces.py, TrackBends.py); wide: rail_profile_wide.py
-    // (blocks/WideTrack.py); both sections: rail_section.py. A block's style comes from its subtype; spans and joints
-    // only connect blocks of one style.
+    // (blocks/WideTrack.py); both sections: rail_section.py. A block's style comes from its subtype; spans only
+    // connect blocks of one style, joints (end to end) join both.
     // Both styles repeat their texture every module, so every piece fits anywhere and a left bend is the right one
     // turned round. The copper is a plate per module; the 0.625 m module and the bends also come with a continuous
-    // strip instead (strip: where the branches of a Rail Switch 1 overlap, see TrackLayout).
+    // strip instead (strip: where the branches of a Rail Switch overlap, see TrackLayout).
     public class TrackStyle
     {
         public static readonly TrackStyle Narrow = new TrackStyle("MagRail_", 0.45f, 0.74, "Narrow", 0.5f, -0.455f, 0.545f);
@@ -43,7 +43,7 @@ namespace MagRail
             faceFills = parts.Select(s => MyStringId.GetOrCompute("MagRail_Face" + face + s + "Fill")).ToArray();
         }
 
-        // The whole end face (part -1), or the third of a Rail Switch 1's end face for that SwitchBranch: its outline,
+        // The whole end face (part -1), or the third of a Rail Switch's end face for that SwitchBranch: its outline,
         // or its inside (fill).
         public MyStringId FaceMaterial(int part, bool fill)
         {

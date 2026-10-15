@@ -673,7 +673,7 @@ namespace MagRail
             DrawEnd(b, port, -1, m, m.Translation);
         }
 
-        // The branch ports of a Rail Switch 1 share one point: one end face, each third lit by its branch.
+        // The branch ports of a Rail Switch share one point: one end face, each third lit by its branch.
         void DrawSwitchFace(TrackBlockLogic b)
         {
             MatrixD face = b.PortWorld(b.PortIndex(TrackBlockLogic.BranchPorts[(int)SwitchBranch.Center]));

@@ -4,7 +4,7 @@ using VRageMath;
 
 namespace MagRail
 {
-    // Rail Switch 1: its three branch ports share one point, so the spans laid from them start in one place and
+    // Rail Switch: its three branch ports share one point, so the spans laid from them start in one place and
     // overlap until they part. Drawn as they are, their surfaces lie in one another and flicker, and their heights
     // differ by what their curves do. Where a span overlaps another branch of its switch (a span, or the rail block
     // joined to the centre branch end to end), its pieces are drawn level with the reference branch (the lowest rank
@@ -92,7 +92,9 @@ namespace MagRail
             }
         }
 
-        // The lane of a block joined end to end to the centre branch, entered at otherPort.
+        // The lane of a block joined end to end to the centre branch, entered at otherPort. Another switch's entry:
+        // its centre lane, not the selected one (LaneFrom), so turning that switch does not rebuild these spans; the
+        // lanes leave the entry together, and only that stretch is near the branches here.
         static TrackLane JointLane(TrackNetwork network, TrackBlockLogic block, int port, out int otherPort)
         {
             TrackBlockLogic other;
@@ -101,6 +103,13 @@ namespace MagRail
                 otherPort = -1;
                 return null;
             }
+            if (other.Kind != TrackKind.Switch || otherPort != other.PortIndex("entry"))
+                return other.LaneFrom(otherPort);
+            int centre = other.PortIndex(TrackBlockLogic.BranchPorts[(int)SwitchBranch.Center]);
+            List<TrackLane> lanes = other.Lanes;
+            for (int i = 0; i < lanes.Count; i++)
+                if (lanes[i].To == centre)
+                    return lanes[i];
             return other.LaneFrom(otherPort);
         }
 

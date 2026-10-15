@@ -15,7 +15,7 @@ namespace MagRail
     // under about 40 m), a joint with pyramid ends shows a chamfer instead. For collision, a run of unscaled 2.5 m
     // pieces.
     // Matrices are in the span's frame (see SpanCurve): origin = rail point in the middle of the piece's chord,
-    // Forward along the chord, Up. A FanLevel shifts the drawn pieces (not the collision) near a Rail Switch 1; where
+    // Forward along the chord, Up. A FanLevel shifts the drawn pieces (not the collision) near a Rail Switch; where
     // the span still overlaps another branch there, its modules are laid one by one with a continuous copper strip
     // instead of plates (TrackStyle: strip models), as the other branch's are.
     public class TrackLayout
@@ -150,7 +150,7 @@ namespace MagRail
             }
         }
 
-        // The module from s0 to s1 has a copper strip (the span overlaps another branch of a Rail Switch 1 there).
+        // The module from s0 to s1 has a copper strip (the span overlaps another branch of a Rail Switch there).
         bool Strip(double s0, double s1)
         {
             return level != null && level.Overlaps(s0, s1);

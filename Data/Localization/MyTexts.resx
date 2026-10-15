@@ -64,13 +64,13 @@
     <value>Rail with a turning head: any direction, slope and bank.</value>
   </data>
   <data name="DisplayName_MagRail_Switch1" xml:space="preserve">
-    <value>Rail Switch 1</value>
+    <value>Rail Switch</value>
   </data>
   <data name="Description_MagRail_Switch1" xml:space="preserve">
     <value>One entry, three branches: left, centre, right, all leaving the front end from one point. The branches are the spans laid from it with the Rail Linker (aim beside the end for the left and right one); the switch sends a train into the selected one.</value>
   </data>
   <data name="DisplayName_MagRail_WideSwitch1" xml:space="preserve">
-    <value>Wide Rail Switch 1</value>
+    <value>Wide Rail Switch</value>
   </data>
   <data name="Description_MagRail_WideSwitch1" xml:space="preserve">
     <value>Wide rail switch (2 m), 1 block long. One entry, three branches: left, centre, right, all leaving the front end from one point. The branches are the spans laid from it with the Rail Linker (aim beside the end for the left and right one); the switch sends a train into the selected one.</value>
@@ -424,7 +424,7 @@
     <value>Engine force (full thrust): {0}; holds the rail with {1}</value>
   </data>
   <data name="MagRail_Engine_Info_Grid" xml:space="preserve">
-    <value>Grid: {0} engines, {1} together; mass {2} t</value>
+    <value>Construct: {0} engines, {1} together; mass {2} t</value>
   </data>
   <data name="MagRail_Engine_Info_Weight" xml:space="preserve">
     <value>; weight {0} ({1}% of the hold)</value>

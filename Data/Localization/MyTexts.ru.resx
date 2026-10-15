@@ -64,13 +64,13 @@
     <value>Рельс с поворотной головой: любое направление, уклон и крен.</value>
   </data>
   <data name="DisplayName_MagRail_Switch1" xml:space="preserve">
-    <value>Стрелка 1</value>
+    <value>Стрелка</value>
   </data>
   <data name="Description_MagRail_Switch1" xml:space="preserve">
     <value>Один вход, три ветки: левая, прямая, правая, все выходят из одной точки на переднем торце. Ветки — это пролёты, проложенные от неё Rail Linker'ом (левую и правую выбирают прицелом сбоку от торца); стрелка направляет поезд в выбранную.</value>
   </data>
   <data name="DisplayName_MagRail_WideSwitch1" xml:space="preserve">
-    <value>Широкая стрелка 1</value>
+    <value>Широкая стрелка</value>
   </data>
   <data name="Description_MagRail_WideSwitch1" xml:space="preserve">
     <value>Широкая стрелка (2 м) длиной 1 блок. Один вход, три ветки: левая, прямая, правая, все выходят из одной точки на переднем торце. Ветки — это пролёты, проложенные от неё Rail Linker'ом (левую и правую выбирают прицелом сбоку от торца); стрелка направляет поезд в выбранную.</value>
@@ -424,7 +424,7 @@
     <value>Сила двигателя (полная тяга): {0}; удержание: {1}</value>
   </data>
   <data name="MagRail_Engine_Info_Grid" xml:space="preserve">
-    <value>Грид: двигателей {0}, вместе {1}; масса {2} т</value>
+    <value>Конструкция: двигателей {0}, вместе {1}; масса {2} т</value>
   </data>
   <data name="MagRail_Engine_Info_Weight" xml:space="preserve">
     <value>; вес {0} ({1}% удержания)</value>

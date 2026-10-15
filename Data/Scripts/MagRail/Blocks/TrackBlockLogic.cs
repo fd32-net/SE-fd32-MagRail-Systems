@@ -14,7 +14,7 @@ using VRageMath;
 namespace MagRail
 {
     // A track block (Rail Block, Free Rail Block, Rail Switch): its settings, its rail part and its ports.
-    // Rail Switch 1 / Wide Rail Switch 1 (blocks/Switch1.py): a straight rail part whose three branch ports are
+    // Rail Switch / Wide Rail Switch (blocks/Switch1.py): a straight rail part whose three branch ports are
     // one point at the front end, like the old Maglev junction; the spans laid from them are the branches.
     // The rail part is the subpart the model's "subpart_" dummy names; the dummy's matrix is the standard placement.
     // The script moves the part by the height setting (and turns the Free Rail head about the rail point = the
@@ -43,7 +43,7 @@ namespace MagRail
             public string Name;
             public Matrix Standard;
             public List<PortDef> Ports;     // null until the part's model was seen
-            public bool Fan;                // Rail Switch 1: the branch ports share one point
+            public bool Fan;                // Rail Switch: the branch ports share one point
         }
 
         // Per subtype, read from the finished model once.

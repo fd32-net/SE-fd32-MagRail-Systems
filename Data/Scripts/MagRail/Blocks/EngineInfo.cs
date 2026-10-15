@@ -1,14 +1,20 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
+using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using VRage.Game.ModAPI;
 
 namespace MagRail
 {
     // Detailed info of a hover engine in the terminal: its rail state, force and hold, power, its grid's
-    // drive and how the engines of its grid compare with the grid's weight here. The drive runs on the server:
-    // clients show no drive line (their power numbers come from the server's demand, Net.BroadcastPower).
+    // drive and how the engines of its construct (mechanical group: rotors, hinges, pistons) compare with the
+    // construct's weight here. The drive runs on the server: clients show no drive line (their power numbers come
+    // from the server's demand, Net.BroadcastPower).
     public static class EngineInfo
     {
+        static readonly List<IMyCubeGrid> construct = new List<IMyCubeGrid>();
+
         public static void Append(IMyTerminalBlock b, StringBuilder sb)
         {
             try
@@ -33,19 +39,25 @@ namespace MagRail
                 if (!e.Block.Propulsion)
                     sb.Append(Loc.T("MagRail_Drive_PropulsionOff")).Append('\n');
 
+                construct.Clear();
+                MyAPIGateway.GridGroups.GetGroup(b.CubeGrid, GridLinkTypeEnum.Mechanical, construct);
                 int count = 0;
                 double total = 0;
                 foreach (HoverEngineLogic other in MagRailSession.Instance.Engines)
                 {
-                    if (other.Block.CubeGrid == b.CubeGrid && other.Active)
+                    if (other.Active && construct.Contains(other.Block.CubeGrid))
                     {
                         count++;
                         total += other.HoldForce;
                     }
                 }
-                if (b.CubeGrid.Physics == null)
+                construct.Clear();
+                MyCubeGrid grid = b.CubeGrid as MyCubeGrid;
+                if (grid == null || grid.Physics == null)
                     return;
-                double mass = b.CubeGrid.Physics.Mass;
+                // Not Physics.Mass: on a client it is 0 for a moving grid (the game keeps no mass for client bodies).
+                // GetCurrentMass sums the group's shapes, which every client has.
+                double mass = grid.GetCurrentMass(GridLinkTypeEnum.Mechanical);
                 double weight = mass * RailBody.Gravity(b.CubeGrid.WorldAABB.Center).Length();
                 sb.Append(Loc.F("MagRail_Engine_Info_Grid", count, Force(total), (mass / 1000).ToString("0.0")));
                 if (weight > 0.01 * mass && total > 0)

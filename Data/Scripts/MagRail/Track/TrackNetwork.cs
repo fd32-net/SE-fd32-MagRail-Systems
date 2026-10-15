@@ -296,8 +296,8 @@ namespace MagRail
         static readonly double JointFacingCos = -Math.Cos(MathHelper.ToRadians(15));
         readonly List<TrackIndex.Entry> jointScratch = new List<TrackIndex.Entry>();
 
-        // A fixed block of the same style whose port meets this one end to end (on any grid), not computed ahead:
-        // found when a train gets there. A port with a span has no joint.
+        // A fixed block whose port meets this one end to end (on any grid, of either style: narrow and wide join),
+        // not computed ahead: found when a train gets there. A port with a span has no joint.
         public bool FindJoint(TrackBlockLogic block, int port, out TrackBlockLogic other, out int otherPort)
         {
             other = null;
@@ -311,7 +311,7 @@ namespace MagRail
             for (int i = 0; i < jointScratch.Count; i++)
             {
                 TrackBlockLogic b = jointScratch[i].Block;
-                if (b == null || b == block || !b.Rideable || b.Style != block.Style)
+                if (b == null || b == block || !b.Rideable)
                     continue;
                 for (int q = 0; q < b.PortCount; q++)
                 {
