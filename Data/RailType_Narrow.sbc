@@ -24,10 +24,11 @@
         <Component Subtype="MetalGrid" Count="4" />
       </Components>
       <CriticalComponent Subtype="MetalGrid" Index="0" />
-      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <!-- On the lift (TrackStyle.Lifts): bottom mount point under the base only (Truss Pillar end face, 0.5 m),
+           mount points on both ends. -->
       <Center x="0" y="0" z="0" />
       <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+        <MountPoint Side="Bottom" StartX="0.4" StartY="0.4" EndX="0.6" EndY="0.6" Default="true" />
         <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
         <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
       </MountPoints>
@@ -39,120 +40,6 @@
       <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
       <DestroySound>WepSmallWarheadExpl</DestroySound>
       <PCU>10</PCU>
-      <IsAirTight>false</IsAirTight>
-      <Upgrades />
-    </Definition>
-    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
-      <Id>
-        <TypeId>UpgradeModule</TypeId>
-        <SubtypeId>MagRail_RailBlock5</SubtypeId>
-      </Id>
-      <DisplayName>DisplayName_MagRail_RailBlock5</DisplayName>
-      <Description>Description_MagRail_RailBlock5</Description>
-      <Icon>Textures\Icons\Blocks\MagRail_RailBlock5.dds</Icon>
-      <CubeSize>Large</CubeSize>
-      <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="1" y="1" z="5" />
-      <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Large\MagRail_RailBlock5.mwm</Model>
-      <Components>
-        <Component Subtype="SteelPlate" Count="10" />
-        <Component Subtype="Construction" Count="20" />
-        <Component Subtype="MetalGrid" Count="15" />
-      </Components>
-      <CriticalComponent Subtype="MetalGrid" Index="0" />
-      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
-      <Center x="0" y="0" z="4" />
-      <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="4" EndX="1" EndY="5" Default="true" />
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
-      </MountPoints>
-      <BlockPairName>MagRail_RailBlock5</BlockPairName>
-      <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>20</BuildTimeSeconds>
-      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
-      <DamagedSound>ParticleHeavyMech</DamagedSound>
-      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
-      <DestroySound>WepSmallWarheadExpl</DestroySound>
-      <PCU>15</PCU>
-      <IsAirTight>false</IsAirTight>
-      <Upgrades />
-    </Definition>
-    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
-      <Id>
-        <TypeId>UpgradeModule</TypeId>
-        <SubtypeId>MagRail_RailBlock10</SubtypeId>
-      </Id>
-      <DisplayName>DisplayName_MagRail_RailBlock10</DisplayName>
-      <Description>Description_MagRail_RailBlock10</Description>
-      <Icon>Textures\Icons\Blocks\MagRail_RailBlock10.dds</Icon>
-      <CubeSize>Large</CubeSize>
-      <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="1" y="1" z="10" />
-      <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Large\MagRail_RailBlock10.mwm</Model>
-      <Components>
-        <Component Subtype="SteelPlate" Count="14" />
-        <Component Subtype="Construction" Count="35" />
-        <Component Subtype="MetalGrid" Count="30" />
-      </Components>
-      <CriticalComponent Subtype="MetalGrid" Index="0" />
-      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
-      <Center x="0" y="0" z="9" />
-      <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="9" EndX="1" EndY="10" Default="true" />
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
-      </MountPoints>
-      <BlockPairName>MagRail_RailBlock10</BlockPairName>
-      <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>30</BuildTimeSeconds>
-      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
-      <DamagedSound>ParticleHeavyMech</DamagedSound>
-      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
-      <DestroySound>WepSmallWarheadExpl</DestroySound>
-      <PCU>20</PCU>
-      <IsAirTight>false</IsAirTight>
-      <Upgrades />
-    </Definition>
-    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
-      <Id>
-        <TypeId>UpgradeModule</TypeId>
-        <SubtypeId>MagRail_RailBlock20</SubtypeId>
-      </Id>
-      <DisplayName>DisplayName_MagRail_RailBlock20</DisplayName>
-      <Description>Description_MagRail_RailBlock20</Description>
-      <Icon>Textures\Icons\Blocks\MagRail_RailBlock20.dds</Icon>
-      <CubeSize>Large</CubeSize>
-      <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="1" y="1" z="20" />
-      <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Large\MagRail_RailBlock20.mwm</Model>
-      <Components>
-        <Component Subtype="SteelPlate" Count="18" />
-        <Component Subtype="Construction" Count="65" />
-        <Component Subtype="MetalGrid" Count="60" />
-      </Components>
-      <CriticalComponent Subtype="MetalGrid" Index="0" />
-      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
-      <Center x="0" y="0" z="19" />
-      <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="19" EndX="1" EndY="20" Default="true" />
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
-      </MountPoints>
-      <BlockPairName>MagRail_RailBlock20</BlockPairName>
-      <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>50</BuildTimeSeconds>
-      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
-      <DamagedSound>ParticleHeavyMech</DamagedSound>
-      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
-      <DestroySound>WepSmallWarheadExpl</DestroySound>
-      <PCU>30</PCU>
       <IsAirTight>false</IsAirTight>
       <Upgrades />
     </Definition>
@@ -177,8 +64,9 @@
         <Component Subtype="Computer" Count="2" />
       </Components>
       <CriticalComponent Subtype="Computer" Index="0" />
+      <!-- On the lift (TrackStyle.Lifts): bottom mount point under the base only (Truss Pillar end face). -->
       <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+        <MountPoint Side="Bottom" StartX="0.4" StartY="0.4" EndX="0.6" EndY="0.6" Default="true" />
       </MountPoints>
       <BlockPairName>MagRail_FreeRail</BlockPairName>
       <EdgeType>Light</EdgeType>
@@ -213,10 +101,11 @@
         <Component Subtype="Computer" Count="2" />
       </Components>
       <CriticalComponent Subtype="Computer" Index="0" />
-      <!-- Placed by the back cell (Center), bottom mount points on the end cells, mount points on both ends. -->
+      <!-- On the lift (TrackStyle.Lifts): bottom mount point under the base only (Truss Pillar end face, 0.5 m),
+           mount points on both ends. -->
       <Center x="0" y="0" z="0" />
       <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+        <MountPoint Side="Bottom" StartX="0.4" StartY="0.4" EndX="0.6" EndY="0.6" Default="true" />
         <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
         <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
       </MountPoints>
@@ -240,9 +129,6 @@
       <Description>Description_MagRail_TrackGroup</Description>
       <Blocks>
         <Block Type="UpgradeModule" Subtype="MagRail_RailBlock1" />
-        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock5" />
-        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock10" />
-        <Block Type="UpgradeModule" Subtype="MagRail_RailBlock20" />
         <Block Type="UpgradeModule" Subtype="MagRail_FreeRail" />
         <Block Type="UpgradeModule" Subtype="MagRail_Switch1" />
       </Blocks>
@@ -251,9 +137,6 @@
   <!-- Progression: research group 16, like the old Maglev blocks. -->
   <ResearchBlocks>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock1" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
-    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock5" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
-    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock10" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
-    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_RailBlock20" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_FreeRail" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_Switch1" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
   </ResearchBlocks>

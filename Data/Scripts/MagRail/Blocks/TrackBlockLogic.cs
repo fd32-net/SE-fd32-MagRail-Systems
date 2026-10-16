@@ -22,8 +22,8 @@ namespace MagRail
     // Ports are the dummies of the part's model: position = rail point, Forward = outwards, Up = rail up.
     // The descriptor lists the subtypes of TrackStyle's registry (an attribute takes constants only): keep both alike.
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_UpgradeModule), false,
-        "MagRail_RailBlock1", "MagRail_RailBlock5", "MagRail_RailBlock10", "MagRail_RailBlock20", "MagRail_FreeRail",
-        "MagRail_Switch1", "MagRail_WideRailBlock1", "MagRail_WideRailBlock5", "MagRail_WideFreeRail", "MagRail_WideSwitch1")]
+        "MagRail_RailBlock1", "MagRail_FreeRail",
+        "MagRail_Switch1", "MagRail_WideRailBlock1", "MagRail_WideFreeRail", "MagRail_WideSwitch1")]
     public class TrackBlockLogic : MyGameLogicComponent
     {
         // Branch port names by SwitchBranch.
@@ -43,9 +43,13 @@ namespace MagRail
         {
             public string Name;
             public Matrix Standard;
+            // Free Rail on the lift: the base's turning upper half (subpart TurnName), its standard placement.
+            public Matrix? Turn;
             public List<PortDef> Ports;     // null until the part's model was seen
             public bool Fan;                // Rail Switch: the branch ports share one point
         }
+
+        const string TurnName = "Turn";
 
         // Per subtype, read from the finished model once.
         static readonly Dictionary<string, PartInfo> partInfos = new Dictionary<string, PartInfo>();
@@ -67,6 +71,8 @@ namespace MagRail
         MyEntitySubpart part;
         bool partOnStatic;
         bool partDirty;
+        // The struts of a block on the lift (TrackStyle.Lifts), else null.
+        RailLift lift;
 
         static TrackNetwork Network
         {
@@ -86,6 +92,8 @@ namespace MagRail
             }
             Style = style;
             Kind = kind;
+            if (TrackStyle.HasLift(Block.BlockDefinition.SubtypeId))
+                lift = new RailLift(this);
             NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
         }
 
@@ -137,6 +145,8 @@ namespace MagRail
             if (registered && MagRailSession.Instance != null)
                 Network.Unregister(this);
             registered = false;
+            if (lift != null)
+                lift.Remove();
         }
 
         // ---- settings ----
@@ -154,6 +164,12 @@ namespace MagRail
         public float Height
         {
             get { return StandardHeight + Settings.HeightOffset; }
+        }
+
+        // Lowest rail point (terminal height), m: on the lift lower than over a platform.
+        public float MinHeight
+        {
+            get { return lift != null ? RailLift.MinHeight : Style.MinHeight; }
         }
 
         // A span in rail mode touches the block: height and head stay as they are.
@@ -389,14 +405,20 @@ namespace MagRail
                 return null;
             dummies.Clear();
             Block.Model.GetDummies(dummies);
+            Matrix? turn = null;
             foreach (KeyValuePair<string, IMyModelDummy> d in dummies)
             {
                 if (!d.Key.StartsWith("subpart_"))
                     continue;
-                info = new PartInfo { Name = d.Key.Substring("subpart_".Length), Standard = Matrix.Normalize(d.Value.Matrix) };
-                break;
+                string name = d.Key.Substring("subpart_".Length);
+                if (name == TurnName)
+                    turn = Matrix.Normalize(d.Value.Matrix);
+                else if (info == null)
+                    info = new PartInfo { Name = name, Standard = Matrix.Normalize(d.Value.Matrix) };
             }
             dummies.Clear();
+            if (info != null)
+                info.Turn = turn;
             // A construction stage has no subpart: try again with the finished model.
             if (info != null)
                 partInfos[subtype] = info;
@@ -434,12 +456,17 @@ namespace MagRail
             if (info == null || !Block.TryGetSubpart(info.Name, out sub))
             {
                 part = null;
+                if (lift != null)
+                    lift.Remove();
                 return;
             }
             ReadPorts(info, sub);
             bool onStatic = Block.CubeGrid.IsStatic;
             if (sub == part && onStatic == partOnStatic && !partDirty)
+            {
+                UpdateLift(info, false);
                 return;
+            }
             part = sub;
             partOnStatic = onStatic;
             partDirty = false;
@@ -447,8 +474,36 @@ namespace MagRail
             Matrix local = PartMatrix(info);
             part.PositionComp.SetLocalMatrix(ref local);
             RebuildPhysics(part);
+            MyEntitySubpart turnPart;
+            if (info.Turn.HasValue && Block.TryGetSubpart(TurnName, out turnPart))
+            {
+                Matrix turnLocal = info.Turn.Value;
+                Vector3 at = turnLocal.Translation;
+                turnLocal.Translation = Vector3.Zero;
+                turnLocal *= TurnMatrix();
+                turnLocal.Translation = at;
+                turnPart.PositionComp.SetLocalMatrix(ref turnLocal);
+            }
             if (!MyAPIGateway.Utilities.IsDedicated)
                 PieceEntities.LightCopper(part);
+            UpdateLift(info, true);
+        }
+
+        // The struts follow the rail part; the ears sit at its ends (the ports).
+        void UpdateLift(PartInfo info, bool moved)
+        {
+            if (lift == null || info.Ports == null)
+                return;
+            float half = 0;
+            foreach (PortDef p in info.Ports)
+                half = Math.Max(half, Math.Abs(p.Local.Translation.Z));
+            lift.Update(PartMatrix(info), half, info.Turn.HasValue ? TurnMatrix() : Matrix.Identity, moved);
+        }
+
+        // The Free Rail head's yaw, which the base's upper half follows.
+        Matrix TurnMatrix()
+        {
+            return Matrix.CreateRotationY(MathHelper.ToRadians(-Settings.Yaw));
         }
 
         Matrix PartMatrix(PartInfo info)
@@ -457,8 +512,15 @@ namespace MagRail
             Vector3 position = m.Translation + Vector3.Up * Settings.HeightOffset;
             m.Translation = Vector3.Zero;
             if (Kind == TrackKind.FreeRail)
+            {
+                Matrix standard = m;
                 m *= Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(-Settings.Yaw), MathHelper.ToRadians(Settings.Pitch),
                     MathHelper.ToRadians(-Settings.Roll));
+                // On the lift the head turns about the middle of its ear pivots (user, 2026-10-16), not the rail point:
+                // that point stays where it is in the standard placement.
+                if (lift != null && !Settings.RailPointPivot)
+                    position += Vector3.Transform(RailLift.HeadPivot, standard) - Vector3.Transform(RailLift.HeadPivot, m);
+            }
             m.Translation = position;
             return m;
         }

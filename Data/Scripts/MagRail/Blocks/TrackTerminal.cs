@@ -139,11 +139,11 @@ namespace MagRail
             controls.Add(control);
         }
 
-        // Per rail style (TrackStyle.MinHeight); a block without logic shows the lowest of all.
+        // Per block (TrackBlockLogic.MinHeight: its lift, else its rail style); a block without logic shows the lowest.
         static float MinHeight(IMyTerminalBlock b)
         {
             TrackBlockLogic logic = Logic(b);
-            return logic != null ? logic.Style.MinHeight : TrackStyle.All.Min(s => s.MinHeight);
+            return logic != null ? logic.MinHeight : Math.Min(TrackStyle.All.Min(s => s.MinHeight), RailLift.MinHeight);
         }
 
         static void SetHeight(IMyTerminalBlock b, float value)
@@ -152,7 +152,7 @@ namespace MagRail
             if (logic == null || float.IsNaN(logic.StandardHeight))
                 return;
             float standard = logic.StandardHeight;
-            float height = Snap(MathHelper.Clamp(value, logic.Style.MinHeight, MaxHeight), HeightStep);
+            float height = Snap(MathHelper.Clamp(value, logic.MinHeight, MaxHeight), HeightStep);
             Change(b, s => s.HeightOffset = Snap(height - standard, HeightStep));
         }
 

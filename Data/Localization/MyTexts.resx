@@ -15,24 +15,6 @@
   <data name="Description_MagRail_RailBlock1" xml:space="preserve">
     <value>Straight rail, 1 block long. Rails placed end to end join by themselves.</value>
   </data>
-  <data name="DisplayName_MagRail_RailBlock5" xml:space="preserve">
-    <value>Rail Block 5</value>
-  </data>
-  <data name="Description_MagRail_RailBlock5" xml:space="preserve">
-    <value>Straight rail, 5 blocks long. Rails placed end to end join by themselves.</value>
-  </data>
-  <data name="DisplayName_MagRail_RailBlock10" xml:space="preserve">
-    <value>Rail Block 10</value>
-  </data>
-  <data name="Description_MagRail_RailBlock10" xml:space="preserve">
-    <value>Straight rail, 10 blocks long, on platforms at its ends. Rails placed end to end join by themselves.</value>
-  </data>
-  <data name="DisplayName_MagRail_RailBlock20" xml:space="preserve">
-    <value>Rail Block 20</value>
-  </data>
-  <data name="Description_MagRail_RailBlock20" xml:space="preserve">
-    <value>Straight rail, 20 blocks long, on platforms at its ends. Rails placed end to end join by themselves.</value>
-  </data>
   <data name="DisplayName_MagRail_FreeRail" xml:space="preserve">
     <value>Free Rail Block</value>
   </data>
@@ -56,12 +38,6 @@
   </data>
   <data name="Description_MagRail_WideRailBlock1" xml:space="preserve">
     <value>Straight wide rail (2 m), 1 block long. Rails placed end to end join by themselves, of any type; the Rail Linker lays spans only between wide rails.</value>
-  </data>
-  <data name="DisplayName_MagRail_WideRailBlock5" xml:space="preserve">
-    <value>Wide Rail Block 5</value>
-  </data>
-  <data name="Description_MagRail_WideRailBlock5" xml:space="preserve">
-    <value>Straight wide rail (2 m), 5 blocks long. Rails placed end to end join by themselves, of any type; the Rail Linker lays spans only between wide rails.</value>
   </data>
   <data name="DisplayName_MagRail_WideFreeRail" xml:space="preserve">
     <value>Wide Free Rail Block</value>

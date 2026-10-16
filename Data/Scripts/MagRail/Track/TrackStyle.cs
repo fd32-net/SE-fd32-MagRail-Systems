@@ -27,18 +27,21 @@ namespace MagRail
         // Before the styles: they fill them as they are made.
         static readonly Dictionary<string, TrackStyle> styleOf = new Dictionary<string, TrackStyle>();
         static readonly Dictionary<string, TrackKind> kindOf = new Dictionary<string, TrackKind>();
+        static readonly HashSet<string> lifted = new HashSet<string>();
 
         public static readonly TrackStyle Narrow = new TrackStyle("Narrow", "MagRail_", minHeight: 0.45f, width: 0.74,
                 crestHeight: 0.33, top: 0.35, feet: 0.24, faceHalfWidth: 0.5f, faceBottom: -0.455f, faceTop: 0.545f)
-            .Blocks(TrackKind.Rail, "MagRail_RailBlock1", "MagRail_RailBlock5", "MagRail_RailBlock10", "MagRail_RailBlock20")
+            .Blocks(TrackKind.Rail, "MagRail_RailBlock1")
             .Blocks(TrackKind.FreeRail, "MagRail_FreeRail")
-            .Blocks(TrackKind.Switch, "MagRail_Switch1");
+            .Blocks(TrackKind.Switch, "MagRail_Switch1")
+            .Lifts("MagRail_RailBlock1", "MagRail_FreeRail", "MagRail_Switch1");
 
         public static readonly TrackStyle Wide = new TrackStyle("Wide", "MagRail_Wide", minHeight: 0.45f, width: 2.0,
                 crestHeight: 0.33, top: 0.35, feet: 0.24, faceHalfWidth: 1.2f, faceBottom: -0.555f, faceTop: 0.645f)
-            .Blocks(TrackKind.Rail, "MagRail_WideRailBlock1", "MagRail_WideRailBlock5")
+            .Blocks(TrackKind.Rail, "MagRail_WideRailBlock1")
             .Blocks(TrackKind.FreeRail, "MagRail_WideFreeRail")
-            .Blocks(TrackKind.Switch, "MagRail_WideSwitch1");
+            .Blocks(TrackKind.Switch, "MagRail_WideSwitch1")
+            .Lifts("MagRail_WideRailBlock1", "MagRail_WideFreeRail", "MagRail_WideSwitch1");
 
         public static readonly TrackStyle[] All = { Narrow, Wide };
 
@@ -92,6 +95,19 @@ namespace MagRail
                 kindOf.Add(subtype, kind);
             }
             return this;
+        }
+
+        // Blocks on the lift (RailLift: Truss Pillar base, ears under the rail ends, struts) instead of platforms.
+        TrackStyle Lifts(params string[] subtypes)
+        {
+            foreach (string subtype in subtypes)
+                lifted.Add(subtype);
+            return this;
+        }
+
+        public static bool HasLift(string subtype)
+        {
+            return lifted.Contains(subtype);
         }
 
         // The style and kind of a track block subtype; false for one not in the registry.

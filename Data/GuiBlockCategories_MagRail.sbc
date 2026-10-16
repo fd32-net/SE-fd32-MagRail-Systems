@@ -40,13 +40,9 @@
       <IsBlockCategory>true</IsBlockCategory>
       <ItemIds>
         <string>UpgradeModule/MagRail_RailBlock1</string>
-        <string>UpgradeModule/MagRail_RailBlock5</string>
-        <string>UpgradeModule/MagRail_RailBlock10</string>
-        <string>UpgradeModule/MagRail_RailBlock20</string>
         <string>UpgradeModule/MagRail_FreeRail</string>
         <string>UpgradeModule/MagRail_Switch1</string>
         <string>UpgradeModule/MagRail_WideRailBlock1</string>
-        <string>UpgradeModule/MagRail_WideRailBlock5</string>
         <string>UpgradeModule/MagRail_WideFreeRail</string>
         <string>UpgradeModule/MagRail_WideSwitch1</string>
         <string>MotorSuspension/MagRail_HoverLarge</string>

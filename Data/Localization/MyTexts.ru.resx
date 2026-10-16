@@ -15,24 +15,6 @@
   <data name="Description_MagRail_RailBlock1" xml:space="preserve">
     <value>Прямой рельс длиной 1 блок. Рельсы, поставленные торец к торцу, соединяются сами.</value>
   </data>
-  <data name="DisplayName_MagRail_RailBlock5" xml:space="preserve">
-    <value>Рельс 5</value>
-  </data>
-  <data name="Description_MagRail_RailBlock5" xml:space="preserve">
-    <value>Прямой рельс длиной 5 блоков. Рельсы, поставленные торец к торцу, соединяются сами.</value>
-  </data>
-  <data name="DisplayName_MagRail_RailBlock10" xml:space="preserve">
-    <value>Рельс 10</value>
-  </data>
-  <data name="Description_MagRail_RailBlock10" xml:space="preserve">
-    <value>Прямой рельс длиной 10 блоков на платформах по концам. Рельсы, поставленные торец к торцу, соединяются сами.</value>
-  </data>
-  <data name="DisplayName_MagRail_RailBlock20" xml:space="preserve">
-    <value>Рельс 20</value>
-  </data>
-  <data name="Description_MagRail_RailBlock20" xml:space="preserve">
-    <value>Прямой рельс длиной 20 блоков на платформах по концам. Рельсы, поставленные торец к торцу, соединяются сами.</value>
-  </data>
   <data name="DisplayName_MagRail_FreeRail" xml:space="preserve">
     <value>Поворотный рельс</value>
   </data>
@@ -56,12 +38,6 @@
   </data>
   <data name="Description_MagRail_WideRailBlock1" xml:space="preserve">
     <value>Прямой широкий рельс (2 м) длиной 1 блок. Рельсы, поставленные торец к торцу, соединяются сами, любого типа; Rail Linker прокладывает пролёты только между широкими рельсами.</value>
-  </data>
-  <data name="DisplayName_MagRail_WideRailBlock5" xml:space="preserve">
-    <value>Широкий рельс 5</value>
-  </data>
-  <data name="Description_MagRail_WideRailBlock5" xml:space="preserve">
-    <value>Прямой широкий рельс (2 м) длиной 5 блоков. Рельсы, поставленные торец к торцу, соединяются сами, любого типа; Rail Linker прокладывает пролёты только между широкими рельсами.</value>
   </data>
   <data name="DisplayName_MagRail_WideFreeRail" xml:space="preserve">
     <value>Широкий поворотный рельс</value>
