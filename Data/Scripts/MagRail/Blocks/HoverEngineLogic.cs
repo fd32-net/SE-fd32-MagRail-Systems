@@ -26,7 +26,7 @@ namespace MagRail
     // under it and its settings; and the drive's power consumer. Numbers are the old Maglev's, so the ported physics
     // keeps them.
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorSuspension), false,
-        "MagRail_HoverLarge", "MagRail_HoverSmall", "MagRail_HoverMini")]
+        "MagRail_HoverLarge", "MagRail_HoverSmall")]
     public class HoverEngineLogic : MyGameLogicComponent
     {
         // Must be listed in Data/EntityComponents_MagRail.sbc, or the game drops it on save.
@@ -49,6 +49,8 @@ namespace MagRail
         public int JumpTicks, LostTicks, NextSearchTick;
         // Server: the power the drive asks for this tick, MW (Drive; Rides hands it to the network).
         public float PowerWanted;
+        // Clients: the lower part that lies along the rail (cosmetic).
+        public EngineSwivel Swivel;
         MyResourceSinkComponent sink;
         float demand;
         bool registered;
@@ -75,6 +77,8 @@ namespace MagRail
                 HookPower();
                 Block.AppendingCustomInfo += EngineInfo.Append;
                 EngineTerminal.Create();
+                if (!MyAPIGateway.Utilities.IsDedicated)
+                    Swivel = new EngineSwivel(this);
             }
             catch (Exception e)
             {
@@ -174,8 +178,7 @@ namespace MagRail
                 switch (Block.BlockDefinition.SubtypeId)
                 {
                     case "MagRail_HoverLarge": return 1000000.0;
-                    case "MagRail_HoverSmall": return 500000.0;
-                    default: return 75000.0;
+                    default: return 500000.0;
                 }
             }
         }
@@ -222,8 +225,7 @@ namespace MagRail
                 switch (Block.BlockDefinition.SubtypeId)
                 {
                     case "MagRail_HoverLarge": return 5.0;
-                    case "MagRail_HoverSmall": return 2.4;
-                    default: return 0.4;
+                    default: return 2.4;
                 }
             }
         }

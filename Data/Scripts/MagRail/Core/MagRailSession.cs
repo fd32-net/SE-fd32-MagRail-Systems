@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Sandbox.ModAPI;
 using VRage.Game.Components;
+using VRageMath;
 
 namespace MagRail
 {
@@ -13,7 +14,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.10.8";
+        public const string Version = "V0.10.9";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -98,6 +99,7 @@ namespace MagRail
                 if (client)
                 {
                     Pieces.Update(Network);
+                    UpdateSwivels();
                     TrackDebug.Update();
                     DriveTuningTerminal.Create();
                     if (Net.IsServer)
@@ -111,6 +113,16 @@ namespace MagRail
             {
                 Log.Error("Session.UpdateAfterSimulation", e);
             }
+        }
+
+        void UpdateSwivels()
+        {
+            if (MyAPIGateway.Session.Camera == null)
+                return;
+            Vector3D camera = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
+            for (int i = 0; i < Engines.Count; i++)
+                if (Engines[i].Swivel != null)
+                    Engines[i].Swivel.Update(camera, tick);
         }
 
         public override void HandleInput()

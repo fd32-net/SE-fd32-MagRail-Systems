@@ -69,12 +69,6 @@
   <data name="Description_MagRail_HoverSmall" xml:space="preserve">
     <value>Holds the train over the rail. Mount it under the wagon. Placeholder model.</value>
   </data>
-  <data name="DisplayName_MagRail_HoverMini" xml:space="preserve">
-    <value>Hover Engine Mini 3x1</value>
-  </data>
-  <data name="Description_MagRail_HoverMini" xml:space="preserve">
-    <value>Small hover engine for light small-grid trains. Placeholder model.</value>
-  </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Track block</value>
   </data>

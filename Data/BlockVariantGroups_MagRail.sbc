@@ -9,7 +9,6 @@
       <Blocks>
         <Block Type="MotorSuspension" Subtype="MagRail_HoverLarge" />
         <Block Type="MotorSuspension" Subtype="MagRail_HoverSmall" />
-        <Block Type="MotorSuspension" Subtype="MagRail_HoverMini" />
       </Blocks>
     </BlockVariantGroup>
   </BlockVariantGroups>

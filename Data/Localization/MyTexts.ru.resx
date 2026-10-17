@@ -69,12 +69,6 @@
   <data name="Description_MagRail_HoverSmall" xml:space="preserve">
     <value>Держит поезд над рельсом. Ставится под вагон. Модель-заглушка.</value>
   </data>
-  <data name="DisplayName_MagRail_HoverMini" xml:space="preserve">
-    <value>Двигатель парения мини 3x1</value>
-  </data>
-  <data name="Description_MagRail_HoverMini" xml:space="preserve">
-    <value>Малый двигатель парения для лёгких поездов на малой сетке. Модель-заглушка.</value>
-  </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Блок пути</value>
   </data>
