@@ -26,8 +26,10 @@ namespace MagRail
     {
         const double Window = 10;       // local projection looks this far around S, m
         const int MaxHops = 64;         // pieces crossed by one Advance
-        // A point further than this past the end of a piece is not over it: such a piece is not captured.
-        public const double PastEnd = 0.5;
+        // A point further than this past the end of a piece is not over it: such a piece is not captured, and an
+        // engine there lets go (HoverEngineLogic.Probe). Half a large block: two rails one block apart (a gap
+        // for a gate) hand an engine over in the middle of the gap.
+        public const double PastEnd = 1.25;
         // Capture on a switch: a branch that is not selected must be this much nearer to win. Where the
         // branches still overlap (near the entry) the selected one is taken; at the far end they are 0.8 m apart.
         const double SelectedBranchBonus = 0.5;

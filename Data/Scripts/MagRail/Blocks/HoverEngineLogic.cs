@@ -207,9 +207,16 @@ namespace MagRail
             Vector3D e = sample.Point + sample.Up * HoverHeight - guide;
             double along = Vector3D.Dot(e, sample.Tangent);
             error = (e - sample.Tangent * along).Length();
-            // Mid-track the rail point is square under the guide point; past an end it stays at the end.
+            // Mid-track the rail point is square under the guide point; past an end it stays at the end. Up to
+            // PastEnd beyond it the rail goes on straight along the end's tangent, so the point does not jump
+            // when the next rail across a gap takes over.
             if (Math.Abs(along) > TrackCursor.PastEnd)
                 return RailState.TrackEnd;
+            if (cursor.DeadEnd)
+            {
+                sample.Point -= sample.Tangent * along;
+                sample.Distance = Vector3D.Distance(guide, sample.Point);
+            }
             if (Vector3D.Dot(Block.WorldMatrix.Up, sample.Up) < 0.5)
                 return RailState.Tilted;
             return error <= CaptureDistance ? RailState.Held : RailState.Far;
