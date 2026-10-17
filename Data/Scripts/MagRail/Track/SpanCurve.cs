@@ -21,11 +21,19 @@ namespace MagRail
         public double MinRadius = double.PositiveInfinity;
         public double TwistRate;    // rad per metre: the up turning about the rail, even over the span
         public BoundingSphereD Bounds;
+        // Cut: only a window of a longer curve is sampled (Build: maxLength around focus); FullLength is the whole
+        // curve's (estimated), Length the window's, Offset where the window starts on the whole curve (S counts from
+        // there).
+        public bool Cut;
+        public double FullLength, Offset;
 
         // a, b: port matrices in the span's frame (Translation = rail point, Forward = outwards, Up).
-        public static SpanCurve Build(MatrixD a, MatrixD b)
+        // maxLength: of a longer curve sample only this much, centred on its point nearest to focus (the Rail Linker's
+        // preview of a very long span: the part near the player).
+        public static SpanCurve Build(MatrixD a, MatrixD b, double maxLength = double.PositiveInfinity,
+            Vector3D focus = default(Vector3D))
         {
-            return Build(a.Translation, a.Forward, a.Up, b.Translation, -b.Forward, b.Up);
+            return Build(a.Translation, a.Forward, a.Up, b.Translation, -b.Forward, b.Up, maxLength, focus);
         }
 
         // Rail inside a block from one of its ports to another (same port matrices): it starts inwards
@@ -36,7 +44,8 @@ namespace MagRail
         }
 
         // From p0 leaving along t0 to p3 arriving along t3.
-        static SpanCurve Build(Vector3D p0, Vector3D t0, Vector3D up0, Vector3D p3, Vector3D t3, Vector3D up3)
+        static SpanCurve Build(Vector3D p0, Vector3D t0, Vector3D up0, Vector3D p3, Vector3D t3, Vector3D up3,
+            double maxLength = double.PositiveInfinity, Vector3D focus = default(Vector3D))
         {
             SpanCurve c = new SpanCurve();
             t0 = Vector3D.Normalize(t0);
@@ -52,13 +61,23 @@ namespace MagRail
                 estimate += Vector3D.Distance(last, next);
                 last = next;
             }
+            if (estimate > maxLength)
+                return Window(p0, c1, c2, p3, up0, up3, maxLength, focus);
             int n = Math.Max(8, (int)Math.Ceiling(estimate / Step));
+            c.Sample(p0, c1, c2, p3, 0, 1, n, t0);
+            c.Finish(up0, up3);
+            return c;
+        }
 
+        // Samples n + 1 points evenly in t from ta to tb (S from the first).
+        void Sample(Vector3D p0, Vector3D c1, Vector3D c2, Vector3D p3, double ta, double tb, int n, Vector3D t0)
+        {
+            SpanCurve c = this;
             Vector3D chordDir = p3 - p0;
             chordDir = chordDir.LengthSquared() > 1e-8 ? Vector3D.Normalize(chordDir) : t0;
             for (int i = 0; i <= n; i++)
             {
-                double t = i / (double)n;
+                double t = ta + (tb - ta) * i / n;
                 Vector3D d1 = Derivative(p0, c1, c2, p3, t);
                 Vector3D d2 = SecondDerivative(p0, c1, c2, p3, t);
                 double speed = d1.Length();
@@ -68,8 +87,65 @@ namespace MagRail
                 c.Curvature.Add(speed > 1e-8 ? Vector3D.Cross(d1, d2).Length() / (speed * speed * speed) : 0);
                 c.S.Add(i == 0 ? 0 : c.S[i - 1] + Vector3D.Distance(c.Pos[i - 1], p));
             }
-            c.Finish(up0, up3);
+        }
+
+        // A window of maxLength of the whole Bezier around its point nearest to focus. A coarse pass over the whole
+        // curve gives arc length against t, the nearest point, the transported up and the twist (spread evenly over the
+        // whole curve, as Finish does); the window is then sampled as usual.
+        static SpanCurve Window(Vector3D p0, Vector3D c1, Vector3D c2, Vector3D p3, Vector3D up0, Vector3D up3,
+            double maxLength, Vector3D focus)
+        {
+            const int Coarse = 1024;
+            double[] s = new double[Coarse + 1];
+            Vector3D[] ups = new Vector3D[Coarse + 1];
+            Vector3D tan = Vector3D.Normalize(Derivative(p0, c1, c2, p3, 0)), last = p0;
+            Vector3D up = Reject(up0, tan);
+            ups[0] = up;
+            int nearest = 0;
+            double nearestDistance = Vector3D.DistanceSquared(p0, focus);
+            for (int k = 1; k <= Coarse; k++)
+            {
+                double t = k / (double)Coarse;
+                Vector3D p = Point(p0, c1, c2, p3, t), d = Derivative(p0, c1, c2, p3, t);
+                if (d.LengthSquared() > 1e-16)
+                    tan = Vector3D.Normalize(d);
+                up = Reject(up, tan);
+                ups[k] = up;
+                s[k] = s[k - 1] + Vector3D.Distance(last, p);
+                last = p;
+                double distance = Vector3D.DistanceSquared(p, focus);
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearest = k;
+                }
+            }
+            double total = s[Coarse];
+            Vector3D target = Reject(up3, tan);
+            double twistRate = Math.Atan2(Vector3D.Dot(Vector3D.Cross(up, target), tan), Vector3D.Dot(up, target)) / total;
+
+            double from = Math.Max(0, Math.Min(s[nearest] - maxLength * 0.5, total - maxLength));
+            int ka, kb;
+            double ta = TAt(s, from, out ka), tb = TAt(s, Math.Min(total, from + maxLength), out kb);
+            SpanCurve c = new SpanCurve();
+            c.Cut = true;
+            c.FullLength = total;
+            c.Offset = from;
+            c.Sample(p0, c1, c2, p3, ta, tb, Math.Max(8, (int)Math.Ceiling(maxLength / Step)), tan);
+            c.Finish(ups[ka], up3, twistRate, twistRate * from);
             return c;
+        }
+
+        // t at arc length x of a coarse table s (evenly in t), k: the table entry before it.
+        static double TAt(double[] s, double x, out int k)
+        {
+            int last = s.Length - 1;
+            k = 0;
+            while (k < last - 1 && s[k + 1] <= x)
+                k++;
+            double d = s[k + 1] - s[k];
+            double f = d > 1e-9 ? MathHelper.Clamp((x - s[k]) / d, 0, 1) : 0;
+            return (k + f) / last;
         }
 
         // The same curve with every point moved by offset[i] (TerrainLift): tangents and curvature from the moved
@@ -95,16 +171,23 @@ namespace MagRail
                 double angle = Math.Acos(MathHelper.Clamp(Vector3D.Dot(c.Tan[a], c.Tan[b]), -1.0, 1.0));
                 c.Curvature.Add(ds > 1e-9 ? angle / ds : 0);
             }
+            c.Cut = Cut;
+            c.FullLength = Cut ? FullLength : 0;
+            c.Offset = Offset;
             c.Finish(Up[0], Up[n]);
             return c;
         }
 
-        // From Pos, Tan, S and Curvature: Length, the ups, MinRadius, Bounds.
-        void Finish(Vector3D up0, Vector3D up3)
+        // From Pos, Tan, S and Curvature: Length, the ups, MinRadius, Bounds. twistPerMetre: the twist is given (a
+        // window of a longer curve: up0 is the untwisted up at its start, twistAt0 the twist there; up3 is unused), not
+        // found from up3.
+        void Finish(Vector3D up0, Vector3D up3, double twistPerMetre = double.NaN, double twistAt0 = 0)
         {
             SpanCurve c = this;
             int n = Pos.Count - 1;
             c.Length = c.S[n];
+            if (!c.Cut)
+                c.FullLength = c.Length;
 
             // Parallel transport of A's up along the tangents, then the remaining twist to B's up
             // spread evenly over the length.
@@ -115,12 +198,18 @@ namespace MagRail
                     up = Reject(up, c.Tan[i]);
                 c.Up.Add(up);
             }
-            Vector3D target = Reject(up3, c.Tan[n]);
-            double twist = Math.Atan2(Vector3D.Dot(Vector3D.Cross(c.Up[n], target), c.Tan[n]), Vector3D.Dot(c.Up[n], target));
+            double twist;
+            if (double.IsNaN(twistPerMetre))
+            {
+                Vector3D target = Reject(up3, c.Tan[n]);
+                twist = Math.Atan2(Vector3D.Dot(Vector3D.Cross(c.Up[n], target), c.Tan[n]), Vector3D.Dot(c.Up[n], target));
+            }
+            else
+                twist = twistPerMetre * c.Length;
             c.TwistRate = c.Length > 1e-6 ? Math.Abs(twist) / c.Length : 0;
             for (int i = 0; i <= n; i++)
             {
-                double angle = c.Length > 1e-6 ? twist * c.S[i] / c.Length : 0;
+                double angle = twistAt0 + (c.Length > 1e-6 ? twist * c.S[i] / c.Length : 0);
                 Vector3D u = c.Up[i], k = c.Tan[i];
                 c.Up[i] = Vector3D.Normalize(u * Math.Cos(angle) + Vector3D.Cross(k, u) * Math.Sin(angle));
             }
@@ -150,6 +239,14 @@ namespace MagRail
                     hi = mid - 1;
             }
             return lo;
+        }
+
+        // The last sample at most `metres` of arc after sample i: a point that far from something is no nearer to it
+        // anywhere up to there (S sums the chords). Skipping by sample count is not safe: samples are even in t, not
+        // in length, and over tens of km the difference adds up to many metres.
+        public int Ahead(int i, double metres)
+        {
+            return Math.Max(i, Index(S[i] + metres));
         }
 
         public double Fraction(int i, double s)

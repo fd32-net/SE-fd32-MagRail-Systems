@@ -31,6 +31,9 @@ namespace MagRail
         // Lift over planet ground (TerrainLift), m, evenly over the span: measured when the span was switched to rail
         // and kept while it is one. null: none (also rails laid before the lift existed).
         [ProtoMember(14)] public float[] Lift;
+        // The span ignores the ground (no TerrainLift): laid with the Rail Linker without Shift (the default). Spans
+        // laid before this existed have false: they rest on the ground.
+        [ProtoMember(15)] public bool NoLift;
     }
 
     [ProtoContract]

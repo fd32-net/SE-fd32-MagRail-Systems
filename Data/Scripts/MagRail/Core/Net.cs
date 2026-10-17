@@ -12,7 +12,7 @@ namespace MagRail
     {
         SettingsRequest = 1,    // client -> server: a player changed a track block's settings
         Settings = 2,           // server -> clients: the settings the server applied
-        LinkRequest = 3,        // client -> server: lay a span Block/Port -> Block2/Port2
+        LinkRequest = 3,        // client -> server: lay a span Block/Port -> Block2/Port2; Flag = ignore the ground (NoLift)
         UnlinkRequest = 4,      // client -> server: delete the span on owner Block's Port
         ModeRequest = 5,        // client -> server: span on owner Block's Port to rail (Flag) / prototype
         Spans = 6,              // server -> clients: an owner block's spans
@@ -201,9 +201,10 @@ namespace MagRail
             }
         }
 
-        public static void SendLinkRequest(TrackBlockLogic a, string aPort, TrackBlockLogic b, string bPort)
+        public static void SendLinkRequest(TrackBlockLogic a, string aPort, TrackBlockLogic b, string bPort, bool noLift)
         {
-            ToServer(new Packet { Type = PacketType.LinkRequest, Block = a.Block.EntityId, Port = aPort, Block2 = b.Block.EntityId, Port2 = bPort });
+            ToServer(new Packet { Type = PacketType.LinkRequest, Block = a.Block.EntityId, Port = aPort, Block2 = b.Block.EntityId, Port2 = bPort,
+                Flag = noLift });
         }
 
         public static void SendUnlinkRequest(TrackBlockLogic owner, string port)
@@ -289,7 +290,7 @@ namespace MagRail
                         return;
                     int aPort = logic.PortIndex(p.Port), bPort = other.PortIndex(p.Port2);
                     if (aPort >= 0 && bPort >= 0)
-                        network.Link(logic, aPort, other, bPort);
+                        network.Link(logic, aPort, other, bPort, p.Flag);
                     break;
                 }
                 case PacketType.UnlinkRequest:

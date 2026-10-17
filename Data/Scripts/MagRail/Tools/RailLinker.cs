@@ -20,6 +20,10 @@ namespace MagRail
     //   cannot take it flashes red). LMB on a port with a prototype: pick that end up (the span goes, its other end is
     //   the new start). RMB: cancel; on a port with a prototype: delete it.
     //   Spans: LMB: prototype <-> rail. RMB on a prototype: delete it. MMB on a rail: paint it.
+    //   A span ignores the ground (SpanRecord.NoLift) unless Shift is held on the click: then it rests on the ground
+    //   (TerrainLift; the preview shows it while Shift is held).
+    // A span being laid survives putting the tool away: taken again, it goes on from the same port if that is still
+    // there and free (Resume).
     // The tool's display draws what is going on (Screen, LinkerDisplay) and answers clicks with a check or a cross; the
     // help window (DrawHud) says the same in words, with names, numbers and reasons the display has no room for.
     // Client side; changes go through TrackNetwork requests (the server checks the tool is in hand).
@@ -36,6 +40,9 @@ namespace MagRail
         // The aimed span keeps the aim up to this much further out (AimScore 1 / SpanHold), and wins over a neighbour
         // as close: no flicker with the crosshair on its edge.
         const double SpanHold = 0.8;
+        // The preview of a long span is built and drawn only this much of it, around its point nearest to the camera
+        // (a span of tens of km would cost every frame); rebuilt when the camera moved PreviewRefocus.
+        const double PreviewMaxLength = 3000, PreviewRefocus = 25;
 
         public static readonly Color FreeColor = new Color(70, 165, 255);
         static readonly Color LinkedColor = new Color(60, 230, 90);
@@ -63,7 +70,8 @@ namespace MagRail
         const double PreviewLiftSeconds = 0.1;
         int previewAimPort = -1;
         TrackBlockLogic previewAimBlock;
-        Vector3D previewFrom, previewTo, previewToForward;
+        Vector3D previewFrom, previewTo, previewToForward, previewFocus;
+        bool previewGround;
         float[] previewLift;
         double previewLiftTime = double.NegativeInfinity;
         bool previewLiftStale;      // the curve moved since its lift was measured
@@ -123,12 +131,17 @@ namespace MagRail
                 held = now;
                 panel.Reset();
                 if (!held)
-                    startBlock = null;
+                    Remember();
+                else
+                    Resume();
             }
             if (!held)
                 return;
-            if (startBlock != null && Network.Find(startBlock.Block.EntityId) == null)
+            if (startBlock != null && !StartUsable(startBlock, startPort))
+            {
                 startBlock = null;
+                Draw.Notify(Loc.T("MagRail_Linker_StartLost"), MyFontEnum.Red);
+            }
             RefreshJoints();
             if (MyAPIGateway.Gui.IsCursorVisible || MyAPIGateway.Gui.ChatEntryVisible)
                 return;
@@ -152,6 +165,7 @@ namespace MagRail
         {
             if (tick)
                 previewProblem = null;
+            bool ground = FollowGround;
             if (startBlock == null)
             {
                 preview = null;
@@ -189,8 +203,10 @@ namespace MagRail
             // changes) and laid on the new curve in between.
             bool same = preview != null && Vector3D.DistanceSquared(from.Translation, previewFrom) < 1e-6
                         && Vector3D.DistanceSquared(to.Translation, previewTo) < 1e-6
-                        && Vector3D.DistanceSquared(to.Forward, previewToForward) < 1e-8;
-            bool targetChanged = aimBlock != previewAimBlock || aimPort != previewAimPort;
+                        && Vector3D.DistanceSquared(to.Forward, previewToForward) < 1e-8
+                        && !(preview.Cut && Vector3D.DistanceSquared(MyAPIGateway.Session.Camera.Position, previewFocus)
+                             > PreviewRefocus * PreviewRefocus);
+            bool targetChanged = aimBlock != previewAimBlock || aimPort != previewAimPort || ground != previewGround;
             double now = MyAPIGateway.Session.ElapsedPlayTime.TotalSeconds;
             bool remeasure = targetChanged || ((!same || previewLiftStale) && now - previewLiftTime >= PreviewLiftSeconds);
             if (same && !remeasure)
@@ -200,15 +216,18 @@ namespace MagRail
             previewToForward = to.Forward;
             previewAimBlock = aimBlock;
             previewAimPort = aimPort;
-            SpanCurve curve = SpanCurve.Build(from, to);
-            if (!startBlock.Block.CubeGrid.IsStatic || !toStatic)
+            previewGround = ground;
+            previewFocus = MyAPIGateway.Session.Camera.Position;
+            SpanCurve curve = SpanCurve.Build(from, to, PreviewMaxLength, previewFocus);
+            if (!ground || !startBlock.Block.CubeGrid.IsStatic || !toStatic)
             {
                 preview = curve;
                 return;
             }
             if (remeasure)
             {
-                previewLift = TerrainLift.Measure(curve, MatrixD.Identity, startBlock.Style, freeEnd);
+                // A cut preview ends in the air like a free end (its end is no port).
+                previewLift = TerrainLift.Measure(curve, MatrixD.Identity, startBlock.Style, freeEnd || curve.Cut);
                 previewLiftTime = now;
             }
             previewLiftStale = !remeasure;
@@ -258,10 +277,19 @@ namespace MagRail
                 double tolerance = Math.Max(0.4, (style.FaceTop - style.FaceBottom) * 0.5);
                 for (int n = 0; n < c.Pos.Count; n += 2)
                 {
+                    // Far out of reach (a long span): skip the points that cannot come into reach.
+                    Vector3D point = Vector3D.Transform(c.Pos[n], frame);
+                    double far = Vector3D.Distance(point, origin) - AimRange - 10;
+                    if (far > 0)
+                    {
+                        // The loop's own step (n += 2) still moves on when nothing can be skipped.
+                        n = Math.Max(n, c.Ahead(n, far) - 2);
+                        continue;
+                    }
                     // Across the rail's whole width (a wide rail is caught at its edges too).
                     Vector3D up = Vector3D.TransformNormal(c.Up[n], frame);
                     Vector3D side = Vector3D.TransformNormal(Vector3D.Cross(c.Tan[n], c.Up[n]), frame) * style.FaceHalfWidth;
-                    Vector3D centre = Vector3D.Transform(c.Pos[n], frame) + up * middle;
+                    Vector3D centre = point + up * middle;
                     double score = AimScore(centre - side, centre + side, origin, dir, tolerance) * (s == was ? SpanHold : 1);
                     if (score < best)
                     {
@@ -325,9 +353,11 @@ namespace MagRail
                     return;
                 }
                 bool replaces = Network.SpanAt(aimBlock, aimPort) != null;
-                Network.RequestLink(startBlock, startPort, aimBlock, aimPort);
+                bool ground = FollowGround;
+                Network.RequestLink(startBlock, startPort, aimBlock, aimPort, !ground);
                 startBlock = null;
-                Draw.Notify(Loc.T(replaces ? "MagRail_Linker_Replaced" : "MagRail_Linker_Linked"), MyFontEnum.Green);
+                Draw.Notify(Loc.T(replaces ? "MagRail_Linker_Replaced" : ground ? "MagRail_Linker_LinkedGround" : "MagRail_Linker_Linked"),
+                    MyFontEnum.Green);
                 LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);
                 return;
             }
@@ -401,6 +431,56 @@ namespace MagRail
         {
             Draw.Notify(Loc.F("MagRail_Linker_RailFirst", Keys.Control(MyControlsSpace.PRIMARY_TOOL_ACTION)), MyFontEnum.Red);
             LinkerDisplay.Flash(button, false);
+        }
+
+        // Shift held while laying: the span rests on the ground (the menus and chat take the keyboard).
+        static bool FollowGround
+        {
+            get
+            {
+                return !MyAPIGateway.Gui.IsCursorVisible && !MyAPIGateway.Gui.ChatEntryVisible
+                       && MyAPIGateway.Input.IsAnyShiftKeyPressed();
+            }
+        }
+
+        // The span being laid when the tool is put away: its start by block id and port name (the block may stream out
+        // and in again as a new object meanwhile).
+        long rememberedBlock;
+        string rememberedPort;
+
+        void Remember()
+        {
+            rememberedBlock = startBlock != null ? startBlock.Block.EntityId : 0;
+            rememberedPort = startBlock != null ? startBlock.PortName(startPort) : null;
+            startBlock = null;
+        }
+
+        // Taken again: goes on laying from the remembered port if it is still there and free.
+        void Resume()
+        {
+            if (rememberedPort == null)
+                return;
+            TrackBlockLogic b = Network.Find(rememberedBlock);
+            int port = b != null && b.PortsKnown ? b.PortIndex(rememberedPort) : -1;
+            rememberedPort = null;
+            if (port < 0 || !StartUsable(b, port))
+            {
+                Draw.Notify(Loc.T("MagRail_Linker_StartLost"), MyFontEnum.Red);
+                return;
+            }
+            startBlock = b;
+            startPort = port;
+            Draw.Notify(Loc.F("MagRail_Linker_Resumed", PortTitle(startBlock, startPort)), MyFontEnum.Green);
+        }
+
+        // A span can still be laid from this port: the block is there and whole, the port has no span (another player may
+        // have laid one) and is not joined end to end to another block.
+        bool StartUsable(TrackBlockLogic b, int port)
+        {
+            TrackBlockLogic other;
+            int otherPort;
+            return Network.Find(b.Block.EntityId) == b && b.Block.IsFunctional && Network.SpanAt(b, port) == null
+                   && !Network.FindJoint(b, port, out other, out otherPort);
         }
 
         static double Now
@@ -493,6 +573,14 @@ namespace MagRail
             AddKey(LinkerDisplay.Button.Left, Keys.Control(MyControlsSpace.PRIMARY_TOOL_ACTION));
             AddKey(LinkerDisplay.Button.Right, Keys.Control(MyControlsSpace.SECONDARY_TOOL_ACTION));
             AddKey(LinkerDisplay.Button.Wheel, Keys.Mouse(MyMouseButtonsEnum.Middle));
+            // Shift: only while laying; held, it is lit.
+            string shift = Keys.Key(MyKeys.Shift);
+            if (startBlock == null)
+                panel.AddKey(shift, "—", HudPanel.Dim, HudPanel.Dim);
+            else if (FollowGround)
+                panel.AddKey(shift, Loc.T("MagRail_Linker_DoGround"), HudPanel.Green, HudPanel.Green);
+            else
+                panel.AddKey(shift, Loc.T("MagRail_Linker_DoGround"), HudPanel.Blue, HudPanel.Blue);
             panel.Add("", HudPanel.White);
             panel.Add(what, whatColor, true);
             panel.Add(detail, detailColor);
@@ -535,8 +623,8 @@ namespace MagRail
         {
             // The game font has no infinity sign.
             if (double.IsInfinity(c.MinRadius))
-                return Loc.F("MagRail_Linker_Straight", c.Length.ToString("0.0"));
-            return Loc.F("MagRail_Linker_Curve", c.Length.ToString("0.0"), c.MinRadius.ToString("0.0"));
+                return Loc.F("MagRail_Linker_Straight", c.FullLength.ToString("0.0"));
+            return Loc.F("MagRail_Linker_Curve", c.FullLength.ToString("0.0"), c.MinRadius.ToString("0.0"));
         }
 
         static string PortTitle(TrackBlockLogic block, int port)
@@ -605,7 +693,7 @@ namespace MagRail
                 if (preview != null)
                 {
                     LinkerDisplay.Line(s, LinkerDisplay.LineKind.Dash, preview);
-                    s.Text = LinkerDisplay.Length(preview.Length);
+                    s.Text = LinkerDisplay.Length(preview.FullLength);
                 }
                 if (aimBlock != null && !(aimBlock == startBlock && aimPort == startPort))
                 {

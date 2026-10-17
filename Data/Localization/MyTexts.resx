@@ -201,17 +201,29 @@
   <data name="MagRail_Linker_DoPaint" xml:space="preserve">
     <value>paint (colour and skin: {0})</value>
   </data>
+  <data name="MagRail_Linker_DoGround" xml:space="preserve">
+    <value>hold: follow the ground</value>
+  </data>
   <data name="MagRail_Linker_Linked" xml:space="preserve">
     <value>Span laid (prototype)</value>
   </data>
   <data name="MagRail_Linker_Replaced" xml:space="preserve">
     <value>Span laid (prototype), the old prototype removed</value>
   </data>
+  <data name="MagRail_Linker_LinkedGround" xml:space="preserve">
+    <value>Span laid (prototype) along the ground</value>
+  </data>
   <data name="MagRail_Linker_Started" xml:space="preserve">
     <value>Span from {0}: aim at the other port</value>
   </data>
   <data name="MagRail_Linker_Cancelled" xml:space="preserve">
     <value>Span cancelled</value>
+  </data>
+  <data name="MagRail_Linker_Resumed" xml:space="preserve">
+    <value>Span from {0} continues: aim at the other port</value>
+  </data>
+  <data name="MagRail_Linker_StartLost" xml:space="preserve">
+    <value>The span's start port is gone or taken: span cancelled</value>
   </data>
   <data name="MagRail_Linker_PickedUp" xml:space="preserve">
     <value>End picked up: aim at a new port</value>

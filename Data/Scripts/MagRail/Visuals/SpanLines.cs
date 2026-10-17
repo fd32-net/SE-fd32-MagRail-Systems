@@ -14,7 +14,8 @@ namespace MagRail
     // A centre line through the rail points; near the camera also a translucent ribbon over the crests (it shows the
     // bank) and the rail's section every few modules, where the track pieces will stand. While the Rail Linker is held
     // the line and the near sections are also seen through models (Draw.SeeThrough). A span that should be a rail
-    // but cannot be one gets a red cross in the middle; the span the Linker aims at pulses.
+    // but cannot be one gets a red cross in the middle; the span the Linker aims at pulses. A very long span is drawn
+    // only within DrawRange of the camera.
     public static class SpanLines
     {
         const double DrawRange = 3000;
@@ -62,6 +63,13 @@ namespace MagRail
             while (i < last)
             {
                 double distance = Vector3D.Distance(a, Draw.Camera);
+                if (distance > DrawRange)
+                {
+                    // Out of range: skip ahead by as many points as the curve cannot come back into range within.
+                    i = Math.Min(last, Math.Max(i + 8, c.Ahead(i, distance - DrawRange)));
+                    a = Vector3D.Transform(c.Pos[i], frame);
+                    continue;
+                }
                 int step = distance < 60 ? 2 : distance < 400 ? 4 : 8;
                 int j = Math.Min(i + step, last);
                 Vector3D b = Vector3D.Transform(c.Pos[j], frame);
@@ -103,13 +111,15 @@ namespace MagRail
 
         // The end face texture (Draw.Face) every SectionModules modules, not on the ends (the ports are there): on the
         // module boundaries of a laid span (TrackLayout: whole modules, all stretched alike); while laying (Preview)
-        // as far apart from the start, so they stand still while the free end moves.
+        // as far apart from the start, so they stand still while the free end moves (a window of a long preview, Cut:
+        // counted from the whole curve's start, so they stand still while the window moves).
         static void DrawSections(SpanCurve c, MatrixD frame, TrackStyle style, LineStyle look, float glow, Color tint,
             float bright)
         {
             int modules = Math.Max(1, (int)Math.Round(c.Length / TrackLayout.Module));
             double step = SectionModules * (look == LineStyle.Preview ? TrackLayout.Module : c.Length / modules);
-            for (double s = step; s < c.Length - step * 0.5; s += step)
+            double first = c.Cut ? step - c.Offset % step : step;
+            for (double s = first; s < c.Length - step * 0.5; s += step)
             {
                 Vector3D p = Vector3D.Transform(c.PosAt(s), frame);
                 double distance = Vector3D.Distance(p, Draw.Camera);

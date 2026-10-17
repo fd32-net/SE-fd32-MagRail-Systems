@@ -201,17 +201,29 @@
   <data name="MagRail_Linker_DoPaint" xml:space="preserve">
     <value>покрасить (цвет и скин: {0})</value>
   </data>
+  <data name="MagRail_Linker_DoGround" xml:space="preserve">
+    <value>держать: по рельефу</value>
+  </data>
   <data name="MagRail_Linker_Linked" xml:space="preserve">
     <value>Пролёт проложен (прототип)</value>
   </data>
   <data name="MagRail_Linker_Replaced" xml:space="preserve">
     <value>Пролёт проложен (прототип), старый прототип убран</value>
   </data>
+  <data name="MagRail_Linker_LinkedGround" xml:space="preserve">
+    <value>Пролёт проложен (прототип) по рельефу</value>
+  </data>
   <data name="MagRail_Linker_Started" xml:space="preserve">
     <value>Пролёт от {0}: наведите на второй порт</value>
   </data>
   <data name="MagRail_Linker_Cancelled" xml:space="preserve">
     <value>Пролёт отменён</value>
+  </data>
+  <data name="MagRail_Linker_Resumed" xml:space="preserve">
+    <value>Пролёт от {0} продолжается: наведите на второй порт</value>
+  </data>
+  <data name="MagRail_Linker_StartLost" xml:space="preserve">
+    <value>Начальный порт пропал или занят: пролёт отменён</value>
   </data>
   <data name="MagRail_Linker_PickedUp" xml:space="preserve">
     <value>Конец поднят: наведите на новый порт</value>

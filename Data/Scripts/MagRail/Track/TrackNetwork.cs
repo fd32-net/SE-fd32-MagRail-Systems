@@ -358,7 +358,7 @@ namespace MagRail
             s.Curve = BaseCurve(s);
             // Over planet ground, spans that stand still (both blocks on static grids): a prototype follows the ground
             // as it is, a rail keeps the lift measured when it was built (SetMode).
-            if (s.Owner.Block.CubeGrid.IsStatic && s.Partner.Block.CubeGrid.IsStatic)
+            if (s.Owner.Block.CubeGrid.IsStatic && s.Partner.Block.CubeGrid.IsStatic && !s.Record.NoLift)
                 s.Curve = s.Record.WantRail
                     ? TerrainLift.Apply(s.Curve, FrameMatrix(s), s.Record.Lift)
                     : TerrainLift.Live(s.Curve, FrameMatrix(s), s.Owner.Style);
@@ -393,12 +393,13 @@ namespace MagRail
 
         // ---- changes (server; a client sends a request instead) ----
 
-        public void RequestLink(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort)
+        // noLift: the span ignores the ground (SpanRecord.NoLift).
+        public void RequestLink(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort, bool noLift)
         {
             if (Net.IsServer)
-                Link(a, aPort, b, bPort);
+                Link(a, aPort, b, bPort, noLift);
             else
-                Net.SendLinkRequest(a, a.PortName(aPort), b, b.PortName(bPort));
+                Net.SendLinkRequest(a, a.PortName(aPort), b, b.PortName(bPort), noLift);
         }
 
         public void RequestUnlink(Span s)
@@ -428,7 +429,7 @@ namespace MagRail
                 Net.SendPaintRequest(s.Owner, s.Record.OwnerPort, hsv, skin);
         }
 
-        public void Link(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort)
+        public void Link(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort, bool noLift)
         {
             if (LinkProblem(a, aPort, b, bPort) != null)
                 return;
@@ -455,6 +456,7 @@ namespace MagRail
             {
                 OwnerPort = portName, PartnerId = b.Block.EntityId, PartnerPort = b.PortName(bPort),
                 SameGrid = a.Block.CubeGrid == b.Block.CubeGrid, PartnerX = pos.X, PartnerY = pos.Y, PartnerZ = pos.Z,
+                NoLift = noLift,
             };
             a.SpanStore.Spans.Add(r);
             spans.Add(new Span(a, r));
@@ -473,7 +475,7 @@ namespace MagRail
         {
             // Built as it lies now: the prototype's lift over the ground is kept with the rail.
             s.Record.Lift = null;
-            if (wantRail && s.Bound && s.Owner.Block.CubeGrid.IsStatic && s.Partner.Block.CubeGrid.IsStatic)
+            if (wantRail && s.Bound && !s.Record.NoLift && s.Owner.Block.CubeGrid.IsStatic && s.Partner.Block.CubeGrid.IsStatic)
                 s.Record.Lift = TerrainLift.Measure(BaseCurve(s), FrameMatrix(s), s.Owner.Style);
             s.Record.WantRail = wantRail;
             s.Curve = null;
