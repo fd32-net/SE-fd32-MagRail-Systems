@@ -180,7 +180,7 @@ namespace MagRail
             IMyTerminalControlSlider speed = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyThrust>("MagRail_CruiseSpeed");
             speed.Title = Loc.Id("MagRail_Cruise_Speed");
             speed.Tooltip = Loc.Id("MagRail_Cruise_Speed_Tip");
-            speed.SetLimits(b => 0f, b => (float)Cruise.MaxSpeed(b.CubeGrid));
+            speed.SetLimits(b => -(float)Cruise.MaxSpeed(b.CubeGrid), b => (float)Cruise.MaxSpeed(b.CubeGrid));
             speed.Getter = b => IsUnit(b) ? (float)Get(b).Cruise.Target : 0f;
             speed.Setter = (b, v) => Cruise.Request(Get(b), Cruise.CmdSpeed, v);
             speed.Writer = (b, sb) =>

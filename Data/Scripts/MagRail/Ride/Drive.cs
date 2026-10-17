@@ -219,8 +219,8 @@ namespace MagRail
             cruiseMove = 0;
             if (trainUnit == null)
                 return;
-            // W/S are the cockpit's; the cruise pulls the way its unit pushes. A cockpit facing the other way: S is
-            // gas over the target and W cancels; one facing across it: either cancels.
+            // W/S are the cockpit's; the cruise drives along its unit's axis, against it for a minus target. A cockpit
+            // facing the other way: S is gas over the target and W cancels; one facing across it: either cancels.
             if (pilot != null && move != 0)
             {
                 double facing = Vector3D.Dot(Axis(pilot, driveAxis), Cruise.Direction(trainUnit));
@@ -256,7 +256,7 @@ namespace MagRail
             }
             double sign = facing > 0 ? 1 : -1;
             double speed = along * sign;
-            double wanted = (trainUnit.Cruise.Target - speed) * mass / Step;
+            double wanted = (Math.Abs(trainUnit.Cruise.Target) - speed) * mass / Step;
             bool pushing = wanted >= 0;
             forces.Clear();
             double limit = 0;

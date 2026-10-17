@@ -514,7 +514,7 @@
     <value>Cruise speed</value>
   </data>
   <data name="MagRail_Cruise_Speed_Tip" xml:space="preserve">
-    <value>The speed the cruise holds, m/s, up to the world's max ship speed; it does not switch the cruise on. The cruise pushes the way this block pushes: shown after its name in the block list (Forward = forward of the cockpit). Each unit has its own cruise, but only one works on a train at a time.</value>
+    <value>The speed the cruise holds, m/s, up to the world's max ship speed; it does not switch the cruise on. Plus: the way this block pushes, shown after its name in the block list (Forward = forward of the cockpit); minus: the other way. Each unit has its own cruise, but only one works on a train at a time.</value>
   </data>
   <data name="MagRail_Cruise_ActSet" xml:space="preserve">
     <value>Cruise Set</value>

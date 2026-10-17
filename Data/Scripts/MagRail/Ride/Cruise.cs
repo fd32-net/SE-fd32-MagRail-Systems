@@ -14,10 +14,12 @@ namespace MagRail
     // remembered one) / Cancel and a speed slider; toolbar actions the same plus + / - (the target only). Every unit keeps its own cruise, but only one cruises a train at a time, as with the
     // vanilla AI blocks (user decision 2026-10-15): switching one on switches off the others on the grids
     // mechanically joined (rotor, hinge, piston); the drive follows the one that is on (Drive.ReadCruise).
-    // The direction is the unit's own (user idea 2026-10-15): the way it pushes as a thruster, which the game shows
+    // The axis is the unit's own (user idea 2026-10-15): the way it pushes as a thruster, which the game shows
     // after its name in the terminal ("(Forward)" relative to the cockpit). So no cockpit is needed to cruise.
-    // W is gas over the target, back to the target on release; S, Space and parking cancel, the target is kept for
-    // Resume. Speeds in m/s, steps of 1 m/s, up to the world's max ship speed. The server decides; a client's
+    // The target has a sign (user decision 2026-10-17): plus along the axis, minus back, so one unit drives both
+    // ways. The key that drives the target's way is gas over it, back to the target on release; the other one,
+    // Space and parking cancel, the target is kept for Resume. Speeds in m/s, steps of 1 m/s, up to the world's
+    // max ship speed either way. The server decides; a client's
     // terminal or toolbar sends a request and shows the change at once, the server's broadcast confirms it.
     public struct Cruise
     {
@@ -54,7 +56,7 @@ namespace MagRail
             {
                 s.Engaged = parts[0] == "1";
                 s.HasTarget = parts[1] == "1";
-                s.Target = Math.Max(0, target);
+                s.Target = target;
             }
             return s;
         }
@@ -89,7 +91,7 @@ namespace MagRail
                 case CmdSet:
                     s.Engaged = true;
                     s.HasTarget = true;
-                    s.Target = ForwardSpeed(unit, max);
+                    s.Target = AxisSpeed(unit, max);
                     break;
                 case CmdResume:
                     if (!s.HasTarget)
@@ -102,31 +104,37 @@ namespace MagRail
                 case CmdPlus:
                 case CmdMinus:
                     // Only the target; on or off stays as it is.
-                    double from = s.HasTarget ? s.Target : ForwardSpeed(unit, max);
-                    s.Target = MathHelper.Clamp(from + (command == CmdPlus ? SpeedStep : -SpeedStep), 0.0, max);
+                    double from = s.HasTarget ? s.Target : AxisSpeed(unit, max);
+                    s.Target = MathHelper.Clamp(from + (command == CmdPlus ? SpeedStep : -SpeedStep), -max, max);
                     s.HasTarget = true;
                     break;
                 case CmdSpeed:
-                    s.Target = MathHelper.Clamp(Math.Round(value), 0.0, max);
+                    s.Target = MathHelper.Clamp(Math.Round(value), -max, max);
                     s.HasTarget = true;
                     break;
             }
             return s;
         }
 
-        // The way the unit pushes as a thruster (its nozzle faces the other way): the cruise direction.
-        public static Vector3D Direction(TrainControlLogic unit)
+        // The way the unit pushes as a thruster (its nozzle faces the other way): the cruise axis, plus targets.
+        public static Vector3D Axis(TrainControlLogic unit)
         {
             return unit.Block.WorldMatrix.Backward;
         }
 
-        // Speed the cruise direction, whole m/s, never negative.
-        static double ForwardSpeed(TrainControlLogic unit, double max)
+        // The way the cruise drives: the axis, or against it for a minus target (a zero target: the axis).
+        public static Vector3D Direction(TrainControlLogic unit)
+        {
+            return unit.Cruise.Target < 0 ? -Axis(unit) : Axis(unit);
+        }
+
+        // Speed along the axis, whole m/s, minus = back.
+        static double AxisSpeed(TrainControlLogic unit, double max)
         {
             if (unit.Block.CubeGrid.Physics == null)
                 return 0;
-            double v = Vector3D.Dot(unit.Block.CubeGrid.Physics.LinearVelocity, Direction(unit));
-            return MathHelper.Clamp(Math.Round(v), 0.0, max);
+            double v = Vector3D.Dot(unit.Block.CubeGrid.Physics.LinearVelocity, Axis(unit));
+            return MathHelper.Clamp(Math.Round(v), -max, max);
         }
 
         // ---- state ----
