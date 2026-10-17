@@ -26,9 +26,10 @@ namespace MagRail
     // the controller's "Control wheels", main cockpit) with the native suspension controls: Propulsion, Power,
     // Speed Limit, Propulsion override, Braking, Parking.
     // - Thrust is game-like, as a thruster's: along the rail at the centre of mass, so an engine at one end never
-    //   turns the grid. An engine has no direction of its own: W pushes the way the controller faces along the
-    //   rail; a controller facing across the rail (more than 60 degrees off) is an error and nothing pushes. In a
-    //   curve the push comes with the curve's turn (RailBody.AlongResponse), so the grid's ends stay on the rail.
+    //   turns the grid. An engine has no direction of its own: the controller's axis nearest the rail drives, so a
+    //   cockpit facing along the rail drives with W/S, one turned sideways with D/A, one facing up with Space/C
+    //   (then Space is no brake). The axis is kept until it is more than 60 degrees off the rail. In a curve the
+    //   push comes with the curve's turn (RailBody.AlongResponse), so the grid's ends stay on the rail.
     // - The controller is looked up on the grids mechanically joined to this one (rotor, hinge, piston), as the
     //   game's wheel control reaches. Every grid of a train pushes itself with its own engines: couplers carry
     //   little.
@@ -69,6 +70,10 @@ namespace MagRail
         // pilot).
         IMyShipController pilot, reference;
         int controllerTick = -999;
+        // The reference controller's axis that drives along the rail (0 Forward: W/S, 1 Right: D/A, 2 Up: Space/C;
+        // -1 = not picked) and the controller it was picked for.
+        int driveAxis = -1;
+        IMyShipController axisController;
         // The reference controller's grid has a Train Control Unit (else it has no dampeners to read); the train's
         // units, and the one whose cruise is on this tick.
         bool unit;
@@ -118,16 +123,18 @@ namespace MagRail
             this.grid = grid;
         }
 
-        public void ReadInput(int tick)
+        public void ReadInput(int tick, Vector3D pathForward)
         {
             RefreshController(tick);
+            PickAxis(pathForward);
             move = 0;
             brakeKey = false;
             if (pilot != null)
             {
                 Vector3 m = pilot.MoveIndicator;
-                move = MathHelper.Clamp(-m.Z, -1f, 1f);
-                brakeKey = m.Y > 0.5f;
+                double input = driveAxis == 1 ? m.X : driveAxis == 2 ? m.Y : -m.Z;
+                move = MathHelper.Clamp(input, -1.0, 1.0);
+                brakeKey = driveAxis != 2 && m.Y > 0.5f;
             }
             bool trainParked = reference != null && !reference.MarkedForClose && reference.HandBrake;
             // Parked train: W/S pushes no grid of it (else the wagons push the parked locomotive along).
@@ -216,7 +223,7 @@ namespace MagRail
             // gas over the target and W cancels; one facing across it: either cancels.
             if (pilot != null && move != 0)
             {
-                double facing = Vector3D.Dot(pilot.WorldMatrix.Forward, Cruise.Direction(trainUnit));
+                double facing = Vector3D.Dot(Axis(pilot, driveAxis), Cruise.Direction(trainUnit));
                 cruiseMove = Math.Abs(facing) < AlignMin ? -Math.Abs(move) : move * Math.Sign(facing);
             }
             int cancel = Cruise.NoteNone;
@@ -284,8 +291,9 @@ namespace MagRail
         }
 
         // Along-rail velocity change of the engines' thrust this tick. along: the along speed about to be written
-        // (relative to the rail, sign of pathForward). Sets every holding engine's power demand.
-        public double Thrust(List<HoverEngineLogic> held, Vector3D pathForward, double along, double mass, double ramp, int tick)
+        // (relative to the rail, sign of pathForward); drift: what gravity and the rail's own acceleration change it
+        // by after the write (the dampers cancel it up front). Sets every holding engine's power demand.
+        public double Thrust(List<HoverEngineLogic> held, Vector3D pathForward, double along, double drift, double mass, double ramp, int tick)
         {
             State = DriveState.Idle;
             Force = 0;
@@ -313,13 +321,13 @@ namespace MagRail
             if (cruising && cruiseMove <= 0.1 && BrakeForce <= 0)
                 return CruiseThrust(held, pathForward, along, mass, ramp, tick);
             if (!anyInput)
-                return BrakeForce <= 0 && Dampers() ? Damp(held, along, mass, ramp) : 0;
+                return BrakeForce <= 0 && Dampers() ? Damp(held, along + drift, mass, ramp) : 0;
             if (reference == null || reference.MarkedForClose)
             {
                 State = DriveState.NoController;
                 return 0;
             }
-            double facing = Vector3D.Dot(reference.WorldMatrix.Forward, pathForward);
+            double facing = Vector3D.Dot(Axis(reference, driveAxis), pathForward);
             if (Math.Abs(facing) < AlignMin)
             {
                 State = DriveState.Sideways;
@@ -354,7 +362,8 @@ namespace MagRail
 
         // Inertia dampeners: every engine with Propulsion on pushes against the grid's motion along the rail as W/S
         // would (its Power slider, the same power and limit), only as hard as it takes to stop the grid this tick,
-        // so a stopped train stays held on a slope (and draws power for it).
+        // so a stopped train stays held on a slope (and draws power for it). along: the along speed the grid would
+        // have after this tick's physics (gravity added), so a lift does not creep down at g/60 m/s.
         double Damp(List<HoverEngineLogic> held, double along, double mass, double ramp)
         {
             State = DriveState.Dampers;
@@ -427,6 +436,8 @@ namespace MagRail
 
         public void Release()
         {
+            driveAxis = -1;
+            axisController = null;
             cruising = false;
             cruiseMove = 0;
             autopilot = false;
@@ -474,6 +485,41 @@ namespace MagRail
         }
 
         // ---- controllers ----
+
+        // The reference controller's axis that drives: kept while it is within 60 degrees of the rail (a curve does
+        // not swap the keys midway), else the one nearest the rail. One of three square axes is always within 55.
+        void PickAxis(Vector3D pathForward)
+        {
+            if (reference == null || reference.MarkedForClose)
+            {
+                driveAxis = -1;
+                axisController = null;
+                return;
+            }
+            if (reference != axisController)
+            {
+                driveAxis = -1;
+                axisController = reference;
+            }
+            if (driveAxis >= 0 && Math.Abs(Vector3D.Dot(Axis(reference, driveAxis), pathForward)) >= AlignMin)
+                return;
+            double best = -1;
+            for (int i = 0; i < 3; i++)
+            {
+                double d = Math.Abs(Vector3D.Dot(Axis(reference, i), pathForward));
+                if (d > best)
+                {
+                    best = d;
+                    driveAxis = i;
+                }
+            }
+        }
+
+        static Vector3D Axis(IMyShipController c, int axis)
+        {
+            MatrixD m = c.WorldMatrix;
+            return axis == 1 ? m.Right : axis == 2 ? m.Up : m.Forward;
+        }
 
         void RefreshController(int tick)
         {

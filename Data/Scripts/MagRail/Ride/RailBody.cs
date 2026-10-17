@@ -215,8 +215,9 @@ namespace MagRail
             along += alongChange;
 
             // The drive: thrust at the centre of mass, then the brakes (Drive); in a curve with the curve's turn.
-            Drive.ReadInput(tick);
-            double thrust = Drive.Thrust(held, pathForward, along, physics.Mass, ramp, tick);
+            Drive.ReadInput(tick, pathForward);
+            double drift = Vector3D.Dot(gravity - RailAcceleration(points[0]), pathForward) * Step;
+            double thrust = Drive.Thrust(held, pathForward, along, drift, physics.Mass, ramp, tick);
             alongChange += thrust;
             along += thrust;
             double carriedAlong = Vector3D.Dot(carried - carrierVelocity, pathForward);
