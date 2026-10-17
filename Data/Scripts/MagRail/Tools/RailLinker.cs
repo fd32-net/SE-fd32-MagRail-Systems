@@ -242,7 +242,7 @@ namespace MagRail
             aimSpan = null;
             MatrixD cam = MyAPIGateway.Session.Camera.WorldMatrix;
             Vector3D origin = cam.Translation, dir = cam.Forward;
-            double best = 1;
+            double best = double.MaxValue;     // the nearest port under the crosshair
             foreach (TrackBlockLogic b in Network.Blocks)
             {
                 if (!b.PortsKnown || Vector3D.DistanceSquared(b.Block.WorldMatrix.Translation, origin) > (AimRange + 15) * (AimRange + 15))
@@ -251,10 +251,10 @@ namespace MagRail
                 {
                     if (!Offered(b, i))
                         continue;
-                    double score = PortScore(b, i, origin, dir);
-                    if (score < best)
+                    double depth = PortDepth(b, i, origin, dir);
+                    if (depth < best)
                     {
-                        best = score;
+                        best = depth;
                         aimBlock = b;
                         aimPort = i;
                     }
@@ -300,17 +300,42 @@ namespace MagRail
             }
         }
 
-        // The port's whole end face (a switch branch: its third) as drawn: a segment across its width at mid height,
-        // as thick as the face is high.
-        static double PortScore(TrackBlockLogic b, int port, Vector3D origin, Vector3D dir)
+        // The port takes the aim only with the crosshair on its end face as drawn (Draw.Face: the section's outline with
+        // its stroke, FACES / STROKE in ModelSource/overlay_textures.py; far away the face grows about the rail point,
+        // DrawEnd), a switch's branch on its third (the texture splits the section's width in three, the side thirds out
+        // to the edge): how far along the view the crosshair meets it (of several faces under it the nearest wins);
+        // otherwise double.MaxValue.
+        const double FaceStroke = 0.05;
+
+        static double PortDepth(TrackBlockLogic b, int port, Vector3D origin, Vector3D dir)
         {
             TrackStyle style = b.Style;
             MatrixD m = b.PortWorld(port);
             double scale = Math.Max(1, Vector3D.Distance(m.Translation, origin) * FaceOnScreen / style.Width);
-            double half = style.FaceHalfWidth * (b.FanRank(port) >= 0 ? 1.0 / 3 : 1) * scale;
-            Vector3D centre = b.PortAim(port) + m.Up * ((style.FaceTop + style.FaceBottom) * 0.5 * scale);
-            double tolerance = Math.Max(0.3, (style.FaceTop - style.FaceBottom) * 0.5 * scale);
-            return AimScore(centre - m.Right * half, centre + m.Right * half, origin, dir, tolerance);
+            double edge = style.Width / 2 + FaceStroke, from = -edge, to = edge;
+            if (b.FanRank(port) >= 0)
+            {
+                double side = Vector3D.Dot(b.PortAim(port) - m.Translation, m.Right), split = style.Width / 6;
+                if (side > 1e-3)
+                    from = split;
+                else if (side < -1e-3)
+                    to = -split;
+                else
+                {
+                    from = -split;
+                    to = split;
+                }
+            }
+            double bottom = -style.Feet - FaceStroke, top = style.CrestHeight + FaceStroke;
+            double facing = Vector3D.Dot(dir, m.Forward);
+            if (Math.Abs(facing) < 1e-6)
+                return double.MaxValue;
+            double t = Vector3D.Dot(m.Translation - origin, m.Forward) / facing;
+            if (t < 0.5 || t > AimRange)
+                return double.MaxValue;
+            Vector3D on = origin + dir * t - m.Translation;
+            double x = Vector3D.Dot(on, m.Right) / scale, z = Vector3D.Dot(on, m.Up) / scale;
+            return x < from || x > to || z < bottom || z > top ? double.MaxValue : t;
         }
 
         // The segment a-b: its point closest to the view ray.
@@ -636,12 +661,25 @@ namespace MagRail
         // (TrackSettings.Flipped) names its left branch right and back.
         public static string PortLabel(TrackBlockLogic block, int port)
         {
+            string key = "MagRail_Port_" + ShownPort(block, port);
+            string name = Loc.T(key);
+            return name == key ? block.PortName(port) : name;
+        }
+
+        // The port's dummy name as the player sees it: a flipped switch's left branch is its right one.
+        static string ShownPort(TrackBlockLogic block, int port)
+        {
             string dummy = block.PortName(port);
             if (block.Settings != null && block.Settings.Flipped)
                 dummy = dummy == "branch_l" ? "branch_r" : dummy == "branch_r" ? "branch_l" : dummy;
-            string key = "MagRail_Port_" + dummy;
-            string name = Loc.T(key);
-            return name == key ? block.PortName(port) : name;
+            return dummy;
+        }
+
+        // A switch's branch for the screen: 'L', 'C', 'R'; other ports none.
+        static char BranchLetter(TrackBlockLogic block, int port)
+        {
+            string dummy = ShownPort(block, port);
+            return dummy == "branch_l" ? 'L' : dummy == "branch_c" ? 'C' : dummy == "branch_r" ? 'R' : '\0';
         }
 
         // ---- drawing (every frame) ----
@@ -677,7 +715,8 @@ namespace MagRail
         // aimed; the aimed port's stub on the right, red with a cross if it cannot take the span); a port with a span or
         // a span aimed at - both stubs with the prototype's line between (bars in its colours) or the rail; the length
         // in the top right corner; the profile in the top left one (the style of what is aimed at or laid; nothing: none);
-        // the mouse with what its buttons would do now (PLAN.md 10.16).
+        // the mouse with what its buttons would do now (PLAN.md 10.16); a switch's branch (L / C / R) over the stub of its
+        // port - the left one: the start or aimed port, the right one: the port laid to.
         LinkerDisplay.Screen Screen()
         {
             LinkerDisplay.Screen s = screen;
@@ -686,9 +725,12 @@ namespace MagRail
             if (span != null && !span.Bound)
                 span = null;
             s.Profile = startBlock != null ? startBlock.Style : aimBlock != null ? aimBlock.Style : span != null ? span.Owner.Style : null;
+            if (startBlock == null && aimBlock != null)
+                s.BranchLeft = BranchLetter(aimBlock, aimPort);
             if (startBlock != null)
             {
                 s.StubLeft = s.CapLeft = s.PortLeft = true;
+                s.BranchLeft = BranchLetter(startBlock, startPort);
                 s.Hints[(int)LinkerDisplay.Button.Right] = LinkerDisplay.HintKind.Cancel;
                 if (preview != null)
                 {
@@ -698,6 +740,7 @@ namespace MagRail
                 if (aimBlock != null && !(aimBlock == startBlock && aimPort == startPort))
                 {
                     s.StubRight = s.PortRight = true;
+                    s.BranchRight = BranchLetter(aimBlock, aimPort);
                     if (previewProblem == null)
                         s.Hints[(int)LinkerDisplay.Button.Left] = LinkerDisplay.HintKind.Prototype;
                     else

@@ -20,7 +20,8 @@ namespace MagRail
     // its end face), port dots, the line between them in SEGMENTS segments (dashes while laying, bars once linked; each
     // its own colour), the rail between the stubs once built; over them the mouse (always) with what its buttons do: a
     // button that does something is lit, its hint next to the mouse (left button's at its left, the right one's at its
-    // right, the wheel's over it); the length in whole metres in the top right corner, the profile in the top left one.
+    // right, the wheel's over it); the length in whole metres in the top right corner, the profile in the top left one;
+    // a switch's branch (L / C / R) over the stub of its port.
     // What it shows comes from RailLinker.Screen; a click's answer flashes in the clicked button's hint's place (Flash:
     // a small check - done, a red cross - cannot, for FlashSeconds). The line's segments take the colours of the
     // world's span lines (Draw.ByShape).
@@ -45,7 +46,7 @@ namespace MagRail
         const float Unit = 1e-4f;           // metres
         const float TextRight = 940, TextTop = 46, TextGap = 6;
         const float DigitWidth = 43, MWidth = 56;
-        const int DigitCopies = 4;          // subparts per digit (RailLinker.py DIGIT_COPIES)
+        const int DigitCopies = 5;         // subparts per digit (RailLinker.py DIGIT_COPIES)
         static readonly Vector2[] hintAt = { new Vector2(346, 137), new Vector2(534, 137), new Vector2(440, 34) };   // by Button
         const float AnswerIn = 20;          // a click's answer (40 units) in its hint's place (80)
         static readonly Vector2 RefusedAt = new Vector2(834, 150);  // the red cross over the right stub
@@ -70,6 +71,7 @@ namespace MagRail
             public Color TextColor = White;
             public TrackStyle Profile;
             public bool Refused;                            // a red cross over the right stub
+            public char BranchLeft, BranchRight;            // a switch's branch over the stub of its port: 'L', 'C', 'R' or none
             public readonly HintKind[] Hints = new HintKind[3]; // by Button
 
             public void Clear()
@@ -82,6 +84,7 @@ namespace MagRail
                 Text = null;
                 Profile = null;
                 Refused = false;
+                BranchLeft = BranchRight = '\0';
                 Array.Clear(Hints, 0, Hints.Length);
             }
         }
@@ -91,7 +94,8 @@ namespace MagRail
         enum G
         {
             StubLeft, CapLeft, StubRight, Rail, PortLeft, PortRight, Arrow, CheckSmall, CrossSmall, Cross, M, Mouse,
-            MouseLeft, MouseRight, MouseWheel, HintGrab, HintBreak, HintPrototype, HintRail, HintPaint, HintCancel, Dash0
+            MouseLeft, MouseRight, MouseWheel, HintGrab, HintBreak, HintPrototype, HintRail, HintPaint, HintCancel,
+            BranchLeft, BranchRight = BranchLeft + 3, Dash0 = BranchRight + 3   // each L, C, R
         }
         const int Bar0 = (int)G.Dash0 + Segments, Digit0 = Bar0 + Segments, Profile0 = Digit0 + 10 * DigitCopies;
         // Before the arrays sized by it.
@@ -103,7 +107,8 @@ namespace MagRail
             string[] n = new string[GlyphCount];
             string[] single = { "stub_left", "cap_left", "stub_right", "rail", "port_left", "port_right", "arrow", "check_s",
                 "cross_s", "cross", "m", "mouse", "mouse_l", "mouse_r", "mouse_w", "hint_grab", "hint_break", "hint_proto",
-                "hint_rail", "hint_paint", "cross_hint" };
+                "hint_rail", "hint_paint", "cross_hint", "branch_l_left", "branch_c_left", "branch_r_left", "branch_l_right",
+                "branch_c_right", "branch_r_right" };
             for (int i = 0; i < single.Length; i++)
                 n[i] = Prefix + single[i];
             for (int k = 0; k < Segments; k++)
@@ -171,10 +176,10 @@ namespace MagRail
             }
         }
 
-        // A length for the screen: whole metres, up to 9999.
+        // A length for the screen: whole metres, up to 99999.
         public static string Length(double metres)
         {
-            return Math.Min(9999, Math.Round(metres)).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "m";
+            return Math.Min(99999, Math.Round(metres)).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "m";
         }
 
         // The local player's mouse buttons (any held), every tick while the Linker is in hand.
@@ -256,6 +261,8 @@ namespace MagRail
                     wantColor[i] = s.Grades[k];
                 }
             Set(G.Arrow, s.Arrow, s.Grades[Segments - 1]);
+            Branch(G.BranchLeft, s.BranchLeft, s.Left);
+            Branch(G.BranchRight, s.BranchRight, s.Right);
             for (int k = 0; k < TrackStyle.All.Length; k++)
             {
                 want[Profile0 + k] = s.Profile == TrackStyle.All[k];
@@ -284,6 +291,14 @@ namespace MagRail
         {
             want[(int)glyph] = on;
             wantColor[(int)glyph] = color;
+        }
+
+        // A switch's branch letter over a stub: `first` - its L.
+        static void Branch(G first, char letter, Color color)
+        {
+            int k = letter == 0 ? -1 : "LCR".IndexOf(letter);
+            if (k >= 0)
+                Set(first + k, true, color);
         }
 
         static void Move(G glyph, Color color, Vector2 at)
