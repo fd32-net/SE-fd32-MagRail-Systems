@@ -121,6 +121,88 @@
       <IsAirTight>false</IsAirTight>
       <Upgrades />
     </Definition>
+    <!-- Embedded rails (ModelSource/blocks/EmbeddedRail.py): a block and a half block with the rail built into them, the
+         copper flush with the block top; fixed height (TrackStyle.FixedHeight), joints at both ends like Rail Block 1.
+         The block is airtight on every face, the half block is not. -->
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_WideEmbeddedRail</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_WideEmbeddedRail</DisplayName>
+      <Description>Description_MagRail_WideEmbeddedRail</Description>
+      <!-- Placeholder: the type's Rail Block 1 icon until its own is drawn. -->
+      <Icon>Textures\Icons\Blocks\MagRail_WideRailBlock1.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_WideEmbeddedRail.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="25" />
+        <Component Subtype="Construction" Count="8" />
+        <Component Subtype="MetalGrid" Count="4" />
+      </Components>
+      <CriticalComponent Subtype="MetalGrid" Index="0" />
+      <Center x="0" y="0" z="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+        <MountPoint Side="Top" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Left" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Right" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
+      </MountPoints>
+      <BlockPairName>MagRail_WideEmbeddedRail</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>12</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>10</PCU>
+      <IsAirTight>true</IsAirTight>
+      <Upgrades />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>MagRail_WideEmbeddedRailHalf</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_WideEmbeddedRailHalf</DisplayName>
+      <Description>Description_MagRail_WideEmbeddedRailHalf</Description>
+      <!-- Placeholder: the type's Rail Block 1 icon until its own is drawn. -->
+      <Icon>Textures\Icons\Blocks\MagRail_WideRailBlock1.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_WideEmbeddedRailHalf.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="12" />
+        <Component Subtype="Construction" Count="6" />
+        <Component Subtype="MetalGrid" Count="4" />
+      </Components>
+      <CriticalComponent Subtype="MetalGrid" Index="0" />
+      <Center x="0" y="0" z="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
+        <MountPoint Side="Left" StartX="0" StartY="0" EndX="1" EndY="0.5" />
+        <MountPoint Side="Right" StartX="0" StartY="0" EndX="1" EndY="0.5" />
+        <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="0.5" />
+        <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="0.5" />
+      </MountPoints>
+      <BlockPairName>MagRail_WideEmbeddedRailHalf</BlockPairName>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>8</BuildTimeSeconds>
+      <DamageEffectName>Damage_HeavyMech_Damaged</DamageEffectName>
+      <DamagedSound>ParticleHeavyMech</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <PCU>10</PCU>
+      <IsAirTight>false</IsAirTight>
+      <Upgrades />
+    </Definition>
   </CubeBlocks>
   <!-- G menu: the type's blocks in one group; the first block is the group icon. -->
   <BlockVariantGroups>
@@ -132,6 +214,8 @@
         <Block Type="UpgradeModule" Subtype="MagRail_WideRailBlock1" />
         <Block Type="UpgradeModule" Subtype="MagRail_WideFreeRail" />
         <Block Type="UpgradeModule" Subtype="MagRail_WideSwitch1" />
+        <Block Type="UpgradeModule" Subtype="MagRail_WideEmbeddedRail" />
+        <Block Type="UpgradeModule" Subtype="MagRail_WideEmbeddedRailHalf" />
       </Blocks>
     </BlockVariantGroup>
   </BlockVariantGroups>
@@ -140,6 +224,8 @@
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_WideRailBlock1" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_WideFreeRail" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_WideSwitch1" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_WideEmbeddedRail" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_WideEmbeddedRailHalf" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
   </ResearchBlocks>
   <!-- Rail Linker end face overlays (TrackStyle.Face, Visuals/Draw.cs): MagRail_FaceWide<part><Line|Fill>,
        textures from ModelSource/overlay_textures.py. -->

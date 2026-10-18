@@ -23,7 +23,11 @@ namespace MagRail
     public class TrackSettings
     {
         // 2: the Free Rail head on the lift turns about the middle of its ear pivots (RailPointPivot).
-        public const int CurrentVersion = 2;
+        // 3: the models' standard rail point is 0.90 m over the cell bottom (was 1.00): older settings get LegacyOffset
+        // added, so their rail stays where it was built.
+        public const int CurrentVersion = 3;
+        // The old standard over the new one, m.
+        public const float LegacyOffset = 0.10f;
 
         [ProtoMember(1)] public int Version = CurrentVersion;
         // 2 was the Locked flag (test builds of V0.3.0): do not reuse.
@@ -88,10 +92,10 @@ namespace MagRail
         {
             TrackSettings s = MyAPIGateway.Utilities.SerializeFromBinary<TrackSettings>(Convert.FromBase64String(text));
             if (s.Version < 2)
-            {
                 s.RailPointPivot = true;
-                s.Version = CurrentVersion;
-            }
+            if (s.Version < 3)
+                s.HeightOffset = (float)Math.Round(s.HeightOffset + LegacyOffset, 2);
+            s.Version = CurrentVersion;
             return s;
         }
     }

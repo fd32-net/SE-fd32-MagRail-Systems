@@ -17,6 +17,8 @@ namespace MagRail
     // Build Vision steps a slider by 10^trunc(log10(1.1 * range)) / 100 (both limits non-zero) and keeps
     // writing its own value while scrolling, so the setter must not move the value elsewhere: the slider
     // ranges are chosen to give its step = our step (2.3 m -> 1 cm, 360 and 91 degrees -> 1 degree).
+    // The height slider shows the rail's top (the copper, TrackStyle.Top over the rail point) over the bottom of the
+    // block: the standard rail tops a half block (1.25 m); limits and steps are the rail point's, moved by Top.
     public static class TrackTerminal
     {
         const float MaxHeight = 2.5f, HeightStep = 0.01f;
@@ -33,9 +35,12 @@ namespace MagRail
             return logic != null && logic.Settings != null ? logic : null;
         }
 
-        static bool IsTrack(IMyTerminalBlock b)
+        // A track block with the height setting; an embedded rail (fixed height) has no settings: no controls, not even
+        // the section label.
+        static bool HasSettings(IMyTerminalBlock b)
         {
-            return Logic(b) != null;
+            TrackBlockLogic logic = Logic(b);
+            return logic != null && !logic.FixedHeight;
         }
 
         static bool IsKind(IMyTerminalBlock b, TrackKind kind)
@@ -79,24 +84,24 @@ namespace MagRail
                 return;
             created = true;
 
-            Add(MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSeparator, IMyUpgradeModule>("MagRail_Sep"), IsTrack);
+            Add(MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSeparator, IMyUpgradeModule>("MagRail_Sep"), HasSettings);
             IMyTerminalControlLabel label = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlLabel, IMyUpgradeModule>("MagRail_Section");
             label.Label = Loc.Id("MagRail_Term_Section");
-            Add(label, IsTrack);
+            Add(label, HasSettings);
 
             IMyTerminalControlLabel locked = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlLabel, IMyUpgradeModule>("MagRail_LockedNote");
             locked.Label = Loc.Id("MagRail_Term_LockedNote");
-            Add(locked, b => IsTrack(b) && !CanReshape(b));
+            Add(locked, b => HasSettings(b) && !CanReshape(b));
 
             IMyTerminalControlSlider height = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyUpgradeModule>("MagRail_Height");
             height.Title = Loc.Id("MagRail_Term_Height");
             height.Tooltip = Loc.Id("MagRail_Term_Height_Tip");
-            height.SetLimits(MinHeight, b => MaxHeight);
-            height.Getter = b => Logic(b) != null && !float.IsNaN(Logic(b).Height) ? Logic(b).Height : MinHeight(b);
-            height.Setter = (b, v) => SetHeight(b, v);
+            height.SetLimits(b => MinHeight(b) + Top(b), b => MaxHeight + Top(b));
+            height.Getter = b => (Logic(b) != null && !float.IsNaN(Logic(b).Height) ? Logic(b).Height : MinHeight(b)) + Top(b);
+            height.Setter = (b, v) => SetHeight(b, v - Top(b));
             height.Writer = WriteHeight;
             height.Enabled = CanReshape;
-            Add(height, IsTrack);
+            Add(height, HasSettings);
 
             AddAngle("MagRail_Yaw", "MagRail_Term_Yaw", -180, 180, s => s.Yaw, (s, v) => s.Yaw = v);
             AddAngle("MagRail_Pitch", "MagRail_Term_Pitch", -MaxSlope, MaxSlope, s => s.Pitch, (s, v) => s.Pitch = v, AngleSliderMargin);
@@ -146,6 +151,14 @@ namespace MagRail
             return logic != null ? logic.MinHeight : Math.Min(TrackStyle.All.Min(s => s.MinHeight), RailLift.MinHeight);
         }
 
+        // The rail's top over its point (both styles alike; a block without logic shows the narrow one's).
+        static float Top(IMyTerminalBlock b)
+        {
+            TrackBlockLogic logic = Logic(b);
+            return (float)(logic != null ? logic.Style.Top : TrackStyle.Narrow.Top);
+        }
+
+        // value: the rail point's height.
         static void SetHeight(IMyTerminalBlock b, float value)
         {
             TrackBlockLogic logic = Logic(b);
@@ -161,9 +174,7 @@ namespace MagRail
             TrackBlockLogic logic = Logic(b);
             if (logic == null || float.IsNaN(logic.Height))
                 return;
-            sb.Append(Loc.F("MagRail_Unit_m", logic.Height.ToString("0.00")));
-            if (Math.Abs(logic.Settings.HeightOffset) < 0.001f)
-                sb.Append(' ').Append(Loc.T("MagRail_Term_Standard"));
+            sb.Append(Loc.F("MagRail_Unit_m", (logic.Height + Top(b)).ToString("0.00")));
         }
 
         static void AddAngle(string id, string titleKey, float min, float max, Func<TrackSettings, float> get, Action<TrackSettings, float> set,
@@ -189,8 +200,8 @@ namespace MagRail
 
         static void CreateActions()
         {
-            AddAction("MagRail_HeightUp", "MagRail_Act_HeightUp", IconUp, IsTrack, b => StepHeight(b, HeightStep), WriteHeight);
-            AddAction("MagRail_HeightDown", "MagRail_Act_HeightDown", IconDown, IsTrack, b => StepHeight(b, -HeightStep), WriteHeight);
+            AddAction("MagRail_HeightUp", "MagRail_Act_HeightUp", IconUp, HasSettings, b => StepHeight(b, HeightStep), WriteHeight);
+            AddAction("MagRail_HeightDown", "MagRail_Act_HeightDown", IconDown, HasSettings, b => StepHeight(b, -HeightStep), WriteHeight);
 
             Func<IMyTerminalBlock, bool> sw = b => IsKind(b, TrackKind.Switch);
             AddAction("MagRail_BranchLeft", "MagRail_Act_BranchLeft", IconOn, sw, b => SetBranch(b, SwitchBranch.Left), WriteBranch);

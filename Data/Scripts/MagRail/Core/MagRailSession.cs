@@ -14,7 +14,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.10.14";
+        public const string Version = "V0.10.15";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -47,6 +47,14 @@ namespace MagRail
                 MyAPIGateway.Utilities.MessageEntered += Commands.OnMessage;
             }
             Log.Info(Version + " loaded (" + (MyAPIGateway.Session.IsServer ? "server" : "client") + ")");
+        }
+
+        // The world is loaded: blocks initialised from now on are new (built, pasted, streamed in).
+        public bool Started { get; private set; }
+
+        public override void BeforeStart()
+        {
+            Started = true;
         }
 
         protected override void UnloadData()

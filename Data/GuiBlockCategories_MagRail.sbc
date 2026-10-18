@@ -42,9 +42,13 @@
         <string>UpgradeModule/MagRail_RailBlock1</string>
         <string>UpgradeModule/MagRail_FreeRail</string>
         <string>UpgradeModule/MagRail_Switch1</string>
+        <string>UpgradeModule/MagRail_EmbeddedRail</string>
+        <string>UpgradeModule/MagRail_EmbeddedRailHalf</string>
         <string>UpgradeModule/MagRail_WideRailBlock1</string>
         <string>UpgradeModule/MagRail_WideFreeRail</string>
         <string>UpgradeModule/MagRail_WideSwitch1</string>
+        <string>UpgradeModule/MagRail_WideEmbeddedRail</string>
+        <string>UpgradeModule/MagRail_WideEmbeddedRailHalf</string>
         <string>MotorSuspension/MagRail_HoverLarge</string>
         <string>MotorSuspension/MagRail_HoverSmall</string>
         <string>MotorSuspension/MagRail_HoverTest</string>

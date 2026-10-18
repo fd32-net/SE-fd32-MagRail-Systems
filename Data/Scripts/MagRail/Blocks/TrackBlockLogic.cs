@@ -13,7 +13,7 @@ using VRageMath;
 
 namespace MagRail
 {
-    // A track block (Rail Block, Free Rail Block, Rail Switch): its settings, its rail part and its ports.
+    // A track block (Rail Block, Free Rail Block, Rail Switch, Embedded Rail): its settings, its rail part and its ports.
     // Rail Switch / Wide Rail Switch (blocks/Switch1.py): a straight rail part whose three branch ports are
     // one point at the front end, like the old Maglev junction; the spans laid from them are the branches.
     // The rail part is the subpart the model's "subpart_" dummy names; the dummy's matrix is the standard placement.
@@ -23,7 +23,8 @@ namespace MagRail
     // The descriptor lists the subtypes of TrackStyle's registry (an attribute takes constants only): keep both alike.
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_UpgradeModule), false,
         "MagRail_RailBlock1", "MagRail_FreeRail",
-        "MagRail_Switch1", "MagRail_WideRailBlock1", "MagRail_WideFreeRail", "MagRail_WideSwitch1")]
+        "MagRail_Switch1", "MagRail_WideRailBlock1", "MagRail_WideFreeRail", "MagRail_WideSwitch1",
+        "MagRail_EmbeddedRail", "MagRail_EmbeddedRailHalf", "MagRail_WideEmbeddedRail", "MagRail_WideEmbeddedRailHalf")]
     public class TrackBlockLogic : MyGameLogicComponent
     {
         // Branch port names by SwitchBranch.
@@ -60,10 +61,14 @@ namespace MagRail
         public TrackStyle Style { get; private set; }
         public TrackSettings Settings { get; private set; }
         public SpanStore SpanStore { get; private set; }
+        // The rail stays at its standard height (TrackStyle.FixedHeight): a stored height offset is ignored.
+        public bool FixedHeight { get; private set; }
         // Changes whenever the rail part moves (spans rebuild their curves).
         public int Revision { get; private set; }
 
         bool registered;
+        // Initialised with the world (before MagRailSession.Started): a block without settings is from an older version.
+        bool fromWorld;
         // Where the track index last saw the block: a grid split/merge or a grid turning static moves it.
         IMyCubeGrid indexedGrid;
         bool indexedStatic;
@@ -94,6 +99,8 @@ namespace MagRail
             Kind = kind;
             if (TrackStyle.HasLift(Block.BlockDefinition.SubtypeId))
                 lift = new RailLift(this);
+            FixedHeight = TrackStyle.HasFixedHeight(Block.BlockDefinition.SubtypeId);
+            fromWorld = MagRailSession.Instance != null && !MagRailSession.Instance.Started;
             NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
         }
 
@@ -104,7 +111,7 @@ namespace MagRail
                 // Projections and placement previews have no physics: no logic for them.
                 if (Block.CubeGrid.Physics == null || MagRailSession.Instance == null)
                     return;
-                Settings = LoadSettings() ?? new TrackSettings();
+                Settings = LoadSettings() ?? NewSettings();
                 SpanStore = LoadSpans() ?? new SpanStore { SelfId = Block.EntityId };
                 UpdatePart();
                 Network.Register(this);
@@ -163,7 +170,12 @@ namespace MagRail
 
         public float Height
         {
-            get { return StandardHeight + Settings.HeightOffset; }
+            get { return StandardHeight + HeightOffset; }
+        }
+
+        float HeightOffset
+        {
+            get { return FixedHeight ? 0 : Settings.HeightOffset; }
         }
 
         // Lowest rail point (terminal height), m: on the lift lower than over a platform.
@@ -215,6 +227,17 @@ namespace MagRail
                 UpdatePart();
             }
             TrackTerminal.Refresh();
+        }
+
+        // No settings stored: a new block stands at the standard height. One loaded with the world never had its
+        // settings changed under an older version: it keeps the old standard height (TrackSettings version 3), where
+        // its rails were built. Stored at once, so the next load knows.
+        TrackSettings NewSettings()
+        {
+            TrackSettings s = new TrackSettings { HeightOffset = fromWorld ? TrackSettings.LegacyOffset : 0 };
+            Block.Storage = Block.Storage ?? new MyModStorageComponent();
+            Block.Storage[SettingsGuid] = s.Encode();
+            return s;
         }
 
         TrackSettings LoadSettings()
@@ -509,7 +532,7 @@ namespace MagRail
         Matrix PartMatrix(PartInfo info)
         {
             Matrix m = info.Standard;
-            Vector3 position = m.Translation + Vector3.Up * Settings.HeightOffset;
+            Vector3 position = m.Translation + Vector3.Up * HeightOffset;
             m.Translation = Vector3.Zero;
             if (Kind == TrackKind.FreeRail)
             {
@@ -528,7 +551,8 @@ namespace MagRail
         // The rail part. Rebuilt on every move: moves are rare (settings changes) and a
         // static body does not follow its entity. On a moving grid the part has no collision (see
         // PieceEntities: it would hit the ship); it only keeps its world matrix up to date. A style that is not
-        // Solid has none anywhere.
+        // Solid has none anywhere. An embedded rail (fixed height) has none either: its block's collision holds the rail,
+        // and a body of the part's own is not the grid's (vanilla doors and gates over the block bumped into it).
         void RebuildPhysics(MyEntity e)
         {
             if (e.Physics != null)
@@ -536,7 +560,7 @@ namespace MagRail
                 e.Physics.Close();
                 e.Physics = null;
             }
-            if (partOnStatic && Style.Solid)
+            if (partOnStatic && Style.Solid && !FixedHeight)
             {
                 e.InitModelPhysics(RigidBodyFlag.RBF_STATIC, PieceEntities.StaticLayer);
             }

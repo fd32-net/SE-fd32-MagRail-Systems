@@ -27,6 +27,18 @@
   <data name="Description_MagRail_Switch1" xml:space="preserve">
     <value>One entry, three branches: left, centre, right, all leaving the front end from one point. The branches are the spans laid from it with the Rail Linker (aim beside the end for the left and right one); the switch sends a train into the selected one.</value>
   </data>
+  <data name="DisplayName_MagRail_EmbeddedRail" xml:space="preserve">
+    <value>Embedded Rail</value>
+  </data>
+  <data name="Description_MagRail_EmbeddedRail" xml:space="preserve">
+    <value>Rail built into a block, its copper flush with the block top: for platforms, floors and crossings; vehicles and players pass over it. The rail height is fixed. Joins rails end to end like Rail Block 1.</value>
+  </data>
+  <data name="DisplayName_MagRail_EmbeddedRailHalf" xml:space="preserve">
+    <value>Embedded Rail (half block)</value>
+  </data>
+  <data name="Description_MagRail_EmbeddedRailHalf" xml:space="preserve">
+    <value>Half block with the rail built in, its copper flush with the top: for platforms, floors and crossings; vehicles and players pass over it. The rail height is fixed. Joins rails end to end like Rail Block 1.</value>
+  </data>
   <data name="DisplayName_MagRail_WideTrackGroup" xml:space="preserve">
     <value>Wide Track Blocks</value>
   </data>
@@ -50,6 +62,18 @@
   </data>
   <data name="Description_MagRail_WideSwitch1" xml:space="preserve">
     <value>Wide rail switch (2 m), 1 block long. One entry, three branches: left, centre, right, all leaving the front end from one point. The branches are the spans laid from it with the Rail Linker (aim beside the end for the left and right one); the switch sends a train into the selected one.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideEmbeddedRail" xml:space="preserve">
+    <value>Wide Embedded Rail</value>
+  </data>
+  <data name="Description_MagRail_WideEmbeddedRail" xml:space="preserve">
+    <value>Wide rail (2 m) built into a block, its copper flush with the block top: for platforms, floors and crossings; vehicles and players pass over it. The rail height is fixed. Joins rails end to end like Rail Block 1.</value>
+  </data>
+  <data name="DisplayName_MagRail_WideEmbeddedRailHalf" xml:space="preserve">
+    <value>Wide Embedded Rail (half block)</value>
+  </data>
+  <data name="Description_MagRail_WideEmbeddedRailHalf" xml:space="preserve">
+    <value>Half block with the wide rail (2 m) built in, its copper flush with the top: for platforms, floors and crossings; vehicles and players pass over it. The rail height is fixed. Joins rails end to end like Rail Block 1.</value>
   </data>
   <data name="DisplayName_MagRail_EngineGroup" xml:space="preserve">
     <value>Hover Engines</value>
@@ -82,10 +106,7 @@
     <value>Rail height</value>
   </data>
   <data name="MagRail_Term_Height_Tip" xml:space="preserve">
-    <value>Height of the rail above the bottom of the block. Only an unlocked block can change it.</value>
-  </data>
-  <data name="MagRail_Term_Standard" xml:space="preserve">
-    <value>(standard)</value>
+    <value>Height of the rail's top (the copper) above the bottom of the block; standard 1.25 m, level with a half block. Only an unlocked block can change it.</value>
   </data>
   <data name="MagRail_Unit_m" xml:space="preserve">
     <value>{0} m</value>
