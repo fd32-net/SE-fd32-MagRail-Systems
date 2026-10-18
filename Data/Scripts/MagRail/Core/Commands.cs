@@ -10,6 +10,7 @@ namespace MagRail
     // /magrail debug, /magrail cursor [speed | off]: track checks, see TrackDebug.
     // /magrail log, /magrail mark <text>: the ride log, see RideLog.
     // /magrail skin: TEMPORARY probe - the player's build skin (P menu) as the game saves it, and how long that takes.
+    // /magrail platform [m]: TEMPORARY (engine platform test T2) - bases drawn this much lower, EnginePlatform.DebugSink.
     public static class Commands
     {
         public static void OnMessage(string text, ref bool sendToOthers)
@@ -39,6 +40,16 @@ namespace MagRail
             if (command == "skin")
             {
                 ProbeSkin();
+                return;
+            }
+            if (command == "platform")
+            {
+                float sink;
+                if (words.Length < 3 || !float.TryParse(words[2], System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out sink))
+                    sink = 0;
+                EnginePlatform.DebugSink = sink;
+                MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_PlatformSink", sink.ToString("0.00")));
                 return;
             }
             if (command == "cursor")

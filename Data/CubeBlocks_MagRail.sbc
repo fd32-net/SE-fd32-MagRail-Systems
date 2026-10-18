@@ -116,6 +116,64 @@
       <PCU>20</PCU>
       <IsAirTight>false</IsAirTight>
     </Definition>
+    <!-- TEST (PLAN 10.23, T1): an engine with a platform, a copy of the large one with its own model; the
+         platform (subpart) keeps a set gap over the rail, EnginePlatform. -->
+    <Definition xsi:type="MyObjectBuilder_MotorSuspensionDefinition">
+      <Id>
+        <TypeId>MotorSuspension</TypeId>
+        <SubtypeId>MagRail_HoverTest</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_MagRail_HoverTest</DisplayName>
+      <Description>Description_MagRail_HoverTest</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_HoverLarge.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Cubes\Large\MagRail_HoverTest.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="50" />
+        <Component Subtype="Construction" Count="20" />
+        <Component Subtype="Superconductor" Count="15" />
+        <Component Subtype="Computer" Count="50" />
+      </Components>
+      <CriticalComponent Subtype="Computer" Index="0" />
+      <MountPoints>
+        <MountPoint Side="Top" StartX="0" StartY="0" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0" StartY="0.6" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0.6" EndX="1" EndY="1" />
+        <MountPoint Side="Left" StartX="0" StartY="0.6" EndX="1" EndY="1" />
+        <MountPoint Side="Right" StartX="0" StartY="0.6" EndX="1" EndY="1" />
+      </MountPoints>
+      <BlockPairName>MagRail_HoverTest</BlockPairName>
+      <MirroringY>Z</MirroringY>
+      <MirroringZ>Y</MirroringZ>
+      <EdgeType>Light</EdgeType>
+      <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
+      <DamagedSound>ParticleElectrical</DamagedSound>
+      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroySound>WepSmallWarheadExpl</DestroySound>
+      <BuildTimeSeconds>20</BuildTimeSeconds>
+      <ResourceSinkGroup>Thrust</ResourceSinkGroup>
+      <RequiredPowerInput>5</RequiredPowerInput>
+      <RequiredIdlePowerInput>0</RequiredIdlePowerInput>
+      <MaxForceMagnitude>1E9</MaxForceMagnitude>
+      <DangerousTorqueThreshold>3.36E+07</DangerousTorqueThreshold>
+      <PropulsionForce>20000</PropulsionForce>
+      <RotorPart>MagRail_NoWheel</RotorPart>
+      <MaxSteer>0.0</MaxSteer>
+      <MinHeight>-1.5</MinHeight>
+      <MaxHeight>1.3</MaxHeight>
+      <SafetyDetach>5</SafetyDetach>
+      <SafetyDetachMax>5</SafetyDetachMax>
+      <AxleFriction>20000</AxleFriction>
+      <SteeringSpeed>0.005</SteeringSpeed>
+      <AirShockMinSpeed>10</AirShockMinSpeed>
+      <AirShockMaxSpeed>25</AirShockMaxSpeed>
+      <AirShockActivationDelay>60</AirShockActivationDelay>
+      <PCU>20</PCU>
+      <IsAirTight>false</IsAirTight>
+    </Definition>
     <!-- Train Control Unit: a thruster with (almost) no force. A grid has the vanilla inertia dampeners (Z, the
          cockpit's checkbox, the HUD) only while a working thruster is on it, so the cockpit grid of a train needs
          one; the drive reads the flag. The vanilla AI Flight (Move) block's model. ForceMagnitude is not 0: the

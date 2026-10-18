@@ -69,6 +69,12 @@
   <data name="Description_MagRail_HoverSmall" xml:space="preserve">
     <value>Holds the train over the rail. Mount it under the wagon. Placeholder model.</value>
   </data>
+  <data name="DisplayName_MagRail_HoverTest" xml:space="preserve">
+    <value>Hover Engine (platform test)</value>
+  </data>
+  <data name="Description_MagRail_HoverTest" xml:space="preserve">
+    <value>Test: the platform keeps a set gap over the rail. Placeholder model.</value>
+  </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Track block</value>
   </data>
@@ -354,6 +360,9 @@
   <data name="MagRail_Cmd_Skin" xml:space="preserve">
     <value>Build skin: {0}; colour HSV {1}; read in {2} ms</value>
   </data>
+  <data name="MagRail_Cmd_PlatformSink" xml:space="preserve">
+    <value>Platform test: bases drawn {0} m lower (/magrail platform 0 = off)</value>
+  </data>
   <data name="MagRail_EngineTerm_Section" xml:space="preserve">
     <value>MagRail engine</value>
   </data>
@@ -363,32 +372,23 @@
   <data name="MagRail_EngineTerm_Height_Tip" xml:space="preserve">
     <value>Height of the guide point (block centre + offsets) over the rail point. Standard 2.5 m (small grid 1.2 m).</value>
   </data>
+  <data name="MagRail_EngineTerm_Gap" xml:space="preserve">
+    <value>Platform gap</value>
+  </data>
+  <data name="MagRail_EngineTerm_Gap_Tip" xml:space="preserve">
+    <value>Gap between the top of the rail and the bottom of the platform. 0 = the platform lies on the rail.</value>
+  </data>
   <data name="MagRail_EngineTerm_Hold" xml:space="preserve">
     <value>Hold stiffness</value>
   </data>
   <data name="MagRail_EngineTerm_Hold_Tip" xml:space="preserve">
     <value>How hard the engine pulls its point back over the rail. 1x standard; more = stiffer, less = softer.</value>
   </data>
-  <data name="MagRail_EngineTerm_Offsets" xml:space="preserve">
-    <value>Guide point offset</value>
+  <data name="MagRail_EngineTerm_SideOffset" xml:space="preserve">
+    <value>Side offset</value>
   </data>
-  <data name="MagRail_EngineTerm_OffsetRight" xml:space="preserve">
-    <value>Offset right</value>
-  </data>
-  <data name="MagRail_EngineTerm_OffsetRight_Tip" xml:space="preserve">
+  <data name="MagRail_EngineTerm_SideOffset_Tip" xml:space="preserve">
     <value>Moves the point held over the rail to the block's right (negative = left).</value>
-  </data>
-  <data name="MagRail_EngineTerm_OffsetForward" xml:space="preserve">
-    <value>Offset forward</value>
-  </data>
-  <data name="MagRail_EngineTerm_OffsetForward_Tip" xml:space="preserve">
-    <value>Moves the point held over the rail to the block's front (negative = back).</value>
-  </data>
-  <data name="MagRail_EngineTerm_OffsetUp" xml:space="preserve">
-    <value>Offset up</value>
-  </data>
-  <data name="MagRail_EngineTerm_OffsetUp_Tip" xml:space="preserve">
-    <value>Moves the point held over the rail up (negative = down).</value>
   </data>
   <data name="MagRail_Engine_State_Off" xml:space="preserve">
     <value>Rail: engine off or damaged</value>

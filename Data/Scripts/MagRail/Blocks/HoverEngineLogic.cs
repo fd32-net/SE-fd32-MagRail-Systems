@@ -26,7 +26,7 @@ namespace MagRail
     // under it and its settings; and the drive's power consumer. Numbers are the old Maglev's, so the ported physics
     // keeps them.
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorSuspension), false,
-        "MagRail_HoverLarge", "MagRail_HoverSmall")]
+        "MagRail_HoverLarge", "MagRail_HoverSmall", "MagRail_HoverTest")]
     public class HoverEngineLogic : MyGameLogicComponent
     {
         // Must be listed in Data/EntityComponents_MagRail.sbc, or the game drops it on save.
@@ -51,6 +51,11 @@ namespace MagRail
         public float PowerWanted;
         // Clients: the lower part that lies along the rail (cosmetic).
         public EngineSwivel Swivel;
+        // The model has a platform (EnginePlatform): the player sets its gap over the rail, and the base's height over
+        // it at rest (PlatformRest, m) is the model's. Clients: the platform itself (cosmetic).
+        public bool HasPlatform { get; private set; }
+        public double PlatformRest { get; private set; }
+        public EnginePlatform Platform;
         MyResourceSinkComponent sink;
         float demand;
         bool registered;
@@ -68,6 +73,9 @@ namespace MagRail
                 // Projections and placement previews have no physics: no logic for them.
                 if (Block.CubeGrid.Physics == null || MagRailSession.Instance == null)
                     return;
+                double rest;
+                HasPlatform = EnginePlatform.ReadRest(Block.Model, out rest);
+                PlatformRest = rest;
                 Settings = LoadSettings() ?? new EngineSettings
                 {
                     HoverHeight = Block.CubeGrid.GridSizeEnum == MyCubeSize.Small ? EngineSettings.SmallHeight : EngineSettings.LargeHeight,
@@ -78,7 +86,11 @@ namespace MagRail
                 Block.AppendingCustomInfo += EngineInfo.Append;
                 EngineTerminal.Create();
                 if (!MyAPIGateway.Utilities.IsDedicated)
+                {
                     Swivel = new EngineSwivel(this);
+                    if (HasPlatform)
+                        Platform = new EnginePlatform(this);
+                }
             }
             catch (Exception e)
             {
@@ -92,6 +104,8 @@ namespace MagRail
                 MagRailSession.Instance.Engines.Remove(this);
             if (registered)
                 Block.AppendingCustomInfo -= EngineInfo.Append;
+            if (Platform != null)
+                Platform.Remove();
             registered = false;
         }
 
@@ -149,9 +163,11 @@ namespace MagRail
             get { return registered && Block.IsFunctional && Block.Enabled; }
         }
 
+        // Of the guide point over the rail point. With a platform: the rail's top, the platform's gap and the base's
+        // height over the platform.
         public double HoverHeight
         {
-            get { return Settings.HoverHeight; }
+            get { return HasPlatform ? EnginePlatform.RailTop + Settings.PlatformGap + PlatformRest : Settings.HoverHeight; }
         }
 
         public double SearchDistance
@@ -165,7 +181,7 @@ namespace MagRail
             get
             {
                 MatrixD m = Block.WorldMatrix;
-                return m.Translation + m.Right * Settings.OffsetRight + m.Forward * Settings.OffsetForward + m.Up * Settings.OffsetUp;
+                return m.Translation + m.Right * Settings.SideOffset;
             }
         }
 
@@ -177,7 +193,8 @@ namespace MagRail
             {
                 switch (Block.BlockDefinition.SubtypeId)
                 {
-                    case "MagRail_HoverLarge": return 1000000.0;
+                    case "MagRail_HoverLarge":
+                    case "MagRail_HoverTest": return 1000000.0;
                     default: return 500000.0;
                 }
             }
@@ -231,7 +248,8 @@ namespace MagRail
             {
                 switch (Block.BlockDefinition.SubtypeId)
                 {
-                    case "MagRail_HoverLarge": return 5.0;
+                    case "MagRail_HoverLarge":
+                    case "MagRail_HoverTest": return 5.0;
                     default: return 2.4;
                 }
             }

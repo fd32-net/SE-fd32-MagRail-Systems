@@ -47,6 +47,18 @@ namespace MagRail
             return Logic(b) != null;
         }
 
+        static bool HasPlatform(IMyTerminalBlock b)
+        {
+            HoverEngineLogic logic = Logic(b);
+            return logic != null && logic.HasPlatform;
+        }
+
+        static bool NoPlatform(IMyTerminalBlock b)
+        {
+            HoverEngineLogic logic = Logic(b);
+            return logic != null && !logic.HasPlatform;
+        }
+
         static void Change(IMyTerminalBlock b, Action<EngineSettings> edit)
         {
             HoverEngineLogic logic = Logic(b);
@@ -78,21 +90,18 @@ namespace MagRail
             Add(MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSeparator, IMyMotorSuspension>("MagRail_EngineSep"));
             AddLabel("MagRail_EngineSection", "MagRail_EngineTerm_Section");
             AddSlider("MagRail_HoverHeight", "MagRail_EngineTerm_Height", EngineSettings.MinHeight, EngineSettings.MaxHeight,
-                s => s.HoverHeight, (s, v) => s.HoverHeight = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")));
+                s => s.HoverHeight, (s, v) => s.HoverHeight = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")), NoPlatform);
+            AddSlider("MagRail_PlatformGap", "MagRail_EngineTerm_Gap", EngineSettings.MinGap, EngineSettings.MaxGap,
+                s => s.PlatformGap, (s, v) => s.PlatformGap = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")), HasPlatform);
             AddSlider("MagRail_HoldStrength", "MagRail_EngineTerm_Hold", EngineSettings.MinHold, EngineSettings.MaxHold,
                 s => s.HoldStrength, (s, v) => s.HoldStrength = v, v => v.ToString("0.00") + "x");
-            AddLabel("MagRail_EngineOffsets", "MagRail_EngineTerm_Offsets");
-            AddSlider("MagRail_OffsetRight", "MagRail_EngineTerm_OffsetRight", -EngineSettings.MaxOffsetRight, EngineSettings.MaxOffsetRight,
-                s => s.OffsetRight, (s, v) => s.OffsetRight = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")));
-            AddSlider("MagRail_OffsetForward", "MagRail_EngineTerm_OffsetForward", -EngineSettings.MaxOffsetForward, EngineSettings.MaxOffsetForward,
-                s => s.OffsetForward, (s, v) => s.OffsetForward = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")));
-            AddSlider("MagRail_OffsetUp", "MagRail_EngineTerm_OffsetUp", -EngineSettings.MaxOffsetUp, EngineSettings.MaxOffsetUp,
-                s => s.OffsetUp, (s, v) => s.OffsetUp = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")));
+            AddSlider("MagRail_SideOffset", "MagRail_EngineTerm_SideOffset", -EngineSettings.MaxSideOffset, EngineSettings.MaxSideOffset,
+                s => s.SideOffset, (s, v) => s.SideOffset = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")));
         }
 
-        static void Add(IMyTerminalControl control)
+        static void Add(IMyTerminalControl control, Func<IMyTerminalBlock, bool> visible = null)
         {
-            control.Visible = IsEngine;
+            control.Visible = visible ?? IsEngine;
             MyAPIGateway.TerminalControls.AddControl<IMyMotorSuspension>(control);
             controls.Add(control);
         }
@@ -105,7 +114,7 @@ namespace MagRail
         }
 
         static void AddSlider(string id, string titleKey, float min, float max, Func<EngineSettings, float> get, Action<EngineSettings, float> set,
-            Func<float, string> format)
+            Func<float, string> format, Func<IMyTerminalBlock, bool> visible = null)
         {
             IMyTerminalControlSlider slider = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyMotorSuspension>(id);
             slider.Title = Loc.Id(titleKey);
@@ -114,7 +123,7 @@ namespace MagRail
             slider.Getter = b => Logic(b) != null ? get(Logic(b).Settings) : min;
             slider.Setter = (b, v) => Change(b, s => set(s, Snap(MathHelper.Clamp(v, min, max))));
             slider.Writer = (b, sb) => { if (Logic(b) != null) sb.Append(format(get(Logic(b).Settings))); };
-            Add(slider);
+            Add(slider, visible);
         }
 
         static void HideVanilla()

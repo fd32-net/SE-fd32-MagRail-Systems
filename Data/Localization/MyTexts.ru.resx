@@ -69,6 +69,12 @@
   <data name="Description_MagRail_HoverSmall" xml:space="preserve">
     <value>Держит поезд над рельсом. Ставится под вагон. Модель-заглушка.</value>
   </data>
+  <data name="DisplayName_MagRail_HoverTest" xml:space="preserve">
+    <value>Двигатель парения (тест платформы)</value>
+  </data>
+  <data name="Description_MagRail_HoverTest" xml:space="preserve">
+    <value>Тест: платформа держит заданный зазор над рельсом. Модель-заглушка.</value>
+  </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Блок пути</value>
   </data>
@@ -354,6 +360,9 @@
   <data name="MagRail_Cmd_Skin" xml:space="preserve">
     <value>Скин постройки: {0}; цвет HSV {1}; прочитан за {2} мс</value>
   </data>
+  <data name="MagRail_Cmd_PlatformSink" xml:space="preserve">
+    <value>Тест платформы: основы нарисованы на {0} м ниже (/magrail platform 0 — выкл.)</value>
+  </data>
   <data name="MagRail_EngineTerm_Section" xml:space="preserve">
     <value>Двигатель MagRail</value>
   </data>
@@ -363,32 +372,23 @@
   <data name="MagRail_EngineTerm_Height_Tip" xml:space="preserve">
     <value>Высота опорной точки (центр блока + смещения) над точкой рельса. Стандарт 2.5 м (малая сетка 1.2 м).</value>
   </data>
+  <data name="MagRail_EngineTerm_Gap" xml:space="preserve">
+    <value>Зазор платформы</value>
+  </data>
+  <data name="MagRail_EngineTerm_Gap_Tip" xml:space="preserve">
+    <value>Зазор между верхом рельса и низом платформы. 0 — платформа лежит на рельсе.</value>
+  </data>
   <data name="MagRail_EngineTerm_Hold" xml:space="preserve">
     <value>Жёсткость удержания</value>
   </data>
   <data name="MagRail_EngineTerm_Hold_Tip" xml:space="preserve">
     <value>Насколько сильно двигатель возвращает свою точку на место над рельсом. 1x — стандарт; больше — жёстче, меньше — мягче.</value>
   </data>
-  <data name="MagRail_EngineTerm_Offsets" xml:space="preserve">
-    <value>Смещение опорной точки</value>
+  <data name="MagRail_EngineTerm_SideOffset" xml:space="preserve">
+    <value>Боковое смещение</value>
   </data>
-  <data name="MagRail_EngineTerm_OffsetRight" xml:space="preserve">
-    <value>Смещение вправо</value>
-  </data>
-  <data name="MagRail_EngineTerm_OffsetRight_Tip" xml:space="preserve">
+  <data name="MagRail_EngineTerm_SideOffset_Tip" xml:space="preserve">
     <value>Сдвигает точку, которая держится над рельсом, вправо от блока (минус — влево).</value>
-  </data>
-  <data name="MagRail_EngineTerm_OffsetForward" xml:space="preserve">
-    <value>Смещение вперёд</value>
-  </data>
-  <data name="MagRail_EngineTerm_OffsetForward_Tip" xml:space="preserve">
-    <value>Сдвигает точку, которая держится над рельсом, вперёд от блока (минус — назад).</value>
-  </data>
-  <data name="MagRail_EngineTerm_OffsetUp" xml:space="preserve">
-    <value>Смещение вверх</value>
-  </data>
-  <data name="MagRail_EngineTerm_OffsetUp_Tip" xml:space="preserve">
-    <value>Сдвигает точку, которая держится над рельсом, вверх (минус — вниз).</value>
   </data>
   <data name="MagRail_Engine_State_Off" xml:space="preserve">
     <value>Рельс: двигатель выключен или повреждён</value>

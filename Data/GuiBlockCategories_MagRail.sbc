@@ -47,6 +47,7 @@
         <string>UpgradeModule/MagRail_WideSwitch1</string>
         <string>MotorSuspension/MagRail_HoverLarge</string>
         <string>MotorSuspension/MagRail_HoverSmall</string>
+        <string>MotorSuspension/MagRail_HoverTest</string>
         <string>Thrust/MagRail_TrainControlLarge</string>
         <string>Thrust/MagRail_TrainControlSmall</string>
         <string>UpgradeModule/MagRail_AutopilotLarge</string>

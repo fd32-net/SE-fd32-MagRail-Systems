@@ -13,26 +13,28 @@ namespace MagRail
         // Limits (m): ranges chosen so Build Vision steps them by 1 cm (see TrackTerminal).
         public const float MinHeight = 0.5f, MaxHeight = 9.5f;
         public const float MinHold = 0.5f, MaxHold = 3f;
-        public const float MaxOffsetRight = 2.5f, MaxOffsetForward = 3f, MaxOffsetUp = 2f;
+        public const float MaxSideOffset = 2.5f;
         public const float LargeHeight = 2.5f, SmallHeight = 1.2f;
+        public const float MinGap = 0f, MaxGap = 3f, DefaultGap = 1f;
 
         [ProtoMember(1)] public int Version = CurrentVersion;
         // Height of the guide point over the rail point, m.
         [ProtoMember(2)] public float HoverHeight = LargeHeight;
         // Stiffness of the hold (1 = standard): how hard the engine pulls its point back over the rail.
         [ProtoMember(3)] public float HoldStrength = 1;
-        // The guide point (the point held over the rail) from the block centre along the block's Right,
-        // Forward and Up, m.
-        [ProtoMember(4)] public float OffsetRight;
-        [ProtoMember(5)] public float OffsetForward;
-        [ProtoMember(6)] public float OffsetUp;
+        // The guide point (the point held over the rail) from the block centre along the block's Right, m.
+        // (5 and 6 were the forward and up offsets: removed, old saves just drop them.)
+        [ProtoMember(4)] public float SideOffset;
+        // Engines with a platform (EnginePlatform): the gap between the rail's top and the platform's bottom, m
+        // (0 = the platform lies on the rail). It sets their hover height instead of HoverHeight.
+        [ProtoMember(7)] public float PlatformGap = DefaultGap;
 
         public EngineSettings Copy()
         {
             return new EngineSettings
             {
                 Version = Version, HoverHeight = HoverHeight, HoldStrength = HoldStrength,
-                OffsetRight = OffsetRight, OffsetForward = OffsetForward, OffsetUp = OffsetUp,
+                SideOffset = SideOffset, PlatformGap = PlatformGap,
             };
         }
 
@@ -43,9 +45,8 @@ namespace MagRail
             s.Version = CurrentVersion;
             s.HoverHeight = MathHelper.Clamp(s.HoverHeight, MinHeight, MaxHeight);
             s.HoldStrength = MathHelper.Clamp(s.HoldStrength, MinHold, MaxHold);
-            s.OffsetRight = MathHelper.Clamp(s.OffsetRight, -MaxOffsetRight, MaxOffsetRight);
-            s.OffsetForward = MathHelper.Clamp(s.OffsetForward, -MaxOffsetForward, MaxOffsetForward);
-            s.OffsetUp = MathHelper.Clamp(s.OffsetUp, -MaxOffsetUp, MaxOffsetUp);
+            s.SideOffset = MathHelper.Clamp(s.SideOffset, -MaxSideOffset, MaxSideOffset);
+            s.PlatformGap = MathHelper.Clamp(s.PlatformGap, MinGap, MaxGap);
             return s;
         }
 

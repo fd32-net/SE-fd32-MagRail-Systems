@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
 using VRageMath;
@@ -21,6 +22,11 @@ namespace MagRail
         readonly List<Span> spans = new List<Span>();
         readonly Dictionary<long, Span> byPort = new Dictionary<long, Span>();
         readonly List<Span> scratch = new List<Span>();
+        readonly List<Span> apart = new List<Span>();
+        // Projectors of the grid last asked about (a pasted grid registers all its blocks in one frame).
+        readonly List<IMyProjector> projectors = new List<IMyProjector>();
+        IMyCubeGrid projectorsGrid;
+        int projectorsTick = -1;
         bool unresolved;
         int tick;
 
@@ -114,15 +120,18 @@ namespace MagRail
         {
             SpanStore store = owner.SpanStore;
             bool copy = store.SelfId != owner.Block.EntityId;
+            // Welded from a projection: built block by block, in the projector's grid frame, maybe rotated or
+            // with other settings: its spans could not come back in the same place and are all dropped.
+            bool projected = copy && store.Spans.Count > 0 && FromProjection(owner.Block);
             bool changed = false;
             for (int i = store.Spans.Count - 1; i >= 0; i--)
             {
                 SpanRecord r = store.Spans[i];
                 if (copy)
                 {
-                    // A copied block: spans to other grids are dropped, spans inside the grid are
+                    // A copied (pasted) block: spans to other grids are dropped, spans inside the grid are
                     // found again by the partner's position.
-                    if (!r.SameGrid)
+                    if (!r.SameGrid || projected)
                     {
                         store.Spans.RemoveAt(i);
                         changed = true;
@@ -135,7 +144,44 @@ namespace MagRail
             }
             if (changed || copy)
                 owner.SaveSpans();
+            // Clients decide the same from their own projection; this corrects one that has none.
+            if (projected && Net.IsServer)
+                Net.BroadcastSpans(owner);
             unresolved = true;
+        }
+
+        // A block welded from a projection: the projector keeps the projected copy of it, hidden, at its place
+        // (MyProjectorBase.BuildInternal builds on the projector's grid and only hides the projected block).
+        bool FromProjection(IMyCubeBlock block)
+        {
+            IMyCubeGrid grid = block.CubeGrid;
+            if (grid != projectorsGrid || tick != projectorsTick)
+            {
+                projectorsGrid = grid;
+                projectorsTick = tick;
+                projectors.Clear();
+                MyCubeGrid g = grid as MyCubeGrid;
+                if (g != null)
+                {
+                    foreach (MyCubeBlock b in g.GetFatBlocks())
+                    {
+                        IMyProjector p = b as IMyProjector;
+                        if (p != null)
+                            projectors.Add(p);
+                    }
+                }
+            }
+            Vector3D at = grid.GridIntegerToWorld(block.Position);
+            for (int i = 0; i < projectors.Count; i++)
+            {
+                IMyCubeGrid projected = projectors[i].ProjectedGrid;
+                if (projected == null)
+                    continue;
+                IMySlimBlock twin = projected.GetCubeBlock(projected.WorldToGridInteger(at));
+                if (twin != null && twin.BlockDefinition.Id == block.BlockDefinition)
+                    return true;
+            }
+            return false;
         }
 
         // Binds every unbound span whose two blocks are loaded.
@@ -249,9 +295,20 @@ namespace MagRail
             for (int i = 0; i < spans.Count; i++)
             {
                 Span s = spans[i];
-                if (s.Bound)
+                if (!s.Bound)
+                    continue;
+                // The grids under it came apart (a block broke off, a station became a ship, a ship split): it
+                // could not come back in the same place, so it is deleted, not left as a prototype. Checked before
+                // the damage: a block that breaks off is often damaged too.
+                if (Net.IsServer && GridsApart(s.Owner, s.Partner))
+                    apart.Add(s);
+                else
                     s.Problem = Problem(s.Owner, s.OwnerPort, s.Partner, s.PartnerPort);
             }
+            for (int i = 0; i < apart.Count; i++)
+                if (apart[i].Bound)
+                    Unlink(apart[i]);
+            apart.Clear();
         }
 
         // Why these two ports cannot carry a rail now (Loc key), or null.
@@ -264,10 +321,15 @@ namespace MagRail
             return GridsOrLengthProblem(a, aPort, b, bPort);
         }
 
+        // Neither both on stations nor both on one grid (then the span moves with it).
+        static bool GridsApart(TrackBlockLogic a, TrackBlockLogic b)
+        {
+            return a.Block.CubeGrid != b.Block.CubeGrid && !(a.Block.CubeGrid.IsStatic && b.Block.CubeGrid.IsStatic);
+        }
+
         static string GridsOrLengthProblem(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort)
         {
-            // Both on stations, or both on one grid (then the span moves with it).
-            if (a.Block.CubeGrid != b.Block.CubeGrid && !(a.Block.CubeGrid.IsStatic && b.Block.CubeGrid.IsStatic))
+            if (GridsApart(a, b))
                 return "MagRail_Problem_Grids";
             if (Vector3D.Distance(a.PortWorld(aPort).Translation, b.PortWorld(bPort).Translation) < MinSpanLength)
                 return "MagRail_Problem_Short";
