@@ -490,7 +490,7 @@
     <value>Train Control Unit</value>
   </data>
   <data name="Description_MagRail_TrainControl" xml:space="preserve">
-    <value>Put it on the grid of the train's cockpit: it gives the train the vanilla inertia dampeners (Z) and the cruise control. Dampeners on: release W/S and the train brakes to a stop and holds. Off: it coasts. Cruise: its toolbar actions hold the speed. Model of the AI Flight block (placeholder).</value>
+    <value>Put it on the grid of the train's cockpit: it gives the train the vanilla inertia dampeners (Z) and the cruise control. Dampeners on: release W/S and the train brakes to a stop and holds. Off: it coasts. Cruise: its toolbar actions hold the speed.</value>
   </data>
   <data name="MagRail_Control_DampersOn" xml:space="preserve">
     <value>Inertia dampeners: on</value>
@@ -535,7 +535,7 @@
     <value>Cruise speed</value>
   </data>
   <data name="MagRail_Cruise_Speed_Tip" xml:space="preserve">
-    <value>The speed the cruise holds, m/s, up to the world's max ship speed; it does not switch the cruise on. Plus: the way this block pushes, shown after its name in the block list (Forward = forward of the cockpit); minus: the other way. Each unit has its own cruise, but only one works on a train at a time.</value>
+    <value>The speed the cruise holds, m/s, up to the world's max ship speed; it does not switch the cruise on. Plus: the way this block's arrows and front point (also shown after its name in the block list: Forward = forward of the cockpit); minus: the other way. Each unit has its own cruise, but only one works on a train at a time.</value>
   </data>
   <data name="MagRail_Cruise_ActSet" xml:space="preserve">
     <value>Cruise Set</value>

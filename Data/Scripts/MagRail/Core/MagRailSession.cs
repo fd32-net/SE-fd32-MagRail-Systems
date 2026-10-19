@@ -14,7 +14,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.10.16";
+        public const string Version = "V0.10.17";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -108,6 +108,7 @@ namespace MagRail
                 {
                     Pieces.Update(Network);
                     UpdateEngineParts();
+                    TrainControlLogic.UpdateLights(ControlUnits, tick);
                     TrackDebug.Update();
                     DriveTuningTerminal.Create();
                     if (Net.IsServer)

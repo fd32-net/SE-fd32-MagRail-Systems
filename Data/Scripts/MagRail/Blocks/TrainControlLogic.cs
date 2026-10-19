@@ -10,6 +10,7 @@ using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.ObjectBuilders;
+using VRageMath;
 
 namespace MagRail
 {
@@ -31,6 +32,7 @@ namespace MagRail
         // This unit's cruise (only one unit of a train has it on).
         public Cruise Cruise;
         bool registered;
+        readonly BlockLight light = new BlockLight();
 
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
         {
@@ -74,6 +76,25 @@ namespace MagRail
             if (registered)
                 Block.AppendingCustomInfo -= AppendInfo;
             registered = false;
+        }
+
+        // Clients, every tick (MagRailSession): the units' status lights (BlockLight), every LightTicks.
+        const int LightTicks = 10;
+
+        public static void UpdateLights(List<TrainControlLogic> units, int tick)
+        {
+            if (tick % LightTicks != 0)
+                return;
+            for (int i = 0; i < units.Count; i++)
+                if (!units[i].Block.MarkedForClose)
+                    units[i].UpdateLight(tick);
+        }
+
+        // Cruise on blue, else yellow (ready: Z and the cruise work); off red, not built or damaged dark.
+        void UpdateLight(int tick)
+        {
+            Color? off = BlockLight.NotWorking(Block);
+            light.Paint(Block, off ?? (Cruise.Engaged ? BlockLight.Driving : BlockLight.Idle), true, tick);
         }
 
         // A built unit on the grid: the game registers a thruster in the grid's thrust system while it is functional.

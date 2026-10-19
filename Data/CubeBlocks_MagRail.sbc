@@ -176,7 +176,7 @@
     </Definition>
     <!-- Train Control Unit: a thruster with (almost) no force. A grid has the vanilla inertia dampeners (Z, the
          cockpit's checkbox, the HUD) only while a working thruster is on it, so the cockpit grid of a train needs
-         one; the drive reads the flag. The vanilla AI Task block's model with our glyph plates, turned round
+         one; the drive reads the flag. The vanilla AI Flight (Move) block's model with our glyph plates, turned round so its arrows show the cruise way
          (blocks/AiBlocks.py). ForceMagnitude is not 0: the
          game divides by it (override power, thrust percentage). -->
     <Definition xsi:type="MyObjectBuilder_ThrustDefinition">

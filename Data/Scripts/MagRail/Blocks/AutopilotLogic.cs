@@ -817,14 +817,12 @@ namespace MagRail
 
         static IMyHudNotification hud;
         static string hudText;
-        const int HudTicks = 20, GpsTicks = 60, LightTicks = 10, LightBlinkTicks = 30, LightRepaintTicks = 120;
-        static readonly Color LightIdle = Color.Yellow, LightDriving = new Color(0, 160, 255), LightArrived = Color.Green, LightError = Color.Red;
+        const int HudTicks = 20, GpsTicks = 60, LightTicks = 10;
 
-        int hudTick = -999, gpsTick = -999, lightTick = -999, lightPaintTick = -999;
+        int hudTick = -999, gpsTick = -999, lightTick = -999;
         readonly List<IMyGps> gpsMarks = new List<IMyGps>();
         string gpsKey = "";
-        Color lightColor;
-        float lightEmissivity = -1;
+        readonly BlockLight light = new BlockLight();
 
         void ShowNote(string status)
         {
@@ -894,54 +892,29 @@ namespace MagRail
             gpsKey = "";
         }
 
-        // The model's 'Emissive' material shows the state, like a vanilla block: idle yellow, driving blue, arrived
-        // green, error blinking red; off red, damaged dark. Painted again now and then: a build stage model swap
-        // resets the material.
+        // The status light (BlockLight): idle yellow, driving blue, arrived green, error blinking red; off red,
+        // damaged dark.
         void UpdateLight()
         {
-            if (tick - lightTick < LightTicks)
+            if (tick - lightTick < LightTicks && tick >= lightTick)
                 return;
             lightTick = tick;
-            Color color;
-            float emissivity = 1;
-            if (!Block.IsFunctional)
+            Color? off = BlockLight.NotWorking(Block);
+            if (off.HasValue)
             {
-                color = Color.Black;
-                emissivity = 0;
-            }
-            else if (!Block.IsWorking)
-            {
-                color = LightError;
-            }
-            else
-            {
-                string key = AutopilotStatus.Key(Status);
-                if (key.StartsWith("MagRail_Ap_Err", StringComparison.Ordinal) || key == "MagRail_Ap_Error" || key == "MagRail_Ap_StoppingError"
-                    || key == "MagRail_Ap_InternalError")
-                {
-                    color = LightError;
-                    if ((tick / LightBlinkTicks) % 2 == 1)
-                        emissivity = 0;
-                }
-                else if (Config.Active || Config.Running)
-                {
-                    color = LightDriving;
-                }
-                else if (key == "MagRail_Ap_Arrived" || key == "MagRail_Ap_ArrivedParked")
-                {
-                    color = LightArrived;
-                }
-                else
-                {
-                    color = LightIdle;
-                }
-            }
-            if (color == lightColor && emissivity == lightEmissivity && tick - lightPaintTick < LightRepaintTicks)
+                light.Paint(Block, off.Value, true, tick);
                 return;
-            lightColor = color;
-            lightEmissivity = emissivity;
-            lightPaintTick = tick;
-            Block.SetEmissiveParts("Emissive", color, emissivity);
+            }
+            string key = AutopilotStatus.Key(Status);
+            if (key.StartsWith("MagRail_Ap_Err", StringComparison.Ordinal) || key == "MagRail_Ap_Error" || key == "MagRail_Ap_StoppingError"
+                || key == "MagRail_Ap_InternalError")
+                light.Paint(Block, BlockLight.Error, BlockLight.BlinkOn(tick), tick);
+            else if (Config.Active || Config.Running)
+                light.Paint(Block, BlockLight.Driving, true, tick);
+            else if (key == "MagRail_Ap_Arrived" || key == "MagRail_Ap_ArrivedParked")
+                light.Paint(Block, BlockLight.Arrived, true, tick);
+            else
+                light.Paint(Block, BlockLight.Idle, true, tick);
         }
 
         void AppendInfo(IMyTerminalBlock b, StringBuilder sb)
