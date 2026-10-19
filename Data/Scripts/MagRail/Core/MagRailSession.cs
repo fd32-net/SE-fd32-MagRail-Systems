@@ -14,7 +14,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.10.15";
+        public const string Version = "V0.10.16";
 
         public static MagRailSession Instance { get; private set; }
 
