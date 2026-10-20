@@ -14,11 +14,13 @@ namespace MagRail
     // (blocks/WideTrack.py); both sections: rail_section.py. The styles are a registry: every track block subtype is
     // listed under its style with its kind (a subtype listed nowhere is an error, never a default style). Spans only
     // connect blocks of one style; joints (end to end) join any styles: a train would drive across anyway.
-    // Both styles repeat their texture every module, so every piece fits anywhere and a left bend is the right one
-    // turned round. The copper is a plate per module; the 0.625 m module and the bends may also come with a continuous
-    // strip instead (strip models, optional per style: where the branches of a Rail Switch overlap they are laid
-    // level and a millimetre apart, FanLevel and TrackLayout; a style without them lays its switch branches as they
-    // are, overlapping).
+    // Both styles repeat their body texture every module, so every piece fits anywhere and a left bend is the right
+    // one turned round. The copper is a strip with a gap every TrackLayout.GapModules modules (ModelSource/
+    // copper_texture.py), half of each gap on each piece: a piece has a gap half at its start (turned round: its end)
+    // and every GapModules on; the 0.625 m module and the bends also come without (strip models), the yaw bends also
+    // with it at the end (a right bend turned round is a left one), the joint without and with (variant models).
+    // Without the whole set the gaps are off and the switch branches are laid as they are, overlapping (where they
+    // overlap, they are laid level and a millimetre apart without gaps: FanLevel and TrackLayout).
     // A new style: an entry here (and in All), its subtypes in TrackBlockLogic's descriptor, its data in
     // Data/RailType_<Name>.sbc, its end face textures and Linker glyph: the checklist "Adding a rail type" in
     // ModelSource/README.md.
@@ -68,7 +70,7 @@ namespace MagRail
         // (TrackBlockLogic). Without it (an energy beam) a player falls through; trains ride as always (they do not
         // touch collision). The blocks themselves keep theirs.
         public readonly bool Solid;
-        // It has the whole set of strip models (StripModels; found at session load, Check).
+        // It has the whole set of strip and variant models (VariantModels; found at session load, Check).
         public bool HasStrips { get; private set; }
 
         TrackStyle(string name, string prefix, float minHeight, double width, double crestHeight, double top, double feet,
@@ -136,8 +138,8 @@ namespace MagRail
 
         // Session load: every registered subtype must be a block the game knows (a typo here or in the .sbc).
         // A subtype in the registry but not in TrackBlockLogic's descriptor cannot be seen from here: such a block
-        // gets no logic at all (no rail part, no ports). Which styles have their strip models: all of them, or none
-        // used (a part of the set is an error).
+        // gets no logic at all (no rail part, no ports). Which styles have their strip and variant models: all of them,
+        // or none used (a part of the set is an error).
         public static void Check(MyObjectBuilder_Checkpoint.ModItem mod)
         {
             foreach (string subtype in styleOf.Keys)
@@ -149,22 +151,24 @@ namespace MagRail
             }
             foreach (TrackStyle style in All)
             {
-                List<string> missing = style.StripModels()
+                List<string> missing = style.VariantModels()
                     .Where(m => !MyAPIGateway.Utilities.FileExistsInModLocation(PieceEntities.ModelFile(m), mod)).ToList();
                 style.HasStrips = missing.Count == 0;
-                if (missing.Count > 0 && missing.Count < style.StripModels().Count())
+                if (missing.Count > 0 && missing.Count < style.VariantModels().Count())
                     Log.Error("TrackStyle.Check", style.Name + ": strip models missing (" + string.Join(", ", missing)
-                        + "), switch branches are laid without strips");
+                        + "), no gaps, switch branches are laid without strips");
                 Log.Info("Rail type " + style.Name + (style.HasStrips ? ": strip models found" : ": no strip models"));
             }
         }
 
-        // The strip variants of the module and of every bend.
-        IEnumerable<string> StripModels()
+        // The strip variants of the module and of every bend, the gap variants of the yaw bends and of the joint.
+        IEnumerable<string> VariantModels()
         {
             yield return Straight(1, true);
+            yield return JointGap;
             for (int steps = 1; steps <= TrackLayout.BendSteps; steps++)
             {
+                yield return BendEnd(steps);
                 yield return Bend(steps, 0, 0, true);
                 yield return Bend(0, steps, 0, true);
                 yield return Bend(0, -steps, 0, true);
@@ -180,7 +184,7 @@ namespace MagRail
             return (fill ? faceFills : faceLines)[part + 1];
         }
 
-        // strip: one module only.
+        // strip: without a gap, one module only.
         public string Straight(int modules, bool strip = false)
         {
             return prefix + (strip ? "TrackStrip_" : "Track_") + (modules * 625);
@@ -188,7 +192,7 @@ namespace MagRail
 
         // One axis only: yaw (to the right, +; a left bend is a right one turned round: the section is symmetric),
         // pitch (up, +) or roll (the up leans to the right going forward, +; not mirrored: turned round, a twist
-        // twists the same way), in bend steps.
+        // twists the same way), in bend steps. strip: without a gap.
         public string Bend(int yaw, int pitch, int roll, bool strip = false)
         {
             int steps = yaw != 0 ? yaw : pitch != 0 ? pitch : roll;
@@ -196,9 +200,22 @@ namespace MagRail
             return prefix + (strip ? "BendStrip_" : "Bend_") + axis + (steps < 0 ? "m" : "") + Math.Abs(steps);
         }
 
+        // A yaw bend to the right with the gap half at its end.
+        public string BendEnd(int yaw)
+        {
+            return prefix + "BendEnd_Y" + yaw;
+        }
+
+        // Without a gap.
         public string Joint
         {
             get { return prefix + "Track_Joint"; }
+        }
+
+        // With the gap half at its start.
+        public string JointGap
+        {
+            get { return prefix + "Track_JointGap"; }
         }
     }
 }

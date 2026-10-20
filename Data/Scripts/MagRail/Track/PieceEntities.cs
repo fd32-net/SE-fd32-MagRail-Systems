@@ -23,13 +23,14 @@ namespace MagRail
         public const int StaticLayer = 13;
 
         // The rail's copper strip (material "Emissive" of the piece models and the blocks' rail parts,
-        // ModelSource/rail_profile.py): its colour and glow.
+        // ModelSource/rail_profile.py; "MagRail_Copper" the striped one on trial): its colour and glow.
         public static readonly Color CopperColor = new Color(184, 115, 51);
         const float CopperEmissivity = 1f;
 
         public static void LightCopper(MyEntity e)
         {
             e.SetEmissiveParts("Emissive", CopperColor, CopperEmissivity);
+            e.SetEmissiveParts("MagRail_Copper", CopperColor, CopperEmissivity);
         }
 
         static string modelFolder;

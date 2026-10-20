@@ -22,7 +22,6 @@ namespace MagRail
         const double DetailRange = 120;         // ribbon and sections
         const double ThroughRange = 200;        // centre line through models
         const double SectionThroughRange = 60;
-        const int SectionModules = 4;           // a section every 2.5 m
         const double FadeFrom = 500;            // the line fades to FarAlpha at DrawRange
         const float FarAlpha = 0.35f;
         const float RibbonAlpha = 0.12f;
@@ -109,17 +108,19 @@ namespace MagRail
             return glow > 0 ? Color.Lerp(color, tint, glow) : color;
         }
 
-        // The end face texture (Draw.Face) every SectionModules modules, not on the ends (the ports are there): on the
-        // module boundaries of a laid span (TrackLayout: whole modules, all stretched alike); while laying (Preview)
+        // The end face texture (Draw.Face) every TrackLayout.GapModules modules but a module before the end, not on the
+        // ends (the ports are there): on the gaps in the copper of a laid span (TrackLayout.Gap: whole modules, all
+        // stretched alike); while laying (Preview)
         // as far apart from the start, so they stand still while the free end moves (a window of a long preview, Cut:
         // counted from the whole curve's start, so they stand still while the window moves).
         static void DrawSections(SpanCurve c, MatrixD frame, TrackStyle style, LineStyle look, float glow, Color tint,
             float bright)
         {
             int modules = Math.Max(1, (int)Math.Round(c.Length / TrackLayout.Module));
-            double step = SectionModules * (look == LineStyle.Preview ? TrackLayout.Module : c.Length / modules);
+            double module = look == LineStyle.Preview ? TrackLayout.Module : c.Length / modules;
+            double step = TrackLayout.GapModules * module;
             double first = c.Cut ? step - c.Offset % step : step;
-            for (double s = first; s < c.Length - step * 0.5; s += step)
+            for (double s = first; s < c.Length - module * 1.5; s += step)
             {
                 Vector3D p = Vector3D.Transform(c.PosAt(s), frame);
                 double distance = Vector3D.Distance(p, Draw.Camera);

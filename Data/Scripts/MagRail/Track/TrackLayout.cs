@@ -16,15 +16,22 @@ namespace MagRail
     // pieces.
     // Matrices are in the span's frame (see SpanCurve): origin = rail point in the middle of the piece's chord,
     // Forward along the chord, Up. A FanLevel shifts the drawn pieces (not the collision) near a Rail Switch; where
-    // the span still overlaps another branch there, its modules are laid one by one with a continuous copper strip
-    // instead of plates (TrackStyle: strip models), as the other branch's are. A style without strip models gets no
-    // FanLevel (TrackNetwork.LayoutOf): its switch branches are laid as they are.
+    // the span still overlaps another branch there, its modules are laid one by one without gaps in the copper
+    // (TrackStyle: strip models), as the other branch's are. A style without strip models gets no FanLevel
+    // (TrackNetwork.LayoutOf): its switch branches are laid as they are.
+    // The copper has a gap on every GapModules-th module boundary from the span's start (where the Rail Linker draws
+    // the sections, SpanLines) but the one a module before the end, and on both ends (the blocks' rail parts have a
+    // gap half on their ends: a whole gap on every joint), half of it on each piece: a model has the gap halves its
+    // stretch of the copper texture has (TrackStyle), and every piece is the model, turned round or not, whose halves
+    // fall on exactly the gaps of its boundaries. No module has two (a span of one module: only at its start).
     public class TrackLayout
     {
         public const double Module = 0.625;
         public const double CollisionLength = 2.5;
+        // A gap in the copper every GapModules modules (2.5 m; ModelSource/copper_texture.py REPEAT, at least 2).
+        public const int GapModules = 4;
         // Straight pieces, in modules; a straight run takes the longest that fits first.
-        static readonly int[] StraightModules = { 64, 32, 16, 8, 4, 2, 1 };
+        static readonly int[] StraightModules = { 16, 8, 4, 2, 1 };
         // Bend models turn by yaw, pitch or roll in steps of BendStep, at most BendSteps (TrackBends.py, WideTrack.py)
         // per module: MaxBend (radius about 12 m), MaxTwist (half a roll in about 40 m); prototype colours (Draw).
         public const int BendSteps = 6;
@@ -41,6 +48,7 @@ namespace MagRail
         public readonly List<string> Models = new List<string>();       // model names
         public readonly List<MatrixD> Pieces = new List<MatrixD>();     // stretched along Forward
         public readonly List<MatrixD> Collision = new List<MatrixD>();
+        int modules;
 
         TrackLayout(SpanCurve curve, TrackStyle style, FanLevel level)
         {
@@ -61,9 +69,10 @@ namespace MagRail
             double length = c.Length;
             int n = Math.Max(1, (int)Math.Round(length / Module));
             double m = length / n;      // stretched module
+            layout.modules = n;
 
             if (n == 1)
-                layout.Add(style.Straight(1, layout.Strip(0, length)), Chord(layout.Drawn(0), layout.Drawn(length), c.UpAt(0) + c.UpAt(length), Module));
+                layout.Add(style.Straight(1), Chord(layout.Drawn(0), layout.Drawn(length), c.UpAt(0) + c.UpAt(length), Module));
             else
                 layout.Rail(n, m);
 
@@ -89,7 +98,7 @@ namespace MagRail
                 up[k] = c.UpAt(s);
             }
 
-            // Per module: bend steps on one axis (yaw, pitch, roll), or a joint; copper strip or plates.
+            // Per module: bend steps on one axis (yaw, pitch, roll), or a joint; strip: no gaps (a switch's overlap).
             int[][] steps = { new int[n], new int[n], new int[n] };
             bool[] joint = new bool[n], strip = new bool[n];
             for (int k = 0; k < n; k++)
@@ -131,7 +140,9 @@ namespace MagRail
             {
                 if (joint[i])
                 {
-                    Add(Style.Joint, Chord(pos[i], pos[i + 1], up[i] + up[i + 1], Module));
+                    bool start, end;
+                    Ends(i, false, out start, out end);
+                    AddModule(i, pos, up, start || end ? Style.JointGap : Style.Joint, end);
                     i++;
                     continue;
                 }
@@ -145,8 +156,19 @@ namespace MagRail
                 while (!strip[i] && i + left < n && !joint[i + left] && !strip[i + left]
                        && yaw[i + left] == 0 && pitch[i + left] == 0 && roll[i + left] == 0)
                     left++;
-                int take = StraightTake(i, left, pos, up);
-                Add(Style.Straight(take, strip[i]), Chord(pos[i], pos[i + take], up[i] + up[i + take], take * Module));
+                bool turn;
+                int take = StraightTake(i, left, pos, up, out turn);
+                if (take == 1)
+                {
+                    bool start, end;
+                    Ends(i, strip[i], out start, out end);
+                    AddModule(i, pos, up, Style.Straight(1, !start && !end && Style.HasStrips), end);
+                }
+                else
+                {
+                    MatrixD piece = Chord(pos[i], pos[i + take], up[i] + up[i + take], take * Module);
+                    Add(Style.Straight(take), turn ? TurnedRound(piece) : piece);
+                }
                 i += take;
             }
         }
@@ -164,17 +186,55 @@ namespace MagRail
             return level != null ? p + level.Offset(s) : p;
         }
 
-        // Longest straight piece from module i (at most `left` modules) that the curve is straight and untwisted
-        // enough for.
-        static int StraightTake(int i, int left, Vector3D[] pos, Vector3D[] up)
+        // A gap in the copper on module boundary k.
+        bool Gap(int k)
         {
+            return Style.HasStrips && (k == 0 || k == modules || k % GapModules == 0 && k < modules - 1);
+        }
+
+        // The gap halves module k has: at its start, at its end (on a strip module only on the span's ends: all the
+        // branches of a switch have them there).
+        void Ends(int k, bool strip, out bool start, out bool end)
+        {
+            start = (!strip || k == 0) && Gap(k);
+            end = (!strip || k + 1 == modules) && Gap(k + 1);
+        }
+
+        // Longest straight piece from module i (at most `left` modules) that the curve is straight and untwisted
+        // enough for and whose gaps, turned round or not, fall on the boundaries' (one module: any, AddModule).
+        int StraightTake(int i, int left, Vector3D[] pos, Vector3D[] up, out bool turn)
+        {
+            turn = false;
             for (int j = 0; j < StraightModules.Length; j++)
             {
                 int take = StraightModules[j];
-                if (take <= left && (take == 1 || IsStraight(pos, up, i, i + take)))
+                if (take > left)
+                    continue;
+                if (take == 1)
+                    return 1;
+                if (!IsStraight(pos, up, i, i + take))
+                    continue;
+                if (GapsFit(i, take, false))
                     return take;
+                if (GapsFit(i, take, true))
+                {
+                    turn = true;
+                    return take;
+                }
             }
             return 1;
+        }
+
+        // A straight piece of `take` modules from module i (its gaps every GapModules from its start; turned round:
+        // from its end) has exactly the gaps of its boundaries.
+        bool GapsFit(int i, int take, bool turn)
+        {
+            if (!Style.HasStrips)
+                return true;
+            for (int r = 0; r <= take; r++)
+                if (((turn ? take - r : r) % GapModules == 0) != Gap(i + r))
+                    return false;
+            return true;
         }
 
         static bool IsStraight(Vector3D[] pos, Vector3D[] up, int a, int b)
@@ -196,17 +256,43 @@ namespace MagRail
             return true;
         }
 
-        // Bend module k on its chord.
+        // Bend module k on its chord, with its gap halves (Ends). A yaw bend to the right has them at its start
+        // (Bend) or end (BendEnd), a left bend is one of these turned round; a pitch or roll bend turned round is the
+        // same bend with the half at its end.
         void AddBend(int k, Vector3D[] pos, Vector3D[] up, int ys, int ps, int rs, bool strip)
         {
-            MatrixD m = Chord(pos[k], pos[k + 1], up[k] + up[k + 1], Module);
-            if (ys < 0)
+            bool start, end;
+            Ends(k, strip, out start, out end);
+            if (ys != 0)
             {
-                m.Forward = -m.Forward;
-                m.Right = -m.Right;
-                ys = -ys;
+                bool left = ys < 0;
+                if (left)
+                {
+                    bool t = start;
+                    start = end;
+                    end = t;
+                }
+                ys = Math.Abs(ys);
+                AddModule(k, pos, up, start ? Style.Bend(ys, 0, 0) : end ? Style.BendEnd(ys)
+                    : Style.Bend(ys, 0, 0, Style.HasStrips), left);
             }
-            Add(Style.Bend(ys, ps, rs, strip), m);
+            else
+                AddModule(k, pos, up, Style.Bend(0, ps, rs, !start && !end && Style.HasStrips), end);
+        }
+
+        // One module long model on module k's chord, turned round or not.
+        void AddModule(int k, Vector3D[] pos, Vector3D[] up, string model, bool turn)
+        {
+            MatrixD m = Chord(pos[k], pos[k + 1], up[k] + up[k + 1], Module);
+            Add(model, turn ? TurnedRound(m) : m);
+        }
+
+        // The piece turned round about its up (its ends swapped).
+        static MatrixD TurnedRound(MatrixD m)
+        {
+            m.Forward = -m.Forward;
+            m.Right = -m.Right;
+            return m;
         }
 
         // How far the direction turns from a to b about the axis square to `side` (towards side), rad.
