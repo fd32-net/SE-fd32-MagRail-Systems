@@ -13,6 +13,7 @@ namespace MagRail
     // `through`: while the Rail Linker is held (SeeThrough), also a dimmer copy seen through models: moved towards the
     // camera to 1/100 of the distance and made as much smaller, so it looks the same but stands in front of everything
     // (BuildInfo's way; IgnoreDepth materials and BlendTypeEnum.AdditiveTop were tried and did not show in game).
+    // Never closer than NearMin, though: nearer it would stand in front of the held tool and show through it.
     // `intensity` over 1: brighter than the colour (HDR, glows).
     public static class Draw
     {
@@ -23,6 +24,8 @@ namespace MagRail
         // The see-through copy, dimmer by default (lines and sections behind walls would clutter the view).
         public const float DimThrough = 0.45f;
         const double NearRatio = 0.01;
+        // The see-through copy keeps this far from the camera: past the first person tool, m.
+        const double NearMin = 1;
         // Lines stay at least this thick for their distance (~3 px on a 1080p screen).
         const double MinWidthPerMetre = 0.0025;
 
@@ -56,9 +59,19 @@ namespace MagRail
             Vector3 dir = (Vector3)(d / length);
             MyTransparentGeometry.AddLineBillboard(LineMaterial, color, a, dir, (float)length, thickness, BlendTypeEnum.Standard,
                 intensity: intensity);
-            if (through && SeeThrough)
-                MyTransparentGeometry.AddLineBillboard(LineMaterial, color * throughAlpha, Near(a), dir, (float)(length * NearRatio),
-                    (float)(thickness * NearRatio), BlendTypeEnum.Standard, intensity: intensity);
+            if (!through || !SeeThrough)
+                return;
+            // Each end moves along its own camera ray, so the copy covers the same place on screen.
+            double ra = Ratio(a), rb = Ratio(b);
+            if (ra >= 1 && rb >= 1)
+                return;
+            Vector3D na = Camera + (a - Camera) * Math.Min(ra, 1), nb = Camera + (b - Camera) * Math.Min(rb, 1);
+            d = nb - na;
+            length = d.Length();
+            if (length < 0.00001)
+                return;
+            MyTransparentGeometry.AddLineBillboard(LineMaterial, color * throughAlpha, na, (Vector3)(d / length), (float)length,
+                (float)(thickness * Math.Min((ra + rb) * 0.5, 1)), BlendTypeEnum.Standard, intensity: intensity);
         }
 
         public static void Dot(Vector3D p, Color color, float radius, bool through = false, float intensity = 1,
@@ -67,8 +80,9 @@ namespace MagRail
             // AddPointBillboard takes no intensity: the colour goes over 1 instead.
             Vector4 c = color.ToVector4() * new Vector4(intensity, intensity, intensity, 1);
             MyTransparentGeometry.AddPointBillboard(DotMaterial, c, p, radius, 0, blendType: BlendTypeEnum.Standard);
-            if (through && SeeThrough)
-                MyTransparentGeometry.AddPointBillboard(DotMaterial, c * throughAlpha, Near(p), (float)(radius * NearRatio), 0,
+            double ratio = Ratio(p);
+            if (through && SeeThrough && ratio < 1)
+                MyTransparentGeometry.AddPointBillboard(DotMaterial, c * throughAlpha, Near(p, ratio), (float)(radius * ratio), 0,
                     blendType: BlendTypeEnum.Standard);
         }
 
@@ -85,9 +99,10 @@ namespace MagRail
             MyStringId material = style.FaceMaterial(part, fill);
             MyTransparentGeometry.AddBillboardOriented(material, c, centre, left, upward, halfWidth, halfHeight, Vector2.Zero,
                 BlendTypeEnum.Standard);
-            if (through && SeeThrough)
-                MyTransparentGeometry.AddBillboardOriented(material, c * throughAlpha, Near(centre), left, upward,
-                    (float)(halfWidth * NearRatio), (float)(halfHeight * NearRatio), Vector2.Zero, BlendTypeEnum.Standard);
+            double ratio = Ratio(centre);
+            if (through && SeeThrough && ratio < 1)
+                MyTransparentGeometry.AddBillboardOriented(material, c * throughAlpha, Near(centre, ratio), left, upward,
+                    (float)(halfWidth * ratio), (float)(halfHeight * ratio), Vector2.Zero, BlendTypeEnum.Standard);
         }
 
         // A flat translucent quad (never through models): corners in order round it.
@@ -102,9 +117,15 @@ namespace MagRail
             MyTransparentGeometry.AddQuad(Square, ref quad, color, ref centre, blendType: BlendTypeEnum.Standard);
         }
 
-        static Vector3D Near(Vector3D p)
+        // How much the see-through copy of p moves towards the camera; 1 or more: p is already near, no copy.
+        static double Ratio(Vector3D p)
         {
-            return Camera + (p - Camera) * NearRatio;
+            return Math.Max(NearRatio, NearMin / Math.Max(Vector3D.Distance(p, Camera), 0.001));
+        }
+
+        static Vector3D Near(Vector3D p, double ratio)
+        {
+            return Camera + (p - Camera) * ratio;
         }
 
         // Prototype colour by how well the track pieces can follow the shape (TrackLayout), per module of
