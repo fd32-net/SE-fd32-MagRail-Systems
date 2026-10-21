@@ -33,6 +33,11 @@
         <MountPoint Side="Left" StartX="0" StartY="0.84" EndX="1" EndY="1" />
         <MountPoint Side="Right" StartX="0" StartY="0.84" EndX="1" EndY="1" />
       </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Large\MagRail_EngineLargeConstruction_1.mwm" />
+        <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Large\MagRail_EngineLargeConstruction_2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Large\MagRail_EngineLargeConstruction_3.mwm" />
+      </BuildProgressModels>
       <BlockPairName>MagRail_Engine</BlockPairName>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
@@ -88,6 +93,11 @@
         <MountPoint Side="Left" StartX="0" StartY="0.2" EndX="5" EndY="1" />
         <MountPoint Side="Right" StartX="0" StartY="0.2" EndX="5" EndY="1" />
       </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Small\MagRail_EngineSmallConstruction_1.mwm" />
+        <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Small\MagRail_EngineSmallConstruction_2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Small\MagRail_EngineSmallConstruction_3.mwm" />
+      </BuildProgressModels>
       <BlockPairName>MagRail_Engine</BlockPairName>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
@@ -145,6 +155,10 @@
         <MountPoint Side="Left" StartX="0" StartY="0.46" EndX="1" EndY="1" />
         <MountPoint Side="Right" StartX="0" StartY="0.46" EndX="1" EndY="1" />
       </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.50" File="Models\Cubes\Small\MagRail_EngineMiniConstruction_1.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Small\MagRail_EngineMiniConstruction_2.mwm" />
+      </BuildProgressModels>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>

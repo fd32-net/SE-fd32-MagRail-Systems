@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Sandbox.Common.ObjectBuilders;
+using Sandbox.Definitions;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Components;
+using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.ObjectBuilders;
 using VRageMath;
@@ -104,18 +108,41 @@ namespace MagRail
         void ReadPlatform()
         {
             double rest, zero, min, max;
-            HasPlatform = EnginePlatform.ReadRest(Block.Model, out rest, out zero, out min, out max);
+            IMyModel model = FinishedModel();
+            HasPlatform = EnginePlatform.ReadRest(model, out rest, out zero, out min, out max);
             if (!HasPlatform)
                 return;
             bool range = !double.IsNaN(zero) && min <= max;
             restMin = range ? zero + min : rest;
             restMax = range ? zero + max : rest;
-            baseTop = Block.Model.BoundingBox.Max.Y;
+            baseTop = model.BoundingBox.Max.Y;
             TrainHeightMin = baseTop + restMin;
             TrainHeightMax = baseTop + restMax + EngineSettings.MaxGap;
             // A new engine: the Mini 1.5 m high with a 0.5 m gap, the large engine (both grids) 2.5 m with 1 m.
             defaultTrainHeight = MathHelper.Clamp(IsMini ? 1.5 : 2.5, TrainHeightMin, TrainHeightMax);
             defaultGap = IsMini ? 0.5 : EngineSettings.DefaultGap;
+        }
+
+        // The block's finished model (its definition's), not the one it shows: a block being built or ground down shows a
+        // construction stage, without the platform's dummy and with another top. Read through an entity that never
+        // enters the scene (MyModels is not open to mods), once per model.
+        static readonly Dictionary<string, IMyModel> finishedModels = new Dictionary<string, IMyModel>();
+
+        IMyModel FinishedModel()
+        {
+            MyCubeBlockDefinition def = Block.SlimBlock.BlockDefinition as MyCubeBlockDefinition;
+            if (def == null || string.IsNullOrEmpty(def.Model))
+                return Block.Model;
+            IMyModel model;
+            if (!finishedModels.TryGetValue(def.Model, out model))
+            {
+                MyEntity e = new MyEntity();
+                e.Init(null, def.Model, null, null, null);
+                model = ((IMyEntity)e).Model;
+                e.Close();
+                finishedModels[def.Model] = model;
+            }
+            return model ?? Block.Model;
         }
 
         public override void Close()

@@ -33,6 +33,11 @@
         <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
         <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
       </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Large\MagRail_WideRailBlock1Construction_1.mwm" />
+        <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Large\MagRail_WideRailBlock1Construction_2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Large\MagRail_WideRailBlock1Construction_3.mwm" />
+      </BuildProgressModels>
       <BlockPairName>MagRail_WideRailBlock1</BlockPairName>
       <EdgeType>Light</EdgeType>
       <BuildTimeSeconds>8</BuildTimeSeconds>
@@ -69,6 +74,11 @@
       <MountPoints>
         <MountPoint Side="Bottom" StartX="0.4" StartY="0.4" EndX="0.6" EndY="0.6" Default="true" />
       </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Large\MagRail_WideFreeRailConstruction_1.mwm" />
+        <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Large\MagRail_WideFreeRailConstruction_2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Large\MagRail_WideFreeRailConstruction_3.mwm" />
+      </BuildProgressModels>
       <BlockPairName>MagRail_WideFreeRail</BlockPairName>
       <EdgeType>Light</EdgeType>
       <BuildTimeSeconds>12</BuildTimeSeconds>
@@ -110,6 +120,11 @@
         <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
         <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
       </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Large\MagRail_WideSwitch1Construction_1.mwm" />
+        <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Large\MagRail_WideSwitch1Construction_2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Large\MagRail_WideSwitch1Construction_3.mwm" />
+      </BuildProgressModels>
       <BlockPairName>MagRail_WideSwitch1</BlockPairName>
       <EdgeType>Light</EdgeType>
       <BuildTimeSeconds>10</BuildTimeSeconds>
@@ -153,6 +168,11 @@
         <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="1" />
         <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="1" />
       </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Large\MagRail_WideEmbeddedRailConstruction_1.mwm" />
+        <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Large\MagRail_WideEmbeddedRailConstruction_2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Large\MagRail_WideEmbeddedRailConstruction_3.mwm" />
+      </BuildProgressModels>
       <BlockPairName>MagRail_WideEmbeddedRail</BlockPairName>
       <EdgeType>Light</EdgeType>
       <BuildTimeSeconds>12</BuildTimeSeconds>
@@ -192,6 +212,11 @@
         <MountPoint Side="Front" StartX="0" StartY="0" EndX="1" EndY="0.5" />
         <MountPoint Side="Back" StartX="0" StartY="0" EndX="1" EndY="0.5" />
       </MountPoints>
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Large\MagRail_WideEmbeddedRailHalfConstruction_1.mwm" />
+        <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Large\MagRail_WideEmbeddedRailHalfConstruction_2.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Large\MagRail_WideEmbeddedRailHalfConstruction_3.mwm" />
+      </BuildProgressModels>
       <BlockPairName>MagRail_WideEmbeddedRailHalf</BlockPairName>
       <EdgeType>Light</EdgeType>
       <BuildTimeSeconds>8</BuildTimeSeconds>
