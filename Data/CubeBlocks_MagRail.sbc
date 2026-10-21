@@ -60,7 +60,6 @@
       <AirShockMaxSpeed>25</AirShockMaxSpeed>
       <AirShockActivationDelay>60</AirShockActivationDelay>
       <PCU>20</PCU>
-      <IsAirTight>false</IsAirTight>
     </Definition>
     <Definition xsi:type="MyObjectBuilder_MotorSuspensionDefinition">
       <Id>
@@ -116,7 +115,6 @@
       <AirShockMaxSpeed>25</AirShockMaxSpeed>
       <AirShockActivationDelay>60</AirShockActivationDelay>
       <PCU>20</PCU>
-      <IsAirTight>false</IsAirTight>
     </Definition>
     <!-- Train Control Unit: a thruster with (almost) no force. A grid has the vanilla inertia dampeners (Z, the
          cockpit's checkbox, the HUD) only while a working thruster is on it, so the cockpit grid of a train needs
