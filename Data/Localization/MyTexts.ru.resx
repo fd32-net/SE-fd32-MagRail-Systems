@@ -87,6 +87,12 @@
   <data name="Description_MagRail_Engine" xml:space="preserve">
     <value>Держит поезд над рельсом и ведёт его. Ставится под вагон: платформа под основанием идёт по рельсу.</value>
   </data>
+  <data name="DisplayName_MagRail_EngineMini" xml:space="preserve">
+    <value>Малый двигатель парения</value>
+  </data>
+  <data name="Description_MagRail_EngineMini" xml:space="preserve">
+    <value>Малый двигатель парения для поездов малой сетки: один блок, четверть силы двигателя парения. Ставится под вагон: платформа под основанием идёт по рельсу.</value>
+  </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Блок пути</value>
   </data>

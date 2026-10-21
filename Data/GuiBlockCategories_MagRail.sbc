@@ -51,6 +51,7 @@
         <string>UpgradeModule/MagRail_WideEmbeddedRailHalf</string>
         <string>MotorSuspension/MagRail_EngineLarge</string>
         <string>MotorSuspension/MagRail_EngineSmall</string>
+        <string>MotorSuspension/MagRail_EngineMini</string>
         <string>Thrust/MagRail_TrainControlLarge</string>
         <string>Thrust/MagRail_TrainControlSmall</string>
         <string>UpgradeModule/MagRail_AutopilotLarge</string>

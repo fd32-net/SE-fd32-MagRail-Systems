@@ -87,6 +87,12 @@
   <data name="Description_MagRail_Engine" xml:space="preserve">
     <value>Holds the train over the rail and drives it. Mount it under the wagon: its platform follows the rail under the base.</value>
   </data>
+  <data name="DisplayName_MagRail_EngineMini" xml:space="preserve">
+    <value>Small Hover Engine</value>
+  </data>
+  <data name="Description_MagRail_EngineMini" xml:space="preserve">
+    <value>A small hover engine for small grid trains: one block, a quarter of the Hover Engine's force. Mount it under the wagon: its platform follows the rail under the base.</value>
+  </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Track block</value>
   </data>

@@ -26,7 +26,7 @@ namespace MagRail
     // under it and its settings; and the drive's power consumer. Numbers are the old Maglev's, so the ported physics
     // keeps them.
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorSuspension), false,
-        "MagRail_EngineLarge", "MagRail_EngineSmall")]
+        "MagRail_EngineLarge", "MagRail_EngineSmall", "MagRail_EngineMini")]
     public class HoverEngineLogic : MyGameLogicComponent
     {
         // Must be listed in Data/EntityComponents_MagRail.sbc, or the game drops it on save.
@@ -198,11 +198,12 @@ namespace MagRail
             }
         }
 
-        // The engine's force, N: its full thrust (100% Power); the small grid engine is the same engine. Everything else
-        // is a share of it (PLAN 10.1): it holds the rail with HoldShare of it, the brakes are Drive's shares.
+        // The engine's force, N: its full thrust (100% Power); the small grid's 5x1x5 engine is the same engine, the Mini
+        // has a quarter of it. Everything else is a share of it (PLAN 10.1): it holds the rail with HoldShare of it, the
+        // brakes are Drive's shares.
         public double Force
         {
-            get { return 1000000.0; }
+            get { return Block.BlockDefinition.SubtypeId == "MagRail_EngineMini" ? 250000.0 : 1000000.0; }
         }
 
         public const double HoldShare = 4.0;
