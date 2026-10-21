@@ -76,6 +76,9 @@ namespace MagRail
         MyEntitySubpart part;
         bool partOnStatic;
         bool partDirty;
+        // The part was there at the last UpdatePart (partKnown: there was one).
+        bool partShown;
+        bool partKnown;
         // The struts of a block on the lift (TrackStyle.Lifts), else null.
         RailLift lift;
 
@@ -108,6 +111,12 @@ namespace MagRail
         {
             try
             {
+                // A weld or grind changed the model (OnIntegrity): the part and the collision follow at once.
+                if (registered)
+                {
+                    UpdatePart();
+                    return;
+                }
                 // Projections and placement previews have no physics: no logic for them.
                 if (Block.CubeGrid.Physics == null || MagRailSession.Instance == null)
                     return;
@@ -118,6 +127,7 @@ namespace MagRail
                 registered = true;
                 indexedGrid = Block.CubeGrid;
                 indexedStatic = Block.CubeGrid.IsStatic;
+                indexedGrid.OnBlockIntegrityChanged += OnIntegrity;
                 TrackTerminal.Create();
                 NeedsUpdate |= MyEntityUpdateEnum.EACH_100TH_FRAME;
             }
@@ -127,8 +137,8 @@ namespace MagRail
             }
         }
 
-        // The part is recreated by the game when the block's model changes; the grid can turn
-        // static or dynamic: both are picked up here.
+        // The part is recreated by the game when the block's model changes (picked up at once by OnIntegrity; here as
+        // well, in case the game changed it another way); the grid can turn static or dynamic: both are picked up here.
         public override void UpdateAfterSimulation100()
         {
             try
@@ -136,6 +146,8 @@ namespace MagRail
                 UpdatePart();
                 if (registered && (Block.CubeGrid != indexedGrid || Block.CubeGrid.IsStatic != indexedStatic))
                 {
+                    indexedGrid.OnBlockIntegrityChanged -= OnIntegrity;
+                    Block.CubeGrid.OnBlockIntegrityChanged += OnIntegrity;
                     indexedGrid = Block.CubeGrid;
                     indexedStatic = Block.CubeGrid.IsStatic;
                     Network.Touch();
@@ -147,10 +159,21 @@ namespace MagRail
             }
         }
 
+        // Fired right after a weld or grind step (the model already switched): UpdatePart on the next frame, not 100
+        // frames later — a player ran into a stage's rail before its collision came back (2026-10-22). The grid's event
+        // fires for all its blocks: only this block's counts.
+        void OnIntegrity(IMySlimBlock slim)
+        {
+            if (slim == Block.SlimBlock)
+                NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
+        }
+
         public override void Close()
         {
             if (registered && MagRailSession.Instance != null)
                 Network.Unregister(this);
+            if (registered)
+                indexedGrid.OnBlockIntegrityChanged -= OnIntegrity;
             registered = false;
             if (lift != null)
                 lift.Remove();
@@ -475,8 +498,17 @@ namespace MagRail
         void UpdatePart()
         {
             PartInfo info = GetPartInfo();
-            MyEntitySubpart sub;
-            if (info == null || !Block.TryGetSubpart(info.Name, out sub))
+            MyEntitySubpart sub = null;
+            bool shown = info != null && Block.TryGetSubpart(info.Name, out sub);
+            // Welding and grinding switch the block's model (finished / construction stage) without its grid
+            // collision: the game keeps the shape of the model the grid had. A stage has the rail in its collision, the
+            // finished model has not (the part's body holds it): refreshed here, or a block placed finished and ground
+            // to a stage had no rail to stand on, and one welded up kept the stage's rail at the standard height.
+            if (partKnown && shown != partShown)
+                Block.SlimBlock.UpdateVisual();
+            partKnown = true;
+            partShown = shown;
+            if (!shown)
             {
                 part = null;
                 if (lift != null)
