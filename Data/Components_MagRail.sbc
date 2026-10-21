@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <!-- Rail component: what spans will cost later (PLAN 10.8). Not used by any block yet.
+       Model and icon are the vanilla girder's for now. Recipe in Blueprints_MagRail.sbc. -->
+  <Components>
+    <Component>
+      <Id>
+        <TypeId>Component</TypeId>
+        <SubtypeId>MagRail_Rail</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_Item_MagRail_Rail</DisplayName>
+      <Description>Description_Item_MagRail_Rail</Description>
+      <Icon>Textures\GUI\Icons\component\girder_component.dds</Icon>
+      <Size>
+        <X>0.05</X>
+        <Y>0.05</Y>
+        <Z>1</Z>
+      </Size>
+      <Mass>10</Mass>
+      <Volume>3</Volume>
+      <Model>Models\Components\girder_component.mwm</Model>
+      <PhysicalMaterial>Metal</PhysicalMaterial>
+      <MaxIntegrity>15</MaxIntegrity>
+      <DropProbability>0.5</DropProbability>
+    </Component>
+  </Components>
+</Definitions>

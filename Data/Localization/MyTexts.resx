@@ -177,6 +177,12 @@
   <data name="Description_Item_MagRail_RailLinker" xml:space="preserve">
     <value>Lays maglev spans between track blocks and switches them between prototype and rail.</value>
   </data>
+  <data name="DisplayName_Item_MagRail_Rail" xml:space="preserve">
+    <value>Rail</value>
+  </data>
+  <data name="Description_Item_MagRail_Rail" xml:space="preserve">
+    <value>Maglev rail section. Will be used to build spans.</value>
+  </data>
   <data name="MagRail_Linker_From" xml:space="preserve">
     <value>From {0}</value>
   </data>

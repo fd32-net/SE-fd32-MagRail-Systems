@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <!-- Rail Linker: the cost of the vanilla welder (Position0090_Welder); made in the basic
-       assembler (class Tools) and the assembler (EliteTools), not in survival kits. -->
+       assembler (class Tools) and the assembler (EliteTools), not in survival kits.
+       Rail component (Components_MagRail.sbc): iron only for now; basic assembler (SimpleComponents;
+       BasicComponents is the survival kit) and assembler (Components). -->
   <Blueprints>
     <Blueprint>
       <Id>
@@ -20,9 +22,25 @@
       <IgnoreEfficiencyMultiplier>true</IgnoreEfficiencyMultiplier>
       <IsPrimary>true</IsPrimary>
     </Blueprint>
+    <Blueprint>
+      <Id>
+        <TypeId>BlueprintDefinition</TypeId>
+        <SubtypeId>MagRail_Rail</SubtypeId>
+      </Id>
+      <DisplayName>DisplayName_Item_MagRail_Rail</DisplayName>
+      <Icon>Textures\GUI\Icons\component\girder_component.dds</Icon>
+      <Prerequisites>
+        <Item Amount="10" TypeId="Ingot" SubtypeId="Iron" />
+      </Prerequisites>
+      <Result Amount="1" TypeId="Component" SubtypeId="MagRail_Rail" />
+      <BaseProductionTimeInSeconds>1</BaseProductionTimeInSeconds>
+      <IsPrimary>true</IsPrimary>
+    </Blueprint>
   </Blueprints>
   <BlueprintClassEntries>
     <Entry Class="Tools" BlueprintSubtypeId="MagRail_RailLinker" />
     <Entry Class="EliteTools" BlueprintSubtypeId="MagRail_RailLinker" />
+    <Entry Class="SimpleComponents" BlueprintSubtypeId="MagRail_Rail" />
+    <Entry Class="Components" BlueprintSubtypeId="MagRail_Rail" />
   </BlueprintClassEntries>
 </Definitions>

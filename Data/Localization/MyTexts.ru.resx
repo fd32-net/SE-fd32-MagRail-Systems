@@ -177,6 +177,12 @@
   <data name="Description_Item_MagRail_RailLinker" xml:space="preserve">
     <value>Прокладывает пролёты маглева между блоками пути и переключает их между прототипом и рельсом.</value>
   </data>
+  <data name="DisplayName_Item_MagRail_Rail" xml:space="preserve">
+    <value>Рельс</value>
+  </data>
+  <data name="Description_Item_MagRail_Rail" xml:space="preserve">
+    <value>Отрезок рельса маглева. Пойдёт на постройку пролётов.</value>
+  </data>
   <data name="MagRail_Linker_From" xml:space="preserve">
     <value>От {0}</value>
   </data>
