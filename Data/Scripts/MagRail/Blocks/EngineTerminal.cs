@@ -53,25 +53,22 @@ namespace MagRail
             return logic != null && logic.HasPlatform;
         }
 
-        static bool HasPlatformOffset(IMyTerminalBlock b)
-        {
-            HoverEngineLogic logic = Logic(b);
-            return logic != null && logic.HasPlatformOffset;
-        }
-
         static bool NoPlatform(IMyTerminalBlock b)
         {
             HoverEngineLogic logic = Logic(b);
             return logic != null && !logic.HasPlatform;
         }
 
-        static void Change(IMyTerminalBlock b, Action<EngineSettings> edit)
+        // fit: what else the change moves (another setting that must follow it).
+        static void Change(IMyTerminalBlock b, Action<EngineSettings> edit, Action<HoverEngineLogic, EngineSettings> fit)
         {
             HoverEngineLogic logic = Logic(b);
             if (logic == null)
                 return;
             EngineSettings s = logic.Settings.Copy();
             edit(s);
+            if (fit != null)
+                fit(logic, s);
             logic.Request(s);
         }
 
@@ -97,13 +94,16 @@ namespace MagRail
             AddLabel("MagRail_EngineSection", "MagRail_EngineTerm_Section");
             AddSlider("MagRail_HoverHeight", "MagRail_EngineTerm_Height", EngineSettings.MinHeight, EngineSettings.MaxHeight,
                 s => s.HoverHeight, (s, v) => s.HoverHeight = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")), NoPlatform);
+            // The train height's range is the model's. Height and gap move each other where the platform would leave
+            // the model's range.
+            AddSlider("MagRail_TrainHeight", "MagRail_EngineTerm_TrainHeight",
+                b => HasPlatform(b) ? (float)Logic(b).TrainHeightMin : 0,
+                b => HasPlatform(b) ? (float)Logic(b).TrainHeightMax : EngineSettings.MaxTrainHeight,
+                s => s.TrainHeight, (s, v) => s.TrainHeight = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")), HasPlatform,
+                (logic, s) => logic.FitGap(s));
             AddSlider("MagRail_PlatformGap", "MagRail_EngineTerm_Gap", EngineSettings.MinGap, EngineSettings.MaxGap,
-                s => s.PlatformGap, (s, v) => s.PlatformGap = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")), HasPlatform);
-            // The offset's range is the model's.
-            AddSlider("MagRail_PlatformOffset", "MagRail_EngineTerm_Offset",
-                b => Logic(b) != null && Logic(b).HasPlatformOffset ? (float)Logic(b).PlatformOffsetMin : EngineSettings.MinOffset,
-                b => Logic(b) != null && Logic(b).HasPlatformOffset ? (float)Logic(b).PlatformOffsetMax : EngineSettings.MaxOffset,
-                s => s.PlatformOffset, (s, v) => s.PlatformOffset = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")), HasPlatformOffset);
+                s => s.PlatformGap, (s, v) => s.PlatformGap = v, v => Loc.F("MagRail_Unit_m", v.ToString("0.00")), HasPlatform,
+                (logic, s) => logic.FitHeight(s));
             AddSlider("MagRail_HoldStrength", "MagRail_EngineTerm_Hold", EngineSettings.MinHold, EngineSettings.MaxHold,
                 s => s.HoldStrength, (s, v) => s.HoldStrength = v, v => v.ToString("0.00") + "x");
             AddSlider("MagRail_SideOffset", "MagRail_EngineTerm_SideOffset", -EngineSettings.MaxSideOffset, EngineSettings.MaxSideOffset,
@@ -125,21 +125,21 @@ namespace MagRail
         }
 
         static void AddSlider(string id, string titleKey, float min, float max, Func<EngineSettings, float> get, Action<EngineSettings, float> set,
-            Func<float, string> format, Func<IMyTerminalBlock, bool> visible = null)
+            Func<float, string> format, Func<IMyTerminalBlock, bool> visible = null, Action<HoverEngineLogic, EngineSettings> fit = null)
         {
-            AddSlider(id, titleKey, b => min, b => max, get, set, format, visible);
+            AddSlider(id, titleKey, b => min, b => max, get, set, format, visible, fit);
         }
 
         static void AddSlider(string id, string titleKey, Func<IMyTerminalBlock, float> min, Func<IMyTerminalBlock, float> max,
             Func<EngineSettings, float> get, Action<EngineSettings, float> set, Func<float, string> format,
-            Func<IMyTerminalBlock, bool> visible = null)
+            Func<IMyTerminalBlock, bool> visible = null, Action<HoverEngineLogic, EngineSettings> fit = null)
         {
             IMyTerminalControlSlider slider = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyMotorSuspension>(id);
             slider.Title = Loc.Id(titleKey);
             slider.Tooltip = Loc.Id(titleKey + "_Tip");
             slider.SetLimits(min, max);
             slider.Getter = b => Logic(b) != null ? get(Logic(b).Settings) : min(b);
-            slider.Setter = (b, v) => Change(b, s => set(s, Snap(MathHelper.Clamp(v, min(b), max(b)))));
+            slider.Setter = (b, v) => Change(b, s => set(s, Snap(MathHelper.Clamp(v, min(b), max(b)))), fit);
             slider.Writer = (b, sb) => { if (Logic(b) != null) sb.Append(format(get(Logic(b).Settings))); };
             Add(slider, visible);
         }

@@ -16,8 +16,8 @@ namespace MagRail
         public const float MaxSideOffset = 2.5f;
         public const float LargeHeight = 2.5f, SmallHeight = 1.2f;
         public const float MinGap = 0f, MaxGap = 3f, DefaultGap = 1f;
-        // The platform's offset: each model narrows it (EnginePlatform.ReadRest), this only bounds requests.
-        public const float MinOffset = 0f, MaxOffset = 9.5f;
+        // The train height: each model narrows it (HoverEngineLogic.TrainHeightMin / Max), this only bounds requests.
+        public const float MaxTrainHeight = 9.5f;
 
         [ProtoMember(1)] public int Version = CurrentVersion;
         // Height of the guide point over the rail point, m.
@@ -28,18 +28,19 @@ namespace MagRail
         // (5 and 6 were the forward and up offsets: removed, old saves just drop them.)
         [ProtoMember(4)] public float SideOffset;
         // Engines with a platform (EnginePlatform): the gap between the rail's top and the platform's bottom, m
-        // (0 = the platform lies on the rail). It sets their hover height instead of HoverHeight.
+        // (0 = the platform lies on the rail). It moves only the platform, never the train.
         [ProtoMember(7)] public float PlatformGap = DefaultGap;
-        // Engines whose model lets the platform hang lower or higher: its offset from the base (the base's lowest point
-        // to the platform's top), m, within the model's range.
-        [ProtoMember(8)] public float PlatformOffset;
+        // Engines with a platform: the height of the base's top over the rail's top, m, within the model's range. It
+        // sets their hover height instead of HoverHeight. 0: not set yet (the model's default).
+        // (8 was the platform's offset from the base: removed, old saves just drop it.)
+        [ProtoMember(9)] public float TrainHeight;
 
         public EngineSettings Copy()
         {
             return new EngineSettings
             {
                 Version = Version, HoverHeight = HoverHeight, HoldStrength = HoldStrength,
-                SideOffset = SideOffset, PlatformGap = PlatformGap, PlatformOffset = PlatformOffset,
+                SideOffset = SideOffset, PlatformGap = PlatformGap, TrainHeight = TrainHeight,
             };
         }
 
@@ -52,7 +53,7 @@ namespace MagRail
             s.HoldStrength = MathHelper.Clamp(s.HoldStrength, MinHold, MaxHold);
             s.SideOffset = MathHelper.Clamp(s.SideOffset, -MaxSideOffset, MaxSideOffset);
             s.PlatformGap = MathHelper.Clamp(s.PlatformGap, MinGap, MaxGap);
-            s.PlatformOffset = MathHelper.Clamp(s.PlatformOffset, MinOffset, MaxOffset);
+            s.TrainHeight = MathHelper.Clamp(s.TrainHeight, 0, MaxTrainHeight);
             return s;
         }
 

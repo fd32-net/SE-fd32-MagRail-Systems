@@ -17,11 +17,12 @@ namespace MagRail
     // base's Forward.
     // Everything comes from the model, so each engine model has its own:
     // - dummy subpart_Platform: the platform's place at rest; the platform's origin is its bottom centre, so the
-    //   dummy's depth under the block centre is the base's height over the platform, and the engine holds rail top +
-    //   gap + that (HoverEngineLogic.HoverHeight); its custom properties "yaw_limit", "pitch_limit", "roll_limit"
+    //   dummy's depth under the block centre is the base's height over the platform (a new engine's default: it and
+    //   the standard gap give its train height); its custom properties "yaw_limit", "pitch_limit", "roll_limit"
     //   (degrees): how far the platform may turn from rest (yaw about the base's Up, then pitch, then roll about its
-    //   own forward; a missing one: no limit); "offset_min" / "offset_max" / "offset_zero" (ReadRest): the player
-    //   sets how far under the base it hangs (EngineSettings.PlatformOffset), its rest moves straight along Up;
+    //   own forward; a missing one: no limit); "offset_min" / "offset_max" / "offset_zero" (ReadRest): how far under
+    //   the base it may hang; the player's train height and gap set where in that range (HoverEngineLogic.PlatformRest),
+    //   its rest moves straight along Up;
     // - dummies strut_<n> in the block model (base pivots) and strut_<n> in the platform model (platform pivots): a
     //   strut runs between the two of one name. Struts have two sections (StrutLook.Two): a sleeve from the base and a
     //   rod from the platform. On the base's dummy: "min" / "max", the stroke (pivot to pivot, m); "parts", the section
@@ -70,7 +71,7 @@ namespace MagRail
         Strut[] struts;
         MyEntitySubpart part;
         Matrix modelRest;       // the platform's place in the model
-        Matrix rest;            // there at the player's offset (HoverEngineLogic.PlatformRest)
+        Matrix rest;            // there at the player's height and gap (HoverEngineLogic.PlatformRest)
         Matrix target;          // its last place on the rail (block coordinates)
         double yawLimit, pitchLimit, rollLimit;     // radians
         double blend;           // 0 at rest .. 1 on the rail

@@ -390,14 +390,14 @@
   <data name="MagRail_EngineTerm_Gap" xml:space="preserve">
     <value>Platform gap</value>
   </data>
+  <data name="MagRail_EngineTerm_TrainHeight" xml:space="preserve">
+    <value>Train height</value>
+  </data>
+  <data name="MagRail_EngineTerm_TrainHeight_Tip" xml:space="preserve">
+    <value>Height of the base's top over the top of the rail (its copper). 2.5 m = one large block. The platform keeps its gap; where it has no room left, the gap changes too. The range is the engine model's.</value>
+  </data>
   <data name="MagRail_EngineTerm_Gap_Tip" xml:space="preserve">
-    <value>Gap between the top of the rail and the bottom of the platform. 0 = the platform lies on the rail.</value>
-  </data>
-  <data name="MagRail_EngineTerm_Offset" xml:space="preserve">
-    <value>Platform offset</value>
-  </data>
-  <data name="MagRail_EngineTerm_Offset_Tip" xml:space="preserve">
-    <value>How far under the base the platform hangs: from the base's lowest point to the platform's top. The range is the engine model's.</value>
+    <value>Gap between the top of the rail and the bottom of the platform. 0 = the platform lies on the rail. Moves only the platform; where it has no room left, the train height changes too.</value>
   </data>
   <data name="MagRail_EngineTerm_Hold" xml:space="preserve">
     <value>Hold stiffness</value>

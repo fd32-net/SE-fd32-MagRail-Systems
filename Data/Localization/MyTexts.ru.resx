@@ -390,14 +390,14 @@
   <data name="MagRail_EngineTerm_Gap" xml:space="preserve">
     <value>Зазор платформы</value>
   </data>
+  <data name="MagRail_EngineTerm_TrainHeight" xml:space="preserve">
+    <value>Высота поезда</value>
+  </data>
+  <data name="MagRail_EngineTerm_TrainHeight_Tip" xml:space="preserve">
+    <value>Высота верха основания над верхом рельса (медью). 2.5 м — один большой блок. Платформа держит свой зазор; где ей не хватает места, меняется и зазор. Диапазон задаёт модель двигателя.</value>
+  </data>
   <data name="MagRail_EngineTerm_Gap_Tip" xml:space="preserve">
-    <value>Зазор между верхом рельса и низом платформы. 0 — платформа лежит на рельсе.</value>
-  </data>
-  <data name="MagRail_EngineTerm_Offset" xml:space="preserve">
-    <value>Отступ платформы</value>
-  </data>
-  <data name="MagRail_EngineTerm_Offset_Tip" xml:space="preserve">
-    <value>Насколько ниже основания висит платформа: от самой нижней точки основания до верха платформы. Диапазон задаёт модель двигателя.</value>
+    <value>Зазор между верхом рельса и низом платформы. 0 — платформа лежит на рельсе. Двигает только платформу; где ей не хватает места, меняется и высота поезда.</value>
   </data>
   <data name="MagRail_EngineTerm_Hold" xml:space="preserve">
     <value>Жёсткость удержания</value>

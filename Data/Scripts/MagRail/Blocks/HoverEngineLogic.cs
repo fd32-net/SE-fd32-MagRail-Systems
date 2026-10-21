@@ -49,15 +49,16 @@ namespace MagRail
         public int JumpTicks, LostTicks, NextSearchTick;
         // Server: the power the drive asks for this tick, MW (Drive; Rides hands it to the network).
         public float PowerWanted;
-        // The model has a platform (EnginePlatform): the player sets its gap over the rail, and the base's height over
-        // it at rest (PlatformRest, m) is the model's, or, with an offset range (HasPlatformOffset), the player's offset
-        // in it. Clients: the platform itself (cosmetic).
+        // The model has a platform (EnginePlatform): the player sets the train height (the base's top over the rail's
+        // top) and the platform's gap over the rail. The platform hangs under the base within the model's range of
+        // depths (restMin .. restMax, m under the block centre; one depth without an offset range), so the train
+        // height's range is the model's too. Clients: the platform itself (cosmetic).
         public bool HasPlatform { get; private set; }
-        public bool HasPlatformOffset { get; private set; }
-        public double PlatformOffsetMin { get; private set; }
-        public double PlatformOffsetMax { get; private set; }
+        public double TrainHeightMin { get; private set; }
+        public double TrainHeightMax { get; private set; }
         public EnginePlatform Platform;
-        double modelRest, offsetZero;
+        // baseTop: the base's top over the block centre (the model's top), m.
+        double restMin, restMax, baseTop, defaultTrainHeight, defaultGap;
         MyResourceSinkComponent sink;
         float demand;
         bool registered;
@@ -75,18 +76,17 @@ namespace MagRail
                 // Projections and placement previews have no physics: no logic for them.
                 if (Block.CubeGrid.Physics == null || MagRailSession.Instance == null)
                     return;
-                double min, max;
-                HasPlatform = EnginePlatform.ReadRest(Block.Model, out modelRest, out offsetZero, out min, out max);
-                HasPlatformOffset = HasPlatform && !double.IsNaN(offsetZero) && min <= max;
-                PlatformOffsetMin = min;
-                PlatformOffsetMax = max;
+                ReadPlatform();
                 Settings = LoadSettings() ?? new EngineSettings
                 {
                     HoverHeight = Block.CubeGrid.GridSizeEnum == MyCubeSize.Small ? EngineSettings.SmallHeight : EngineSettings.LargeHeight,
-                    PlatformOffset = HasPlatformOffset ? (float)MathHelper.Clamp(modelRest - offsetZero, min, max) : 0,
                 };
-                if (HasPlatformOffset)
-                    Settings.PlatformOffset = (float)MathHelper.Clamp(Settings.PlatformOffset, min, max);
+                if (HasPlatform && Settings.TrainHeight <= 0)
+                {
+                    Settings.TrainHeight = (float)defaultTrainHeight;
+                    Settings.PlatformGap = (float)defaultGap;
+                    FitGap(Settings);
+                }
                 MagRailSession.Instance.Engines.Add(this);
                 registered = true;
                 HookPower();
@@ -99,6 +99,23 @@ namespace MagRail
             {
                 Log.Error("HoverEngineLogic.UpdateOnceBeforeFrame", e);
             }
+        }
+
+        void ReadPlatform()
+        {
+            double rest, zero, min, max;
+            HasPlatform = EnginePlatform.ReadRest(Block.Model, out rest, out zero, out min, out max);
+            if (!HasPlatform)
+                return;
+            bool range = !double.IsNaN(zero) && min <= max;
+            restMin = range ? zero + min : rest;
+            restMax = range ? zero + max : rest;
+            baseTop = Block.Model.BoundingBox.Max.Y;
+            TrainHeightMin = baseTop + restMin;
+            TrainHeightMax = baseTop + restMax + EngineSettings.MaxGap;
+            // A new engine: the Mini 1.5 m high with a 0.5 m gap, the large engine (both grids) 2.5 m with 1 m.
+            defaultTrainHeight = MathHelper.Clamp(IsMini ? 1.5 : 2.5, TrainHeightMin, TrainHeightMax);
+            defaultGap = IsMini ? 0.5 : EngineSettings.DefaultGap;
         }
 
         public override void Close()
@@ -166,21 +183,40 @@ namespace MagRail
             get { return registered && Block.IsFunctional && Block.Enabled; }
         }
 
-        // Of the guide point over the rail point. With a platform: the rail's top, the platform's gap and the base's
-        // height over the platform.
+        // Of the guide point over the rail point. With a platform: the rail's top and the train height, less the base's
+        // top over the block centre (the gap moves only the platform).
         public double HoverHeight
         {
-            get { return HasPlatform ? EnginePlatform.RailTop + Settings.PlatformGap + PlatformRest : Settings.HoverHeight; }
+            get { return HasPlatform ? EnginePlatform.RailTop + TrainHeight - baseTop : Settings.HoverHeight; }
         }
 
-        // The base's height over the platform at rest, m.
+        // The base's top over the rail's top, m, within the model's range.
+        public double TrainHeight
+        {
+            get { return MathHelper.Clamp(Settings.TrainHeight, TrainHeightMin, TrainHeightMax); }
+        }
+
+        // The platform's depth under the block centre at rest (its bottom), m: where it keeps the player's gap over the
+        // rail's top. The terminal keeps the pair within the model's range (FitGap, FitHeight); settings that are not
+        // (a programmable block's) leave it at the end of the range.
         public double PlatformRest
         {
-            get
-            {
-                return HasPlatformOffset
-                    ? offsetZero + MathHelper.Clamp(Settings.PlatformOffset, PlatformOffsetMin, PlatformOffsetMax) : modelRest;
-            }
+            get { return MathHelper.Clamp(TrainHeight - baseTop - Settings.PlatformGap, restMin, restMax); }
+        }
+
+        // The train height changed: the gap follows as far as the platform must move to stay within the model's range.
+        public void FitGap(EngineSettings s)
+        {
+            double depth = s.TrainHeight - baseTop;
+            s.PlatformGap = (float)MathHelper.Clamp(s.PlatformGap,
+                Math.Max(EngineSettings.MinGap, depth - restMax), Math.Min(EngineSettings.MaxGap, depth - restMin));
+        }
+
+        // The gap changed: the train height follows as far as the platform must move to stay within the model's range.
+        public void FitHeight(EngineSettings s)
+        {
+            s.TrainHeight = (float)MathHelper.Clamp(s.TrainHeight,
+                Math.Max(TrainHeightMin, baseTop + restMin + s.PlatformGap), Math.Min(TrainHeightMax, baseTop + restMax + s.PlatformGap));
         }
 
         public double SearchDistance
@@ -198,12 +234,18 @@ namespace MagRail
             }
         }
 
+        // The small engine for small grid (its own force and defaults).
+        bool IsMini
+        {
+            get { return Block.BlockDefinition.SubtypeId == "MagRail_EngineMini"; }
+        }
+
         // The engine's force, N: its full thrust (100% Power); the small grid's 5x1x5 engine is the same engine, the Mini
         // has a quarter of it. Everything else is a share of it (PLAN 10.1): it holds the rail with HoldShare of it, the
         // brakes are Drive's shares.
         public double Force
         {
-            get { return Block.BlockDefinition.SubtypeId == "MagRail_EngineMini" ? 250000.0 : 1000000.0; }
+            get { return IsMini ? 250000.0 : 1000000.0; }
         }
 
         public const double HoldShare = 4.0;
