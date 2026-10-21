@@ -339,9 +339,8 @@
       <Components>
         <Component Subtype="InteriorPlate" Count="20" />
         <Component Subtype="Construction" Count="30" />
-        <Component Subtype="Detector" Count="20" />
         <Component Subtype="Motor" Count="4" />
-        <Component Subtype="Computer" Count="20" />
+        <Component Subtype="Computer" Count="50" />
         <Component Subtype="SteelPlate" Count="20" />
       </Components>
       <CriticalComponent Subtype="Computer" Index="0" />
@@ -392,9 +391,8 @@
       <Components>
         <Component Subtype="InteriorPlate" Count="2" />
         <Component Subtype="Construction" Count="5" />
-        <Component Subtype="Detector" Count="4" />
         <Component Subtype="Motor" Count="2" />
-        <Component Subtype="Computer" Count="10" />
+        <Component Subtype="Computer" Count="25" />
         <Component Subtype="SteelPlate" Count="2" />
       </Components>
       <CriticalComponent Subtype="Computer" Index="0" />

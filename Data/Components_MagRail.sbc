@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <!-- Rail component: what spans will cost later (PLAN 10.8). Not used by any block yet.
-       Model and icon are the vanilla girder's for now. Recipe in Blueprints_MagRail.sbc. -->
+  <!-- Rail component: track blocks are built from it (1 narrow, 2 wide); spans will cost it later (PLAN 10.8).
+       Model: a 1 m piece of the narrow rail (ModelSource/blocks/RailComponent.py); icon the vanilla girder's
+       for now. Recipe in Blueprints_MagRail.sbc. -->
   <Components>
     <Component>
       <Id>
@@ -12,15 +13,15 @@
       <Description>Description_Item_MagRail_Rail</Description>
       <Icon>Textures\GUI\Icons\component\girder_component.dds</Icon>
       <Size>
-        <X>0.05</X>
-        <Y>0.05</Y>
+        <X>0.2</X>
+        <Y>0.16</Y>
         <Z>1</Z>
       </Size>
-      <Mass>10</Mass>
-      <Volume>3</Volume>
-      <Model>Models\Components\girder_component.mwm</Model>
+      <Mass>40</Mass>
+      <Volume>40</Volume>
+      <Model>Models\Components\MagRail_Rail.mwm</Model>
       <PhysicalMaterial>Metal</PhysicalMaterial>
-      <MaxIntegrity>15</MaxIntegrity>
+      <MaxIntegrity>100</MaxIntegrity>
       <DropProbability>0.5</DropProbability>
     </Component>
   </Components>

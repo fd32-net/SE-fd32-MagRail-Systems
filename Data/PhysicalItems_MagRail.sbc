@@ -15,12 +15,12 @@
       <Description>Description_Item_MagRail_RailLinker</Description>
       <Icon>Textures\Icons\RailLinker.dds</Icon>
       <Size>
-        <X>0.1</X>
-        <Y>0.1</Y>
+        <X>0.4</X>
+        <Y>0.2</Y>
         <Z>0.1</Z>
       </Size>
-      <Mass>0.1</Mass>
-      <Volume>0.1</Volume>
+      <Mass>5</Mass>
+      <Volume>8</Volume>
       <Model>Models\Tools\MagRail_RailLinker.mwm</Model>
       <PhysicalMaterial>Metal</PhysicalMaterial>
       <CanPlayerOrder>false</CanPlayerOrder>

@@ -19,13 +19,13 @@
       <ModelOffset x="0" y="0" z="0" />
       <Model>Models\Cubes\Large\MagRail_RailBlock1.mwm</Model>
       <Components>
-        <Component Subtype="MetalGrid" Count="6" />
-        <Component Subtype="SteelPlate" Count="4" />
-        <Component Subtype="Construction" Count="10" />
-        <Component Subtype="Superconductor" Count="2" />
-        <Component Subtype="SteelPlate" Count="4" />
+        <Component Subtype="Construction" Count="5" />
+        <Component Subtype="SmallTube" Count="4" />
+        <Component Subtype="Motor" Count="4" />
+        <Component Subtype="MagRail_Rail" Count="1" />
+        <Component Subtype="SteelPlate" Count="5" />
       </Components>
-      <CriticalComponent Subtype="Superconductor" Index="0" />
+      <CriticalComponent Subtype="MagRail_Rail" Index="0" />
       <!-- On the lift (TrackStyle.Lifts): bottom mount point under the base only (Truss Pillar end face, 0.5 m),
            mount points on both ends. -->
       <Center x="0" y="0" z="0" />
@@ -64,15 +64,13 @@
       <ModelOffset x="0" y="0" z="0" />
       <Model>Models\Cubes\Large\MagRail_FreeRail.mwm</Model>
       <Components>
-        <Component Subtype="MetalGrid" Count="6" />
-        <Component Subtype="SteelPlate" Count="3" />
-        <Component Subtype="Construction" Count="12" />
-        <Component Subtype="Motor" Count="4" />
-        <Component Subtype="Superconductor" Count="2" />
-        <Component Subtype="Computer" Count="2" />
+        <Component Subtype="Construction" Count="5" />
+        <Component Subtype="SmallTube" Count="4" />
+        <Component Subtype="Motor" Count="8" />
+        <Component Subtype="MagRail_Rail" Count="1" />
         <Component Subtype="SteelPlate" Count="5" />
       </Components>
-      <CriticalComponent Subtype="Computer" Index="0" />
+      <CriticalComponent Subtype="MagRail_Rail" Index="0" />
       <!-- On the lift (TrackStyle.Lifts): bottom mount point under the base only (Truss Pillar end face). -->
       <MountPoints>
         <MountPoint Side="Bottom" StartX="0.4" StartY="0.4" EndX="0.6" EndY="0.6" Default="true" />
@@ -109,14 +107,14 @@
       <ModelOffset x="0" y="0" z="0" />
       <Model>Models\Cubes\Large\MagRail_Switch1.mwm</Model>
       <Components>
-        <Component Subtype="MetalGrid" Count="6" />
-        <Component Subtype="SteelPlate" Count="4" />
-        <Component Subtype="Construction" Count="10" />
-        <Component Subtype="Superconductor" Count="2" />
-        <Component Subtype="Computer" Count="2" />
-        <Component Subtype="SteelPlate" Count="4" />
+        <Component Subtype="Construction" Count="5" />
+        <Component Subtype="SmallTube" Count="4" />
+        <Component Subtype="Motor" Count="4" />
+        <Component Subtype="Computer" Count="5" />
+        <Component Subtype="MagRail_Rail" Count="1" />
+        <Component Subtype="SteelPlate" Count="5" />
       </Components>
-      <CriticalComponent Subtype="Computer" Index="0" />
+      <CriticalComponent Subtype="MagRail_Rail" Index="0" />
       <!-- On the lift (TrackStyle.Lifts): bottom mount point under the base only (Truss Pillar end face, 0.5 m),
            mount points on both ends. -->
       <Center x="0" y="0" z="0" />
@@ -159,13 +157,11 @@
       <ModelOffset x="0" y="0" z="0" />
       <Model>Models\Cubes\Large\MagRail_EmbeddedRail.mwm</Model>
       <Components>
-        <Component Subtype="MetalGrid" Count="6" />
         <Component Subtype="SteelPlate" Count="15" />
-        <Component Subtype="Construction" Count="10" />
-        <Component Subtype="Superconductor" Count="2" />
-        <Component Subtype="SteelPlate" Count="10" />
+        <Component Subtype="MagRail_Rail" Count="1" />
+        <Component Subtype="SteelPlate" Count="5" />
       </Components>
-      <CriticalComponent Subtype="Superconductor" Index="0" />
+      <CriticalComponent Subtype="MagRail_Rail" Index="0" />
       <Center x="0" y="0" z="0" />
       <MountPoints>
         <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
@@ -206,13 +202,11 @@
       <ModelOffset x="0" y="0" z="0" />
       <Model>Models\Cubes\Large\MagRail_EmbeddedRailHalf.mwm</Model>
       <Components>
-        <Component Subtype="MetalGrid" Count="4" />
-        <Component Subtype="SteelPlate" Count="7" />
-        <Component Subtype="Construction" Count="8" />
-        <Component Subtype="Superconductor" Count="2" />
+        <Component Subtype="SteelPlate" Count="5" />
+        <Component Subtype="MagRail_Rail" Count="1" />
         <Component Subtype="SteelPlate" Count="5" />
       </Components>
-      <CriticalComponent Subtype="Superconductor" Index="0" />
+      <CriticalComponent Subtype="MagRail_Rail" Index="0" />
       <Center x="0" y="0" z="0" />
       <MountPoints>
         <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" Default="true" />
