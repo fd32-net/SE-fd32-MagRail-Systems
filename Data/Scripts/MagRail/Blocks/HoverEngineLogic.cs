@@ -183,11 +183,44 @@ namespace MagRail
             get { return registered && Block.IsFunctional && Block.Enabled; }
         }
 
-        // Of the guide point over the rail point. With a platform: the rail's top and the train height, less the base's
-        // top over the block centre (the gap moves only the platform).
+        // Of the guide point over the rail point, as held now (it moves to a new setting at ShiftSpeed). With a platform:
+        // the rail's top and the train height, less the base's top over the block centre (the gap moves only the
+        // platform).
         public double HoverHeight
         {
+            get
+            {
+                Shift();
+                return heightNow;
+            }
+        }
+
+        double SetHoverHeight
+        {
             get { return HasPlatform ? EnginePlatform.RailTop + TrainHeight - baseTop : Settings.HoverHeight; }
+        }
+
+        // A new side offset or height moves the held point there at this speed, m/s, not in one tick: a point that
+        // jumps metres reads as the rail torn away (RailBody's early break) and dropped the engine.
+        const double ShiftSpeed = 2.0;
+        double sideNow, heightNow;
+        int shiftFrame = -1;
+
+        // Once a frame, on every machine alike (the physics and the platform's look).
+        void Shift()
+        {
+            int frame = MyAPIGateway.Session.GameplayFrameCounter;
+            if (frame == shiftFrame)
+                return;
+            double step = shiftFrame < 0 ? double.MaxValue : ShiftSpeed * Math.Max(0, frame - shiftFrame) / 60.0;
+            shiftFrame = frame;
+            sideNow = Toward(sideNow, Settings.SideOffset, step);
+            heightNow = Toward(heightNow, SetHoverHeight, step);
+        }
+
+        static double Toward(double value, double target, double step)
+        {
+            return Math.Abs(target - value) <= step ? target : value + Math.Sign(target - value) * step;
         }
 
         // The base's top over the rail's top, m, within the model's range.
@@ -197,11 +230,12 @@ namespace MagRail
         }
 
         // The platform's depth under the block centre at rest (its bottom), m: where it keeps the player's gap over the
-        // rail's top. The terminal keeps the pair within the model's range (FitGap, FitHeight); settings that are not
-        // (a programmable block's) leave it at the end of the range.
+        // rail's top under the base as held now (while the height moves, too). The terminal keeps the pair within the
+        // model's range (FitGap, FitHeight); settings that are not (a programmable block's) leave it at the end of the
+        // range.
         public double PlatformRest
         {
-            get { return MathHelper.Clamp(TrainHeight - baseTop - Settings.PlatformGap, restMin, restMax); }
+            get { return MathHelper.Clamp(HoverHeight - EnginePlatform.RailTop - Settings.PlatformGap, restMin, restMax); }
         }
 
         // The train height changed: the gap follows as far as the platform must move to stay within the model's range.
@@ -224,13 +258,14 @@ namespace MagRail
             get { return Math.Max(MinSearch, HoverHeight + SearchMargin); }
         }
 
-        // The point held over the rail.
+        // The point held over the rail (the side offset as held now, see Shift).
         public Vector3D GuidePoint
         {
             get
             {
+                Shift();
                 MatrixD m = Block.WorldMatrix;
-                return m.Translation + m.Right * Settings.SideOffset;
+                return m.Translation + m.Right * sideNow;
             }
         }
 

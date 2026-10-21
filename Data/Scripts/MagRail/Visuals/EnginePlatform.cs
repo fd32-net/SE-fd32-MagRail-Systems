@@ -11,7 +11,8 @@ namespace MagRail
 {
     // Cosmetic (PLAN 10.23): the engine's platform, subpart "Platform" under the base (the block), hung on struts. It
     // keeps the player's gap (EngineSettings.PlatformGap) between the rail's top and its bottom and lies parallel to
-    // the rail, where it would be under a base held ideally (the guide point offsets move the whole engine), as long as
+    // the rail, where it would be under a base held ideally (across the rail: under the base where it really is, so
+    // the side offset moves the whole engine), as long as
     // the struts reach: past their stroke the base drags it along (only moved, it stays parallel to the rail), and as
     // far as it may turn from the base: past a limit it stays turned at the limit. Off the rail it goes back to rest. The engine has an axis but no front: the platform takes the rail's way nearer the
     // base's Forward.
@@ -195,12 +196,13 @@ namespace MagRail
             forward.Normalize();
             if (Vector3D.Dot(forward, world.Forward) < 0)
                 forward = -forward;
-            // The base as the rail holds it ideally: along the rail, its guide point at the hover height over the rail.
-            // The platform hangs under it as at rest, so the side offset moves the whole engine.
-            EngineSettings set = engine.Settings;
+            // The base as the rail holds it ideally: along the rail, its guide point at the hover height over the rail;
+            // across the rail where the base really is, so the platform moves sideways with it (a new side offset moves
+            // the whole engine at once, not the platform first and the base after it). The platform hangs under it as
+            // at rest.
             MatrixD ideal = MatrixD.CreateWorld(Vector3D.Zero, forward, up);
-            ideal.Translation = s.Point + up * (engine.HoverHeight + DebugSink)
-                - ideal.Right * set.SideOffset;
+            Vector3D side = ideal.Right;
+            ideal.Translation = s.Point + up * (engine.HoverHeight + DebugSink) + side * Vector3D.Dot(world.Translation - s.Point, side);
             local = (Matrix)((MatrixD)rest * ideal * MatrixD.Invert(world));
             LimitTurn(ref local);
             Limit(ref local);

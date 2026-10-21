@@ -11,10 +11,13 @@ namespace MagRail
     // IMyMotorSuspension and visible on our engines only, and the vanilla suspension controls that mean
     // nothing here (wheel, steering, strength, height...) are hidden on them. The drive controls (Propulsion,
     // Braking, Power, Speed Limit) stay for the drive. Slider values are terminal properties for programmable
-    // blocks; 1 cm steps (ranges chosen for Build Vision's step, see TrackTerminal).
+    // blocks; 1 cm steps (ranges chosen for Build Vision's step, see TrackTerminal). Each slider has toolbar actions
+    // "+" and "-" by one step.
     public static class EngineTerminal
     {
         const float Step = 0.01f;
+        const string IconUp = @"Textures\GUI\Icons\Actions\Increase.dds";
+        const string IconDown = @"Textures\GUI\Icons\Actions\Decrease.dds";
 
         static readonly string[] HiddenControls =
         {
@@ -142,6 +145,21 @@ namespace MagRail
             slider.Setter = (b, v) => Change(b, s => set(s, Snap(MathHelper.Clamp(v, min(b), max(b)))), fit);
             slider.Writer = (b, sb) => { if (Logic(b) != null) sb.Append(format(get(Logic(b).Settings))); };
             Add(slider, visible);
+            AddStepAction(id + "Up", Loc.T(titleKey) + " +", IconUp, slider, Step, visible);
+            AddStepAction(id + "Down", Loc.T(titleKey) + " -", IconDown, slider, -Step, visible);
+        }
+
+        // Through the slider's setter: the same limits, and the settings that follow it move too.
+        static void AddStepAction(string id, string name, string icon, IMyTerminalControlSlider slider, float delta,
+            Func<IMyTerminalBlock, bool> visible)
+        {
+            IMyTerminalAction action = MyAPIGateway.TerminalControls.CreateAction<IMyMotorSuspension>(id);
+            action.Name = new StringBuilder(name);
+            action.Icon = icon;
+            action.Enabled = visible ?? IsEngine;
+            action.Action = b => slider.Setter(b, slider.Getter(b) + delta);
+            action.Writer = slider.Writer;
+            MyAPIGateway.TerminalControls.AddAction<IMyMotorSuspension>(action);
         }
 
         static void HideVanilla()
