@@ -14,7 +14,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.10.17";
+        public const string Version = "V0.10.18";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -130,12 +130,8 @@ namespace MagRail
                 return;
             Vector3D camera = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
             for (int i = 0; i < Engines.Count; i++)
-            {
-                if (Engines[i].Swivel != null)
-                    Engines[i].Swivel.Update(camera, tick);
                 if (Engines[i].Platform != null)
                     Engines[i].Platform.Update(camera, tick);
-            }
         }
 
         public override void HandleInput()

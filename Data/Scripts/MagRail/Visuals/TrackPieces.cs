@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using Sandbox.ModAPI;
 using VRage.Game.Entity;
 using VRageMath;
@@ -12,12 +13,13 @@ namespace MagRail
     {
         const double EnterRange = 2000, ExitRange = 2300;
         const int RefreshTicks = 10;
-        const int PerTick = 20;
+        public static int PerTick = 20;     // TEMPORARY settable (/magrail rate), a const before it
 
         readonly Dictionary<Span, PlacedPieces> placed = new Dictionary<Span, PlacedPieces>();
         readonly List<PlacedPieces> queue = new List<PlacedPieces>();   // unfinished, nearest first
         readonly List<Span> gone = new List<Span>();
         int tick, stamp;
+        readonly Stopwatch repave = new Stopwatch();    // TEMPORARY (/magrail repave)
 
         public int EntityCount { get; private set; }
 
@@ -35,7 +37,15 @@ namespace MagRail
         public void Update(TrackNetwork network)
         {
             if (++tick % RefreshTicks == 0)
+            {
                 Refresh(network);
+                if (repave.IsRunning && queue.Count == 0)
+                {
+                    repave.Stop();
+                    MyAPIGateway.Utilities.ShowMessage("MagRail", EntityCount + " pieces in " +
+                        repave.Elapsed.TotalSeconds.ToString("0.0") + " s, " + PerTick + " per tick");
+                }
+            }
             Build();
         }
 
@@ -110,6 +120,17 @@ namespace MagRail
                     budget--;
                 }
             }
+        }
+
+        // TEMPORARY (/magrail repave): every piece removed and placed again; the time it takes in chat.
+        public void Repave()
+        {
+            foreach (PlacedPieces p in placed.Values)
+                p.Clear();
+            placed.Clear();
+            queue.Clear();
+            EntityCount = 0;
+            repave.Restart();
         }
 
         // Unload: the game closes every entity itself.

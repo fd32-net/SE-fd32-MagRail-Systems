@@ -2,8 +2,8 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <!-- Progression: research group 16, like the old Maglev blocks. -->
   <ResearchBlocks>
-    <ResearchBlock xsi:type="ResearchBlock"><Id Type="MotorSuspension" Subtype="MagRail_HoverLarge" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
-    <ResearchBlock xsi:type="ResearchBlock"><Id Type="MotorSuspension" Subtype="MagRail_HoverSmall" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="MotorSuspension" Subtype="MagRail_EngineLarge" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock"><Id Type="MotorSuspension" Subtype="MagRail_EngineSmall" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="Thrust" Subtype="MagRail_TrainControlLarge" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="Thrust" Subtype="MagRail_TrainControlSmall" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>
     <ResearchBlock xsi:type="ResearchBlock"><Id Type="UpgradeModule" Subtype="MagRail_AutopilotLarge" /><UnlockedByGroups><GroupSubtype>16</GroupSubtype></UnlockedByGroups></ResearchBlock>

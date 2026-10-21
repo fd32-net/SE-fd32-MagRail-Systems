@@ -26,7 +26,7 @@ namespace MagRail
     // under it and its settings; and the drive's power consumer. Numbers are the old Maglev's, so the ported physics
     // keeps them.
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorSuspension), false,
-        "MagRail_HoverLarge", "MagRail_HoverSmall", "MagRail_HoverTest")]
+        "MagRail_EngineLarge", "MagRail_EngineSmall")]
     public class HoverEngineLogic : MyGameLogicComponent
     {
         // Must be listed in Data/EntityComponents_MagRail.sbc, or the game drops it on save.
@@ -49,13 +49,15 @@ namespace MagRail
         public int JumpTicks, LostTicks, NextSearchTick;
         // Server: the power the drive asks for this tick, MW (Drive; Rides hands it to the network).
         public float PowerWanted;
-        // Clients: the lower part that lies along the rail (cosmetic).
-        public EngineSwivel Swivel;
         // The model has a platform (EnginePlatform): the player sets its gap over the rail, and the base's height over
-        // it at rest (PlatformRest, m) is the model's. Clients: the platform itself (cosmetic).
+        // it at rest (PlatformRest, m) is the model's, or, with an offset range (HasPlatformOffset), the player's offset
+        // in it. Clients: the platform itself (cosmetic).
         public bool HasPlatform { get; private set; }
-        public double PlatformRest { get; private set; }
+        public bool HasPlatformOffset { get; private set; }
+        public double PlatformOffsetMin { get; private set; }
+        public double PlatformOffsetMax { get; private set; }
         public EnginePlatform Platform;
+        double modelRest, offsetZero;
         MyResourceSinkComponent sink;
         float demand;
         bool registered;
@@ -73,24 +75,25 @@ namespace MagRail
                 // Projections and placement previews have no physics: no logic for them.
                 if (Block.CubeGrid.Physics == null || MagRailSession.Instance == null)
                     return;
-                double rest;
-                HasPlatform = EnginePlatform.ReadRest(Block.Model, out rest);
-                PlatformRest = rest;
+                double min, max;
+                HasPlatform = EnginePlatform.ReadRest(Block.Model, out modelRest, out offsetZero, out min, out max);
+                HasPlatformOffset = HasPlatform && !double.IsNaN(offsetZero) && min <= max;
+                PlatformOffsetMin = min;
+                PlatformOffsetMax = max;
                 Settings = LoadSettings() ?? new EngineSettings
                 {
                     HoverHeight = Block.CubeGrid.GridSizeEnum == MyCubeSize.Small ? EngineSettings.SmallHeight : EngineSettings.LargeHeight,
+                    PlatformOffset = HasPlatformOffset ? (float)MathHelper.Clamp(modelRest - offsetZero, min, max) : 0,
                 };
+                if (HasPlatformOffset)
+                    Settings.PlatformOffset = (float)MathHelper.Clamp(Settings.PlatformOffset, min, max);
                 MagRailSession.Instance.Engines.Add(this);
                 registered = true;
                 HookPower();
                 Block.AppendingCustomInfo += EngineInfo.Append;
                 EngineTerminal.Create();
-                if (!MyAPIGateway.Utilities.IsDedicated)
-                {
-                    Swivel = new EngineSwivel(this);
-                    if (HasPlatform)
-                        Platform = new EnginePlatform(this);
-                }
+                if (!MyAPIGateway.Utilities.IsDedicated && HasPlatform)
+                    Platform = new EnginePlatform(this);
             }
             catch (Exception e)
             {
@@ -170,6 +173,16 @@ namespace MagRail
             get { return HasPlatform ? EnginePlatform.RailTop + Settings.PlatformGap + PlatformRest : Settings.HoverHeight; }
         }
 
+        // The base's height over the platform at rest, m.
+        public double PlatformRest
+        {
+            get
+            {
+                return HasPlatformOffset
+                    ? offsetZero + MathHelper.Clamp(Settings.PlatformOffset, PlatformOffsetMin, PlatformOffsetMax) : modelRest;
+            }
+        }
+
         public double SearchDistance
         {
             get { return Math.Max(MinSearch, HoverHeight + SearchMargin); }
@@ -185,19 +198,11 @@ namespace MagRail
             }
         }
 
-        // The engine's force by type, N: its full thrust (100% Power). Everything else is a share of it (PLAN 10.1):
-        // it holds the rail with HoldShare of it, the brakes are Drive's shares.
+        // The engine's force, N: its full thrust (100% Power); the small grid engine is the same engine. Everything else
+        // is a share of it (PLAN 10.1): it holds the rail with HoldShare of it, the brakes are Drive's shares.
         public double Force
         {
-            get
-            {
-                switch (Block.BlockDefinition.SubtypeId)
-                {
-                    case "MagRail_HoverLarge":
-                    case "MagRail_HoverTest": return 1000000.0;
-                    default: return 500000.0;
-                }
-            }
+            get { return 1000000.0; }
         }
 
         public const double HoldShare = 4.0;
@@ -244,15 +249,7 @@ namespace MagRail
         // Max power at full thrust, MW: RequiredPowerInput of the block definitions.
         public double MaxPower
         {
-            get
-            {
-                switch (Block.BlockDefinition.SubtypeId)
-                {
-                    case "MagRail_HoverLarge":
-                    case "MagRail_HoverTest": return 5.0;
-                    default: return 2.4;
-                }
-            }
+            get { return 5.0; }
         }
 
         // The engine joins its grid's power network through the suspension's own resource sink. The game gives a

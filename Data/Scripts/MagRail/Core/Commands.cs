@@ -11,6 +11,8 @@ namespace MagRail
     // /magrail log, /magrail mark <text>: the ride log, see RideLog.
     // /magrail skin: TEMPORARY probe - the player's build skin (P menu) as the game saves it, and how long that takes.
     // /magrail platform [m]: TEMPORARY (engine platform test T2) - bases drawn this much lower, EnginePlatform.DebugSink.
+    // /magrail repave, /magrail rate [n]: TEMPORARY - every track piece placed again (the time it takes in chat);
+    // pieces placed per tick.
     public static class Commands
     {
         public static void OnMessage(string text, ref bool sendToOthers)
@@ -50,6 +52,20 @@ namespace MagRail
                     sink = 0;
                 EnginePlatform.DebugSink = sink;
                 MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_PlatformSink", sink.ToString("0.00")));
+                return;
+            }
+            if (command == "repave" && MagRailSession.Instance.Pieces != null)
+            {
+                MagRailSession.Instance.Pieces.Repave();
+                MyAPIGateway.Utilities.ShowMessage("MagRail", "Repave: all pieces again, " + TrackPieces.PerTick + " per tick");
+                return;
+            }
+            if (command == "rate")
+            {
+                int rate;
+                if (words.Length > 2 && int.TryParse(words[2], out rate) && rate > 0)
+                    TrackPieces.PerTick = rate;
+                MyAPIGateway.Utilities.ShowMessage("MagRail", "Pieces per tick: " + TrackPieces.PerTick);
                 return;
             }
             if (command == "cursor")

@@ -7,8 +7,8 @@
       <DisplayName>DisplayName_MagRail_EngineGroup</DisplayName>
       <Description>Description_MagRail_EngineGroup</Description>
       <Blocks>
-        <Block Type="MotorSuspension" Subtype="MagRail_HoverLarge" />
-        <Block Type="MotorSuspension" Subtype="MagRail_HoverSmall" />
+        <Block Type="MotorSuspension" Subtype="MagRail_EngineLarge" />
+        <Block Type="MotorSuspension" Subtype="MagRail_EngineSmall" />
       </Blocks>
     </BlockVariantGroup>
   </BlockVariantGroups>

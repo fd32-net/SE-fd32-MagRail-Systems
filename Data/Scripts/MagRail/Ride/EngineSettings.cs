@@ -16,6 +16,8 @@ namespace MagRail
         public const float MaxSideOffset = 2.5f;
         public const float LargeHeight = 2.5f, SmallHeight = 1.2f;
         public const float MinGap = 0f, MaxGap = 3f, DefaultGap = 1f;
+        // The platform's offset: each model narrows it (EnginePlatform.ReadRest), this only bounds requests.
+        public const float MinOffset = 0f, MaxOffset = 9.5f;
 
         [ProtoMember(1)] public int Version = CurrentVersion;
         // Height of the guide point over the rail point, m.
@@ -28,13 +30,16 @@ namespace MagRail
         // Engines with a platform (EnginePlatform): the gap between the rail's top and the platform's bottom, m
         // (0 = the platform lies on the rail). It sets their hover height instead of HoverHeight.
         [ProtoMember(7)] public float PlatformGap = DefaultGap;
+        // Engines whose model lets the platform hang lower or higher: its offset from the base (the base's lowest point
+        // to the platform's top), m, within the model's range.
+        [ProtoMember(8)] public float PlatformOffset;
 
         public EngineSettings Copy()
         {
             return new EngineSettings
             {
                 Version = Version, HoverHeight = HoverHeight, HoldStrength = HoldStrength,
-                SideOffset = SideOffset, PlatformGap = PlatformGap,
+                SideOffset = SideOffset, PlatformGap = PlatformGap, PlatformOffset = PlatformOffset,
             };
         }
 
@@ -47,6 +52,7 @@ namespace MagRail
             s.HoldStrength = MathHelper.Clamp(s.HoldStrength, MinHold, MaxHold);
             s.SideOffset = MathHelper.Clamp(s.SideOffset, -MaxSideOffset, MaxSideOffset);
             s.PlatformGap = MathHelper.Clamp(s.PlatformGap, MinGap, MaxGap);
+            s.PlatformOffset = MathHelper.Clamp(s.PlatformOffset, MinOffset, MaxOffset);
             return s;
         }
 

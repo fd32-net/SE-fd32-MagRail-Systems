@@ -9,9 +9,8 @@ namespace MagRail
     // lengths, which must match the models.
     // Three sections (the rail lift, blocks/RailLift.py: MagRail_Lift*): <prefix>Sleeve and <prefix>Middle of fixed
     // length, <prefix>Rod 1 m long and stretched over the rest.
-    // Two sections (an engine's struts, from its model): <prefix>Sleeve from the first point and <prefix>Rod to the
-    // second, both of fixed length; the rod slides in the sleeve (the stroke keeps it in: pivot to pivot between the
-    // rod's length and both lengths less some overlap).
+    // Two sections (an engine's struts, from its model): <prefix>Sleeve of fixed length from the first point and
+    // <prefix>Rod from inside the sleeve's end to the second, stretched over that (its length: the model's).
     public class StrutLook
     {
         public static readonly StrutLook Lift = Three("MagRail_Lift", 0.6f, 0.6f);
@@ -41,7 +40,7 @@ namespace MagRail
     public class Strut
     {
         // Collapsed, the middle sticks out of the sleeve by Step; extended, it stays Overlap inside it, and the rod
-        // Overlap inside the middle.
+        // Overlap inside the middle (two sections: inside the sleeve).
         const float Step = 0.05f, Overlap = 0.08f;
 
         readonly StrutLook look;
@@ -83,7 +82,8 @@ namespace MagRail
             if (look.Middle == null)
             {
                 Set(0, a, dir, side, 0, 1, toParent);
-                Set(1, a, dir, side, len - look.RodLength, 1, toParent);
+                float start = Math.Min(look.SleeveLength, len) - Overlap;
+                Set(1, a, dir, side, start, Math.Max(len - start, 1e-3f) / look.RodLength, toParent);
                 added = true;
                 return;
             }

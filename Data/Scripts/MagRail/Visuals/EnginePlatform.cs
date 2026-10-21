@@ -20,7 +20,8 @@ namespace MagRail
     //   dummy's depth under the block centre is the base's height over the platform, and the engine holds rail top +
     //   gap + that (HoverEngineLogic.HoverHeight); its custom properties "yaw_limit", "pitch_limit", "roll_limit"
     //   (degrees): how far the platform may turn from rest (yaw about the base's Up, then pitch, then roll about its
-    //   own forward; a missing one: no limit);
+    //   own forward; a missing one: no limit); "offset_min" / "offset_max" / "offset_zero" (ReadRest): the player
+    //   sets how far under the base it hangs (EngineSettings.PlatformOffset), its rest moves straight along Up;
     // - dummies strut_<n> in the block model (base pivots) and strut_<n> in the platform model (platform pivots): a
     //   strut runs between the two of one name. Struts have two sections (StrutLook.Two): a sleeve from the base and a
     //   rod from the platform. On the base's dummy: "min" / "max", the stroke (pivot to pivot, m); "parts", the section
@@ -68,7 +69,8 @@ namespace MagRail
         readonly List<Mount> mounts = new List<Mount>();
         Strut[] struts;
         MyEntitySubpart part;
-        Matrix rest;            // the platform's place in the model
+        Matrix modelRest;       // the platform's place in the model
+        Matrix rest;            // there at the player's offset (HoverEngineLogic.PlatformRest)
         Matrix target;          // its last place on the rail (block coordinates)
         double yawLimit, pitchLimit, rollLimit;     // radians
         double blend;           // 0 at rest .. 1 on the rail
@@ -85,10 +87,13 @@ namespace MagRail
             partDummies = new Dictionary<string, IMyModelDummy>();
 
         // The base's height over the platform at rest (the platform dummy's depth under the block centre); false: the
-        // model has no platform.
-        public static bool ReadRest(IMyModel model, out double rest)
+        // model has no platform. A platform that may hang lower or higher: the dummy's "offset_min" / "offset_max", the
+        // range of its offset (the base's lowest point to the platform's top, m), and "offset_zero", the depth at offset
+        // 0 (depth = zero + offset); otherwise min = max = NaN.
+        public static bool ReadRest(IMyModel model, out double rest, out double zero, out double min, out double max)
         {
             rest = 0;
+            zero = min = max = double.NaN;
             if (model == null)
                 return false;
             dummies.Clear();
@@ -96,7 +101,12 @@ namespace MagRail
             IMyModelDummy dummy;
             bool found = dummies.TryGetValue(DummyName, out dummy);
             if (found)
+            {
                 rest = -dummy.Matrix.Translation.Y;
+                zero = Number(dummy.CustomData, "offset_zero", float.NaN);
+                min = Number(dummy.CustomData, "offset_min", float.NaN);
+                max = Number(dummy.CustomData, "offset_max", float.NaN);
+            }
             dummies.Clear();
             return found;
         }
@@ -114,7 +124,8 @@ namespace MagRail
             {
                 // A new model (rebuilt block): the platform starts at its place in it.
                 part = sub;
-                rest = sub.PositionComp.LocalMatrixRef;
+                modelRest = sub.PositionComp.LocalMatrixRef;
+                rest = Rest();
                 target = rest;
                 blend = 0;
                 settled = false;
@@ -131,6 +142,7 @@ namespace MagRail
                 AddStruts();
             if (distSq > ViewDistance * ViewDistance)
                 return;
+            rest = Rest();
             if (settled && tick < nextIdle && Same(world, lastWorld) && !(struts != null && !struts[0].Placed))
                 return;
             lastWorld = world;
@@ -242,7 +254,7 @@ namespace MagRail
         }
 
         // The platform turned from rest no further than the model allows, about its own origin: yaw about the base's
-        // Up, then pitch about the platform's Right, then roll about its Forward (EngineSwivel's yaw and pitch).
+        // Up, then pitch about the platform's Right, then roll about its Forward.
         void LimitTurn(ref Matrix local)
         {
             Matrix restTurn = rest;
@@ -370,6 +382,14 @@ namespace MagRail
         }
 
         // ---- helpers ----
+
+        // The model's rest place moved straight along the base's Up to the depth the engine holds the platform at.
+        Matrix Rest()
+        {
+            Matrix m = modelRest;
+            m.Translation = new Vector3(m.Translation.X, -(float)engine.PlatformRest, m.Translation.Z);
+            return m;
+        }
 
         static float Number(IReadOnlyDictionary<string, object> data, string key, float fallback)
         {

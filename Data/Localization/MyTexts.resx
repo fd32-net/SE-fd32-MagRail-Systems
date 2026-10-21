@@ -81,23 +81,11 @@
   <data name="Description_MagRail_EngineGroup" xml:space="preserve">
     <value>Engines that hold a train over the rail.</value>
   </data>
-  <data name="DisplayName_MagRail_HoverLarge" xml:space="preserve">
+  <data name="DisplayName_MagRail_Engine" xml:space="preserve">
     <value>Hover Engine</value>
   </data>
-  <data name="Description_MagRail_HoverLarge" xml:space="preserve">
-    <value>Holds the train over the rail. Mount it under the wagon. Placeholder model.</value>
-  </data>
-  <data name="DisplayName_MagRail_HoverSmall" xml:space="preserve">
-    <value>Hover Engine</value>
-  </data>
-  <data name="Description_MagRail_HoverSmall" xml:space="preserve">
-    <value>Holds the train over the rail. Mount it under the wagon. Placeholder model.</value>
-  </data>
-  <data name="DisplayName_MagRail_HoverTest" xml:space="preserve">
-    <value>Hover Engine (platform test)</value>
-  </data>
-  <data name="Description_MagRail_HoverTest" xml:space="preserve">
-    <value>Test: the platform keeps a set gap over the rail. Placeholder model.</value>
+  <data name="Description_MagRail_Engine" xml:space="preserve">
+    <value>Holds the train over the rail and drives it. Mount it under the wagon: its platform follows the rail under the base.</value>
   </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Track block</value>
@@ -398,6 +386,12 @@
   </data>
   <data name="MagRail_EngineTerm_Gap_Tip" xml:space="preserve">
     <value>Gap between the top of the rail and the bottom of the platform. 0 = the platform lies on the rail.</value>
+  </data>
+  <data name="MagRail_EngineTerm_Offset" xml:space="preserve">
+    <value>Platform offset</value>
+  </data>
+  <data name="MagRail_EngineTerm_Offset_Tip" xml:space="preserve">
+    <value>How far under the base the platform hangs: from the base's lowest point to the platform's top. The range is the engine model's.</value>
   </data>
   <data name="MagRail_EngineTerm_Hold" xml:space="preserve">
     <value>Hold stiffness</value>

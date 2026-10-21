@@ -81,23 +81,11 @@
   <data name="Description_MagRail_EngineGroup" xml:space="preserve">
     <value>Двигатели, которые держат поезд над рельсом.</value>
   </data>
-  <data name="DisplayName_MagRail_HoverLarge" xml:space="preserve">
+  <data name="DisplayName_MagRail_Engine" xml:space="preserve">
     <value>Двигатель парения</value>
   </data>
-  <data name="Description_MagRail_HoverLarge" xml:space="preserve">
-    <value>Держит поезд над рельсом. Ставится под вагон. Модель-заглушка.</value>
-  </data>
-  <data name="DisplayName_MagRail_HoverSmall" xml:space="preserve">
-    <value>Двигатель парения</value>
-  </data>
-  <data name="Description_MagRail_HoverSmall" xml:space="preserve">
-    <value>Держит поезд над рельсом. Ставится под вагон. Модель-заглушка.</value>
-  </data>
-  <data name="DisplayName_MagRail_HoverTest" xml:space="preserve">
-    <value>Двигатель парения (тест платформы)</value>
-  </data>
-  <data name="Description_MagRail_HoverTest" xml:space="preserve">
-    <value>Тест: платформа держит заданный зазор над рельсом. Модель-заглушка.</value>
+  <data name="Description_MagRail_Engine" xml:space="preserve">
+    <value>Держит поезд над рельсом и ведёт его. Ставится под вагон: платформа под основанием идёт по рельсу.</value>
   </data>
   <data name="MagRail_Term_Section" xml:space="preserve">
     <value>Блок пути</value>
@@ -398,6 +386,12 @@
   </data>
   <data name="MagRail_EngineTerm_Gap_Tip" xml:space="preserve">
     <value>Зазор между верхом рельса и низом платформы. 0 — платформа лежит на рельсе.</value>
+  </data>
+  <data name="MagRail_EngineTerm_Offset" xml:space="preserve">
+    <value>Отступ платформы</value>
+  </data>
+  <data name="MagRail_EngineTerm_Offset_Tip" xml:space="preserve">
+    <value>Насколько ниже основания висит платформа: от самой нижней точки основания до верха платформы. Диапазон задаёт модель двигателя.</value>
   </data>
   <data name="MagRail_EngineTerm_Hold" xml:space="preserve">
     <value>Жёсткость удержания</value>

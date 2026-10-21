@@ -3,20 +3,22 @@
   <!-- Engines, Train Control Unit, Autopilot. The track blocks are in RailType_<type>.sbc. -->
   <CubeBlocks>
     <!-- Hover engines: a wheel suspension without a wheel (RotorPart names no block group, so the game spawns
-         none), the script holds the grid over the rail. Numbers are the old Maglev engines'. -->
+         none), the script holds the grid over the rail; the platform under the base follows the rail
+         (EnginePlatform, blocks/Engine.py). One engine on both grids: the small grid one is the same 2.5 m engine,
+         5x1x5, its base fills the cell. Side mount points: the base's slab, its top 0.4 m. -->
     <Definition xsi:type="MyObjectBuilder_MotorSuspensionDefinition">
       <Id>
         <TypeId>MotorSuspension</TypeId>
-        <SubtypeId>MagRail_HoverLarge</SubtypeId>
+        <SubtypeId>MagRail_EngineLarge</SubtypeId>
       </Id>
-      <DisplayName>DisplayName_MagRail_HoverLarge</DisplayName>
-      <Description>Description_MagRail_HoverLarge</Description>
-      <Icon>Textures\Icons\Blocks\MagRail_HoverLarge.dds</Icon>
+      <DisplayName>DisplayName_MagRail_Engine</DisplayName>
+      <Description>Description_MagRail_Engine</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_EngineLarge.dds</Icon>
       <CubeSize>Large</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
       <Size x="1" y="1" z="1" />
       <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Large\MagRail_HoverLarge.mwm</Model>
+      <Model>Models\Cubes\Large\MagRail_EngineLarge.mwm</Model>
       <Components>
         <Component Subtype="SteelPlate" Count="50" />
         <Component Subtype="Construction" Count="20" />
@@ -26,12 +28,12 @@
       <CriticalComponent Subtype="Computer" Index="0" />
       <MountPoints>
         <MountPoint Side="Top" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Front" StartX="0" StartY="0.6" EndX="1" EndY="1" />
-        <MountPoint Side="Back" StartX="0" StartY="0.6" EndX="1" EndY="1" />
-        <MountPoint Side="Left" StartX="0" StartY="0.6" EndX="1" EndY="1" />
-        <MountPoint Side="Right" StartX="0" StartY="0.6" EndX="1" EndY="1" />
+        <MountPoint Side="Front" StartX="0" StartY="0.84" EndX="1" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0.84" EndX="1" EndY="1" />
+        <MountPoint Side="Left" StartX="0" StartY="0.84" EndX="1" EndY="1" />
+        <MountPoint Side="Right" StartX="0" StartY="0.84" EndX="1" EndY="1" />
       </MountPoints>
-      <BlockPairName>MagRail_HoverEngine</BlockPairName>
+      <BlockPairName>MagRail_Engine</BlockPairName>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
@@ -63,74 +65,16 @@
     <Definition xsi:type="MyObjectBuilder_MotorSuspensionDefinition">
       <Id>
         <TypeId>MotorSuspension</TypeId>
-        <SubtypeId>MagRail_HoverSmall</SubtypeId>
+        <SubtypeId>MagRail_EngineSmall</SubtypeId>
       </Id>
-      <DisplayName>DisplayName_MagRail_HoverSmall</DisplayName>
-      <Description>Description_MagRail_HoverSmall</Description>
-      <Icon>Textures\Icons\Blocks\MagRail_HoverSmall.dds</Icon>
+      <DisplayName>DisplayName_MagRail_Engine</DisplayName>
+      <Description>Description_MagRail_Engine</Description>
+      <Icon>Textures\Icons\Blocks\MagRail_EngineSmall.dds</Icon>
       <CubeSize>Small</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="5" y="2" z="5" />
+      <Size x="5" y="1" z="5" />
       <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Small\MagRail_HoverSmall.mwm</Model>
-      <Components>
-        <Component Subtype="SteelPlate" Count="50" />
-        <Component Subtype="Construction" Count="20" />
-        <Component Subtype="Superconductor" Count="10" />
-        <Component Subtype="Computer" Count="50" />
-      </Components>
-      <CriticalComponent Subtype="Computer" Index="0" />
-      <MountPoints>
-        <MountPoint Side="Top" StartX="0" StartY="0" EndX="5" EndY="5" />
-        <MountPoint Side="Front" StartX="0" StartY="1" EndX="5" EndY="2" />
-        <MountPoint Side="Back" StartX="0" StartY="1" EndX="5" EndY="2" />
-        <MountPoint Side="Left" StartX="0" StartY="1" EndX="5" EndY="2" />
-        <MountPoint Side="Right" StartX="0" StartY="1" EndX="5" EndY="2" />
-      </MountPoints>
-      <BlockPairName>MagRail_HoverEngine</BlockPairName>
-      <MirroringY>Z</MirroringY>
-      <MirroringZ>Y</MirroringZ>
-      <EdgeType>Light</EdgeType>
-      <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
-      <DamagedSound>ParticleElectrical</DamagedSound>
-      <DestroyEffect>BlockDestroyedExplosion_Small</DestroyEffect>
-      <DestroySound>WepSmallWarheadExpl</DestroySound>
-      <BuildTimeSeconds>20</BuildTimeSeconds>
-      <ResourceSinkGroup>Thrust</ResourceSinkGroup>
-      <RequiredPowerInput>2.4</RequiredPowerInput>
-      <RequiredIdlePowerInput>0</RequiredIdlePowerInput>
-      <MaxForceMagnitude>1E9</MaxForceMagnitude>
-      <DangerousTorqueThreshold>3.36E+07</DangerousTorqueThreshold>
-      <PropulsionForce>120</PropulsionForce>
-      <RotorPart>MagRail_NoWheel</RotorPart>
-      <MaxSteer>0.0</MaxSteer>
-      <MinHeight>-0.32</MinHeight>
-      <MaxHeight>0.26</MaxHeight>
-      <SafetyDetach>5</SafetyDetach>
-      <SafetyDetachMax>5</SafetyDetachMax>
-      <AxleFriction>20000</AxleFriction>
-      <SteeringSpeed>0.005</SteeringSpeed>
-      <AirShockMinSpeed>10</AirShockMinSpeed>
-      <AirShockMaxSpeed>25</AirShockMaxSpeed>
-      <AirShockActivationDelay>60</AirShockActivationDelay>
-      <PCU>20</PCU>
-      <IsAirTight>false</IsAirTight>
-    </Definition>
-    <!-- TEST (PLAN 10.23, T1): an engine with a platform, a copy of the large one with its own model; the
-         platform (subpart) keeps a set gap over the rail, EnginePlatform. -->
-    <Definition xsi:type="MyObjectBuilder_MotorSuspensionDefinition">
-      <Id>
-        <TypeId>MotorSuspension</TypeId>
-        <SubtypeId>MagRail_HoverTest</SubtypeId>
-      </Id>
-      <DisplayName>DisplayName_MagRail_HoverTest</DisplayName>
-      <Description>Description_MagRail_HoverTest</Description>
-      <Icon>Textures\Icons\Blocks\MagRail_HoverLarge.dds</Icon>
-      <CubeSize>Large</CubeSize>
-      <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="1" y="1" z="1" />
-      <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Cubes\Large\MagRail_HoverTest.mwm</Model>
+      <Model>Models\Cubes\Small\MagRail_EngineSmall.mwm</Model>
       <Components>
         <Component Subtype="SteelPlate" Count="50" />
         <Component Subtype="Construction" Count="20" />
@@ -139,19 +83,19 @@
       </Components>
       <CriticalComponent Subtype="Computer" Index="0" />
       <MountPoints>
-        <MountPoint Side="Top" StartX="0" StartY="0" EndX="1" EndY="1" />
-        <MountPoint Side="Front" StartX="0" StartY="0.6" EndX="1" EndY="1" />
-        <MountPoint Side="Back" StartX="0" StartY="0.6" EndX="1" EndY="1" />
-        <MountPoint Side="Left" StartX="0" StartY="0.6" EndX="1" EndY="1" />
-        <MountPoint Side="Right" StartX="0" StartY="0.6" EndX="1" EndY="1" />
+        <MountPoint Side="Top" StartX="0" StartY="0" EndX="5" EndY="5" />
+        <MountPoint Side="Front" StartX="0" StartY="0.2" EndX="5" EndY="1" />
+        <MountPoint Side="Back" StartX="0" StartY="0.2" EndX="5" EndY="1" />
+        <MountPoint Side="Left" StartX="0" StartY="0.2" EndX="5" EndY="1" />
+        <MountPoint Side="Right" StartX="0" StartY="0.2" EndX="5" EndY="1" />
       </MountPoints>
-      <BlockPairName>MagRail_HoverTest</BlockPairName>
+      <BlockPairName>MagRail_Engine</BlockPairName>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
       <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
       <DamagedSound>ParticleElectrical</DamagedSound>
-      <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+      <DestroyEffect>BlockDestroyedExplosion_Small</DestroyEffect>
       <DestroySound>WepSmallWarheadExpl</DestroySound>
       <BuildTimeSeconds>20</BuildTimeSeconds>
       <ResourceSinkGroup>Thrust</ResourceSinkGroup>
