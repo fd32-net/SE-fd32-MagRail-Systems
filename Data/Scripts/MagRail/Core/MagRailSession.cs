@@ -14,7 +14,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.10.25";
+        public const string Version = "V0.10.26";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -71,8 +71,6 @@ namespace MagRail
             AutopilotLogic.Clear();
             Rides.Clear();
             TrackDebug.Clear();
-            DriveTuning.Clear();
-            DriveTuningHud.Clear();
             RideLog.Stop();
             if (Pieces != null)
                 Pieces.Clear();
@@ -110,9 +108,6 @@ namespace MagRail
                     UpdateEngineParts();
                     TrainControlLogic.UpdateLights(ControlUnits, tick);
                     TrackDebug.Update();
-                    DriveTuningTerminal.Create();
-                    if (Net.IsServer)
-                        DriveTuningHud.Update(Rides);
                     if (tick % 60 == 0)
                         Loc.CheckReload();
                 }

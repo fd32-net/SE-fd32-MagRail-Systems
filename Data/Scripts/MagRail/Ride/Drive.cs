@@ -43,14 +43,21 @@ namespace MagRail
     //   pushing, the engines push against the grid's motion as W/S would (Propulsion, Power, power drawn) and
     //   stop it and hold it, as a ship's dampeners use its thrusters; off, the train coasts. Every grid of the
     //   train reads the controller's flag, so the train stops together.
-    // - The numbers are the defaults of DriveTuning (temporary: tuned from the cockpit terminal).
     public class Drive
     {
         const double Step = 1.0 / 60.0;
         // Shares of the engine's force (HoverEngineLogic.Force, PLAN 10.1): thrust at 100% Power, the most of the
         // Space brake, parking. The Space brake of an engine is BrakeFactor times its thrust (Power slider), up to
         // BrakeShare: Power 10% brakes with 20% of the force, 50% and more with 100% (user decision 2026-10-11).
-        public const double ThrustShare = 1.0, BrakeShare = 1.0, ParkShare = 1.5, BrakeFactor = 2.0;
+        const double ThrustShare = 1.0, BrakeShare = 1.0, ParkShare = 1.5, BrakeFactor = 2.0;
+        // Acceleration limits of the grid, m/s^2 (tuned in game 2026-10-11: 100 = the hold's own limit, so in effect
+        // only the engines' force limits the grid).
+        const double MaxThrustAccel = 100.0, MaxBrakeAccel = 100.0, MaxParkAccel = 100.0;
+        // Rest hold: brake (m/s^2) and the speed below which it holds.
+        const double RestAccel = 0.49, RestSpeed = 0.3;
+        // Space brake: seconds to rise from BrakeRiseStart to full force. The rise starts at half the force: from
+        // nothing, the first moment felt like no brake at all (user, 2026-10-11).
+        const double BrakeRise = 0.5, BrakeRiseStart = 0.5;
         // Controller forward vs rail: |cos| below this counts as sideways (60 degrees).
         const double AlignMin = 0.5;
         // Cruise brake (downhill, over the target) as a share of the engine's thrust: gentle, so pushing wagons do
@@ -85,7 +92,6 @@ namespace MagRail
         // This tick: the autopilot's order (AutopilotLogic), if it drives the train.
         bool autopilot;
         AutopilotLogic.Command order;
-        DriveTuning tuning = DriveTuning.Default;
         bool handBrake;
         int handBrakeTick = -999;
         // This tick's input.
@@ -104,8 +110,6 @@ namespace MagRail
         // brake force (N), the network's share of the thrust asked (1 = full).
         public DriveState State;
         public double Force, BrakeForce, PowerShare = 1;
-        // The brake force was cut to the acceleration limit (DriveTuningHud).
-        public bool BrakeCapped;
 
         public IMyShipController Reference
         {
@@ -138,7 +142,7 @@ namespace MagRail
             }
             bool trainParked = reference != null && !reference.MarkedForClose && reference.HandBrake;
             // Parked train: W/S pushes no grid of it (else the wagons push the parked locomotive along).
-            if (move != 0 && tuning.ParkStopsDrive && trainParked)
+            if (move != 0 && trainParked)
                 move = 0;
             // The autopilot drives: the pilot's keys do nothing, and the cruise would drive on after it.
             trainUnit = CruisingUnit();
@@ -179,10 +183,10 @@ namespace MagRail
                 if (e.Block.Propulsion && e.Block.PropulsionOverride == 0)
                 {
                     if (!pushing)
-                        force = e.Force * tuning.ThrustShare;
+                        force = e.Force * ThrustShare;
                     else
                     {
-                        force = e.Force * tuning.ThrustShare * PowerSlider(e);
+                        force = e.Force * ThrustShare * PowerSlider(e);
                         double speedLimit = SpeedLimit(e);
                         if (Math.Abs(speed) > 0 && speedLimit < double.MaxValue)
                             force *= MathHelper.Clamp((speedLimit - Math.Abs(speed)) / SpeedLimitBand, 0.0, 1.0);
@@ -191,7 +195,7 @@ namespace MagRail
                 forces.Add(force * (wanted > 0 ? sign : -sign));
                 limit += force;
             }
-            double cap = Math.Min(Math.Abs(wanted), (pushing ? tuning.MaxThrustAccel : tuning.MaxBrakeAccel) * mass);
+            double cap = Math.Min(Math.Abs(wanted), (pushing ? MaxThrustAccel : MaxBrakeAccel) * mass);
             double share = limit > 0 ? Math.Min(cap / limit, 1.0) : 0;
             return Push(held, share, mass, ramp);
         }
@@ -267,10 +271,10 @@ namespace MagRail
                 if (e.Block.Propulsion && e.Block.PropulsionOverride == 0 && !Braking(e, tick))
                 {
                     if (!pushing)
-                        force = e.Force * tuning.ThrustShare * CruiseBrakeShare;
+                        force = e.Force * ThrustShare * CruiseBrakeShare;
                     else
                     {
-                        force = e.Force * tuning.ThrustShare * PowerSlider(e);
+                        force = e.Force * ThrustShare * PowerSlider(e);
                         double speedLimit = SpeedLimit(e);
                         if (speed > 0 && speedLimit < double.MaxValue)
                             force *= MathHelper.Clamp((speedLimit - speed) / SpeedLimitBand, 0.0, 1.0);
@@ -279,7 +283,7 @@ namespace MagRail
                 forces.Add(force * (pushing ? sign : -sign));
                 limit += force;
             }
-            double cap = Math.Min(Math.Abs(wanted), (pushing ? tuning.MaxThrustAccel : tuning.MaxBrakeAccel) * mass);
+            double cap = Math.Min(Math.Abs(wanted), (pushing ? MaxThrustAccel : MaxBrakeAccel) * mass);
             double share = limit > 0 ? Math.Min(cap / limit, 1.0) : 0;
             return Push(held, share, mass, ramp);
         }
@@ -306,8 +310,8 @@ namespace MagRail
                 if (Braking(e, tick))
                 {
                     BrakeForce += e.Force * (brakeKey
-                        ? Math.Min(tuning.BrakeFactor * tuning.ThrustShare * PowerSlider(e), tuning.BrakeShare)
-                        : tuning.ParkShare);
+                        ? Math.Min(BrakeFactor * ThrustShare * PowerSlider(e), BrakeShare)
+                        : ParkShare);
                     continue;
                 }
                 anyInput |= Input(e) != 0;
@@ -343,7 +347,7 @@ namespace MagRail
                 double force = 0;
                 if (!Braking(e, tick))
                 {
-                    force = e.Force * tuning.ThrustShare * MathHelper.Clamp(Input(e), -1.0, 1.0) * sign;
+                    force = e.Force * ThrustShare * MathHelper.Clamp(Input(e), -1.0, 1.0) * sign;
                     // The speed limit only holds back thrust that speeds the grid up, never braking.
                     double speedWithThrust = along * Math.Sign(force);
                     double limit = SpeedLimit(e);
@@ -353,7 +357,7 @@ namespace MagRail
                 forces.Add(force);
                 sum += force;
             }
-            double max = tuning.MaxThrustAccel * mass;
+            double max = MaxThrustAccel * mass;
             double scale = mass > 0 && Math.Abs(sum) > max ? max / Math.Abs(sum) : 1;
             if (State == DriveState.Idle)
                 State = DriveState.Driving;
@@ -372,11 +376,11 @@ namespace MagRail
             for (int i = 0; i < held.Count; i++)
             {
                 HoverEngineLogic e = held[i];
-                double force = e.Block.Propulsion ? e.Force * tuning.ThrustShare * PowerSlider(e) : 0;
+                double force = e.Block.Propulsion ? e.Force * ThrustShare * PowerSlider(e) : 0;
                 forces.Add(force);
                 sum += force;
             }
-            double needed = Math.Min(mass * Math.Abs(along) / (Step * ramp), tuning.MaxThrustAccel * mass);
+            double needed = Math.Min(mass * Math.Abs(along) / (Step * ramp), MaxThrustAccel * mass);
             double scale = sum > needed ? needed / sum : 1;
             return Push(held, -Math.Sign(along) * scale, mass, ramp);
         }
@@ -392,7 +396,7 @@ namespace MagRail
                 double force = forces[i] * scale;
                 if (force == 0)
                     continue;
-                e.PowerWanted += (float)(Math.Abs(force) / (e.Force * tuning.ThrustShare) * e.MaxPower);
+                e.PowerWanted += (float)(Math.Abs(force) / (e.Force * ThrustShare) * e.MaxPower);
                 wanted += Math.Abs(force);
                 Force += force * e.PowerSupply;
             }
@@ -409,24 +413,19 @@ namespace MagRail
             double force = BrakeForce;
             bool space = force > 0 && !parked;
             brakeTicks = space ? brakeTicks + 1 : 0;
-            if (space && tuning.BrakeRise > 0)
-                force *= Math.Min(1.0, DriveTuning.BrakeRiseStart + (1 - DriveTuning.BrakeRiseStart) * brakeTicks * Step / tuning.BrakeRise);
-            if (force <= 0 && idle && Math.Abs(carriedAlong) < tuning.RestSpeed)
-                force = mass * tuning.RestAccel;
-            BrakeCapped = false;
+            if (space)
+                force *= Math.Min(1.0, BrakeRiseStart + (1 - BrakeRiseStart) * brakeTicks * Step / BrakeRise);
+            if (force <= 0 && idle && Math.Abs(carriedAlong) < RestSpeed)
+                force = mass * RestAccel;
             if (force <= 0 || mass <= 0)
             {
                 brakeHistory = false;
                 return 0;
             }
-            double max = mass * (parked ? tuning.MaxParkAccel : tuning.MaxBrakeAccel);
-            BrakeCapped = force > max;
-            force = Math.Min(force, max);
-            if (space && tuning.SoftStop > 0)
-                force *= MathHelper.Clamp(Math.Abs(along) / tuning.SoftStop, DriveTuning.SoftStopFloor, 1.0);
+            force = Math.Min(force, mass * (parked ? MaxParkAccel : MaxBrakeAccel));
             BrakeForce = Math.Min(BrakeForce, force);
             double maxChange = force / mass * Step * ramp;
-            double disturbance = brakeHistory && continuous && tuning.Disturbance
+            double disturbance = brakeHistory && continuous
                 ? MathHelper.Clamp(carriedAlong - brakeWrittenAlong, -maxChange, maxChange) : 0;
             double change = MathHelper.Clamp(-(along + disturbance), -maxChange, maxChange);
             brakeWrittenAlong = along + change;
@@ -443,7 +442,6 @@ namespace MagRail
             autopilot = false;
             brakeHistory = false;
             brakeTicks = 0;
-            BrakeCapped = false;
             State = DriveState.Idle;
             Force = 0;
             BrakeForce = 0;
@@ -530,7 +528,6 @@ namespace MagRail
             FindControllers(grid, out pilot, out reference);
             unit = reference != null && TrainControlLogic.OnGrid(reference.CubeGrid);
             TrainControlLogic.CollectTrain(grid, trainUnits);
-            tuning = DriveTuning.For(reference);
         }
 
         // The train's controllers (the grids mechanically joined to this one): the one a player drives from (or
