@@ -393,6 +393,7 @@ namespace MagRail
                 {
                     startBlock = aimBlock;
                     startPort = aimPort;
+                    pickedSpan = null;
                     Draw.Notify(Loc.F("MagRail_Linker_Started", PortTitle(startBlock, startPort)), MyFontEnum.Green);
                     LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);
                 }
@@ -402,6 +403,7 @@ namespace MagRail
                 {
                     startBlock = span.Other(aimBlock);
                     startPort = startBlock == span.Owner ? span.OwnerPort : span.PartnerPort;
+                    pickedSpan = span;
                     Network.RequestUnlink(span);
                     Draw.Notify(Loc.T("MagRail_Linker_PickedUp"), MyFontEnum.Green);
                     LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);
@@ -498,13 +500,21 @@ namespace MagRail
             Draw.Notify(Loc.F("MagRail_Linker_Resumed", PortTitle(startBlock, startPort)), MyFontEnum.Green);
         }
 
+        // The prototype picked up last (LMB on its end): on a client it stays on the start port until the server's
+        // answer removes it, and the port counts as free meanwhile.
+        Span pickedSpan;
+
         // A span can still be laid from this port: the block is there and whole, the port has no span (another player may
-        // have laid one) and is not joined end to end to another block.
+        // have laid one; the picked-up prototype on its way out does not count) and is not joined end to end to another
+        // block.
         bool StartUsable(TrackBlockLogic b, int port)
         {
             TrackBlockLogic other;
             int otherPort;
-            return Network.Find(b.Block.EntityId) == b && b.Block.IsFunctional && Network.SpanAt(b, port) == null
+            Span span = Network.SpanAt(b, port);
+            if (span != null && !(span == pickedSpan && !span.Record.WantRail))
+                return false;
+            return Network.Find(b.Block.EntityId) == b && b.Block.IsFunctional
                    && !Network.FindJoint(b, port, out other, out otherPort);
         }
 
