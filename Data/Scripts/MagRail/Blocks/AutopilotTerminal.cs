@@ -132,6 +132,9 @@ namespace MagRail
             remove.Visible = IsAutopilot;
             tc.AddControl<IMyUpgradeModule>(remove);
 
+            AddOrderButton("MagRail_ApUp", "MagRail_Ap_Up", "MagRail_Ap_Up_Tip", -1);
+            AddOrderButton("MagRail_ApDown", "MagRail_Ap_Down", "MagRail_Ap_Down_Tip", 1);
+
             IMyTerminalControlListbox timers = tc.CreateControl<IMyTerminalControlListbox, IMyUpgradeModule>("MagRail_ApTimer");
             timers.Title = Loc.Id("MagRail_Ap_Timer");
             timers.Tooltip = Loc.Id("MagRail_Ap_Timer_Tip");
@@ -214,6 +217,27 @@ namespace MagRail
                 (a, sb) => sb.Append(Loc.T(a.Config.Park ? "MagRail_Ap_SlotParkOn" : "MagRail_Ap_SlotParkOff")));
             AddAction("MagRail_ApStopAction", Loc.T("MagRail_Ap_ActStop"), CmdStop, 0, @"Textures\GUI\Icons\Actions\SwitchOff.dds",
                 (a, sb) => sb.Append(Loc.T(a.Config.Running || a.Config.Active ? "MagRail_Ap_SlotRun" : "MagRail_Ap_SlotIdle")));
+        }
+
+        // Moves the selected station one place up (-1) or down (+1) the list.
+        static void AddOrderButton(string id, string titleKey, string tipKey, int step)
+        {
+            IMyTerminalControlButton button = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlButton, IMyUpgradeModule>(id);
+            button.Title = Loc.Id(titleKey);
+            button.Tooltip = Loc.Id(tipKey);
+            button.Action = b =>
+            {
+                AutopilotLogic a = Get(b);
+                if (a != null)
+                    a.Request(CmdOrder, a.Config.Selected, step);
+            };
+            button.Enabled = b =>
+            {
+                AutopilotLogic a = Get(b);
+                return a != null && a.Config.Has(a.Config.Selected) && a.Config.Has(a.Config.Selected + step);
+            };
+            button.Visible = IsAutopilot;
+            MyAPIGateway.TerminalControls.AddControl<IMyUpgradeModule>(button);
         }
 
         // An m/s^2 slider, steps of 0.1.

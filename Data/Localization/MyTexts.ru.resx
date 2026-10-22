@@ -744,6 +744,18 @@
   <data name="MagRail_Ap_Delete_Tip" xml:space="preserve">
     <value>Удаляет выбранную станцию.</value>
   </data>
+  <data name="MagRail_Ap_Up" xml:space="preserve">
+    <value>Станцию выше</value>
+  </data>
+  <data name="MagRail_Ap_Up_Tip" xml:space="preserve">
+    <value>Поднимает выбранную станцию на одно место в списке (в этом порядке ездит «Ехать к следующей станции»).</value>
+  </data>
+  <data name="MagRail_Ap_Down" xml:space="preserve">
+    <value>Станцию ниже</value>
+  </data>
+  <data name="MagRail_Ap_Down_Tip" xml:space="preserve">
+    <value>Опускает выбранную станцию на одно место в списке (в этом порядке ездит «Ехать к следующей станции»).</value>
+  </data>
   <data name="MagRail_Ap_Timer" xml:space="preserve">
     <value>Таймер по прибытии</value>
   </data>

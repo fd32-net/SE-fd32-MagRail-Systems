@@ -744,6 +744,18 @@
   <data name="MagRail_Ap_Delete_Tip" xml:space="preserve">
     <value>Deletes the selected station.</value>
   </data>
+  <data name="MagRail_Ap_Up" xml:space="preserve">
+    <value>Move station up</value>
+  </data>
+  <data name="MagRail_Ap_Up_Tip" xml:space="preserve">
+    <value>Moves the selected station one place up the list (the order "Go to the next station" follows).</value>
+  </data>
+  <data name="MagRail_Ap_Down" xml:space="preserve">
+    <value>Move station down</value>
+  </data>
+  <data name="MagRail_Ap_Down_Tip" xml:space="preserve">
+    <value>Moves the selected station one place down the list (the order "Go to the next station" follows).</value>
+  </data>
   <data name="MagRail_Ap_Timer" xml:space="preserve">
     <value>Timer on arrival</value>
   </data>

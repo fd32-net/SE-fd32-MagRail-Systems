@@ -34,7 +34,9 @@ namespace MagRail
         public const int CmdStart = 1, CmdStop = 2, CmdSelect = 3, CmdRemember = 4, CmdRemove = 5, CmdRename = 6,
             CmdMaxSpeed = 7, CmdTimer = 8, CmdNext = 9, CmdPark = 10, CmdShowStations = 11,
             // value = tenths of m/s^2 (CmdLateral: of g, 0 = no limit)
-            CmdAccel = 12, CmdBrake = 13, CmdLateral = 14;
+            CmdAccel = 12, CmdBrake = 13, CmdLateral = 14,
+            // value = the station, arg = -1 up the list / +1 down
+            CmdOrder = 15;
 
         // The speed asked for runs at most this far ahead of the train's own while it speeds up (m/s).
         const double RampLead = 1.0, Step = 1.0 / 60.0;
@@ -620,7 +622,8 @@ namespace MagRail
         static bool IsSetting(int command)
         {
             return command == CmdSelect || command == CmdRename || command == CmdTimer || command == CmdRemove || command == CmdMaxSpeed
-                || command == CmdPark || command == CmdShowStations || command == CmdAccel || command == CmdBrake || command == CmdLateral;
+                || command == CmdPark || command == CmdShowStations || command == CmdAccel || command == CmdBrake || command == CmdLateral
+                || command == CmdOrder;
         }
 
         public void ServerCommand(int command, int value, long arg, string text)
@@ -714,6 +717,20 @@ namespace MagRail
                         c.Selected--;
                     c.ClampIndices();
                     break;
+                case CmdOrder:
+                    {
+                        // Swapped with its neighbour; the target, the last station and the selection go with them.
+                        int other = value + (arg < 0 ? -1 : 1);
+                        if (!c.Has(value) || !c.Has(other))
+                            break;
+                        AutopilotConfig.Station s = c.Stations[value];
+                        c.Stations[value] = c.Stations[other];
+                        c.Stations[other] = s;
+                        c.Target = Swapped(c.Target, value, other);
+                        c.Last = Swapped(c.Last, value, other);
+                        c.Selected = Swapped(c.Selected, value, other);
+                        break;
+                    }
                 case CmdPark:
                     c.Park = value < 0 ? !c.Park : value != 0;
                     break;
@@ -733,6 +750,11 @@ namespace MagRail
                     c.Lateral = AutopilotConfig.ClampLateral(value / 10.0);
                     break;
             }
+        }
+
+        static int Swapped(int index, int a, int b)
+        {
+            return index == a ? b : index == b ? a : index;
         }
 
         // Server: the rail point under the block as a new station (index -1) or an existing one moved here.
