@@ -726,7 +726,8 @@ namespace MagRail
         // a span aimed at - both stubs with the prototype's line between (bars in its colours) or the rail; the length
         // in the top right corner; the profile in the top left one (the style of what is aimed at or laid; nothing: none);
         // the mouse with what its buttons would do now (PLAN.md 10.16); a switch's branch (L / C / R) over the stub of its
-        // port - the left one: the start or aimed port, the right one: the port laid to.
+        // port - the left one: the start or aimed port, the right one: the port laid to; under the line the ground, lit
+        // if the span follows it (laying: Shift held; a prototype: laid so), with Shift left of it while laying.
         LinkerDisplay.Screen Screen()
         {
             LinkerDisplay.Screen s = screen;
@@ -741,6 +742,8 @@ namespace MagRail
             {
                 s.StubLeft = s.CapLeft = s.PortLeft = true;
                 s.BranchLeft = BranchLetter(startBlock, startPort);
+                s.ShiftKey = s.GroundShown = true;
+                s.Ground = FollowGround;
                 s.Hints[(int)LinkerDisplay.Button.Right] = LinkerDisplay.HintKind.Cancel;
                 if (preview != null)
                 {
@@ -786,6 +789,8 @@ namespace MagRail
             else
             {
                 s.CapLeft = s.PortLeft = s.PortRight = true;
+                s.GroundShown = true;
+                s.Ground = !span.Record.NoLift;
                 LinkerDisplay.Line(s, LinkerDisplay.LineKind.Bar, curve);
                 s.Hints[(int)LinkerDisplay.Button.Left] = aimBlock != null ? LinkerDisplay.HintKind.Grab : LinkerDisplay.HintKind.Rail;
                 s.Hints[(int)LinkerDisplay.Button.Right] = LinkerDisplay.HintKind.Break;

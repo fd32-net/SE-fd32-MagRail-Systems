@@ -21,7 +21,9 @@ namespace MagRail
     // its own colour), the rail between the stubs once built; over them the mouse (always) with what its buttons do: a
     // button that does something is lit, its hint next to the mouse (left button's at its left, the right one's at its
     // right, the wheel's over it); the length in whole metres in the top right corner, the profile in the top left one;
-    // a switch's branch (L / C / R) over the stub of its port.
+    // a switch's branch (L / C / R) over the stub of its port; under the line the ground (a mountain ridge: the span
+    // follows the ground - lit, else dim) and Shift left of it (a key with the up arrow: while laying, Shift lays along
+    // the ground).
     // What it shows comes from RailLinker.Screen; a click's answer flashes in the clicked button's hint's place (Flash:
     // a small check - done, a red cross - cannot, for FlashSeconds). The line's segments take the colours of the
     // world's span lines (Draw.ByShape).
@@ -52,6 +54,7 @@ namespace MagRail
         static readonly Vector2 RefusedAt = new Vector2(834, 150);  // the red cross over the right stub
 
         public static readonly Color White = new Color(255, 255, 255);
+        static readonly Color Dim = new Color(32, 32, 32);      // a sign that is off (display_svg.py BADGE_DIM)
         const double FlashSeconds = 0.5;
 
         public enum LineKind { None, Dash, Bar }
@@ -73,10 +76,13 @@ namespace MagRail
             public bool Refused;                            // a red cross over the right stub
             public char BranchLeft, BranchRight;            // a switch's branch over the stub of its port: 'L', 'C', 'R' or none
             public readonly HintKind[] Hints = new HintKind[3]; // by Button
+            public bool ShiftKey;                           // Shift under the line
+            public bool GroundShown, Ground;                // the ground under the line; lit or dim
 
             public void Clear()
             {
                 StubLeft = CapLeft = PortLeft = StubRight = PortRight = Rail = Arrow = false;
+                ShiftKey = GroundShown = Ground = false;
                 Left = Right = TextColor = White;
                 Line = LineKind.None;
                 for (int i = 0; i < Segments; i++)
@@ -95,7 +101,7 @@ namespace MagRail
         {
             StubLeft, CapLeft, StubRight, Rail, PortLeft, PortRight, Arrow, CheckSmall, CrossSmall, Cross, M, Mouse,
             MouseLeft, MouseRight, MouseWheel, HintGrab, HintBreak, HintPrototype, HintRail, HintPaint, HintCancel,
-            BranchLeft, BranchRight = BranchLeft + 3, Dash0 = BranchRight + 3   // each L, C, R
+            KeyShift, Terrain, BranchLeft, BranchRight = BranchLeft + 3, Dash0 = BranchRight + 3   // each L, C, R
         }
         const int Bar0 = (int)G.Dash0 + Segments, Digit0 = Bar0 + Segments, Profile0 = Digit0 + 10 * DigitCopies;
         // Before the arrays sized by it.
@@ -107,7 +113,7 @@ namespace MagRail
             string[] n = new string[GlyphCount];
             string[] single = { "stub_left", "cap_left", "stub_right", "rail", "port_left", "port_right", "arrow", "check_s",
                 "cross_s", "cross", "m", "mouse", "mouse_l", "mouse_r", "mouse_w", "hint_grab", "hint_break", "hint_proto",
-                "hint_rail", "hint_paint", "cross_hint", "branch_l_left", "branch_c_left", "branch_r_left", "branch_l_right",
+                "hint_rail", "hint_paint", "cross_hint", "key_shift", "terrain", "branch_l_left", "branch_c_left", "branch_r_left", "branch_l_right",
                 "branch_c_right", "branch_r_right" };
             for (int i = 0; i < single.Length; i++)
                 n[i] = Prefix + single[i];
@@ -263,6 +269,8 @@ namespace MagRail
             Set(G.Arrow, s.Arrow, s.Grades[Segments - 1]);
             Branch(G.BranchLeft, s.BranchLeft, s.Left);
             Branch(G.BranchRight, s.BranchRight, s.Right);
+            Set(G.KeyShift, s.ShiftKey, White);
+            Set(G.Terrain, s.GroundShown, s.Ground ? White : Dim);
             for (int k = 0; k < TrackStyle.All.Length; k++)
             {
                 want[Profile0 + k] = s.Profile == TrackStyle.All[k];
