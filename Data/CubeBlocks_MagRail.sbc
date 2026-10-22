@@ -210,7 +210,7 @@
       </Id>
       <DisplayName>DisplayName_MagRail_TrainControl</DisplayName>
       <Description>Description_MagRail_TrainControl</Description>
-      <Icon>Textures\GUI\Icons\Cubes\FlightMovementBlock_Move.dds</Icon>
+      <Icon>Textures\Icons\Blocks\MagRail_TrainControl.dds</Icon>
       <CubeSize>Large</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
       <Size x="1" y="1" z="1" />
@@ -274,7 +274,7 @@
       </Id>
       <DisplayName>DisplayName_MagRail_TrainControl</DisplayName>
       <Description>Description_MagRail_TrainControl</Description>
-      <Icon>Textures\GUI\Icons\Cubes\FlightMovementBlock_Move.dds</Icon>
+      <Icon>Textures\Icons\Blocks\MagRail_TrainControl.dds</Icon>
       <CubeSize>Small</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
       <Size x="1" y="1" z="1" />
@@ -330,7 +330,7 @@
       </Id>
       <DisplayName>DisplayName_MagRail_Autopilot</DisplayName>
       <Description>Description_MagRail_Autopilot</Description>
-      <Icon>Textures\GUI\Icons\Cubes\PathRecorderBlock_Task.dds</Icon>
+      <Icon>Textures\Icons\Blocks\MagRail_Autopilot.dds</Icon>
       <CubeSize>Large</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
       <Size x="1" y="1" z="1" />
@@ -382,7 +382,7 @@
       </Id>
       <DisplayName>DisplayName_MagRail_Autopilot</DisplayName>
       <Description>Description_MagRail_Autopilot</Description>
-      <Icon>Textures\GUI\Icons\Cubes\PathRecorderBlock_Task.dds</Icon>
+      <Icon>Textures\Icons\Blocks\MagRail_Autopilot.dds</Icon>
       <CubeSize>Small</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
       <Size x="1" y="1" z="1" />

@@ -27,7 +27,7 @@
         <SubtypeId>MagRail_Rail</SubtypeId>
       </Id>
       <DisplayName>DisplayName_Item_MagRail_Rail</DisplayName>
-      <Icon>Textures\GUI\Icons\component\girder_component.dds</Icon>
+      <Icon>Textures\Icons\MagRail_Rail.dds</Icon>
       <Prerequisites>
         <Item Amount="40" TypeId="Ingot" SubtypeId="Iron" />
         <Item Amount="10" TypeId="Ingot" SubtypeId="Nickel" />

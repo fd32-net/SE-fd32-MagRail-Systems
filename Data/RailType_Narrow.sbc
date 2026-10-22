@@ -149,8 +149,7 @@
       </Id>
       <DisplayName>DisplayName_MagRail_EmbeddedRail</DisplayName>
       <Description>Description_MagRail_EmbeddedRail</Description>
-      <!-- Placeholder: the type's Rail Block 1 icon until its own is drawn. -->
-      <Icon>Textures\Icons\Blocks\MagRail_RailBlock1.dds</Icon>
+      <Icon>Textures\Icons\Blocks\MagRail_EmbeddedRail.dds</Icon>
       <CubeSize>Large</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
       <Size x="1" y="1" z="1" />
@@ -194,8 +193,7 @@
       </Id>
       <DisplayName>DisplayName_MagRail_EmbeddedRailHalf</DisplayName>
       <Description>Description_MagRail_EmbeddedRailHalf</Description>
-      <!-- Placeholder: the type's Rail Block 1 icon until its own is drawn. -->
-      <Icon>Textures\Icons\Blocks\MagRail_RailBlock1.dds</Icon>
+      <Icon>Textures\Icons\Blocks\MagRail_EmbeddedRailHalf.dds</Icon>
       <CubeSize>Large</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
       <Size x="1" y="1" z="1" />

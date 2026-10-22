@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <!-- Rail component: track blocks are built from it (1 narrow, 2 wide); spans will cost it later (PLAN 10.8).
-       Model: a 1 m piece of the narrow rail (ModelSource/blocks/RailComponent.py); icon the vanilla girder's
-       for now. Recipe in Blueprints_MagRail.sbc. -->
+       Model: a 1 m piece of the narrow rail (ModelSource/blocks/RailComponent.py); icon rendered
+       from it (ModelSource/build_icons.py). Recipe in Blueprints_MagRail.sbc. -->
   <Components>
     <Component>
       <Id>
@@ -11,7 +11,7 @@
       </Id>
       <DisplayName>DisplayName_Item_MagRail_Rail</DisplayName>
       <Description>Description_Item_MagRail_Rail</Description>
-      <Icon>Textures\GUI\Icons\component\girder_component.dds</Icon>
+      <Icon>Textures\Icons\MagRail_Rail.dds</Icon>
       <Size>
         <X>0.2</X>
         <Y>0.16</Y>
