@@ -79,6 +79,9 @@ namespace MagRail
                 string skin = s.Skin;
                 if (color != p.Color || skin != p.Skin)
                     p.Paint(color, skin);
+                int selectedStart = s.Owner.SelectedInstead(s.OwnerPort), selectedEnd = s.Partner.SelectedInstead(s.PartnerPort);
+                if (selectedStart != p.SelectedStart || selectedEnd != p.SelectedEnd)
+                    p.Light(selectedStart, selectedEnd);
                 p.Stamp = stamp;
                 p.Distance = d;
                 if (!Done(p))
@@ -116,7 +119,15 @@ namespace MagRail
                 {
                     if (p.Entities[i] != null)
                         continue;
-                    p.Entities[i] = PieceEntities.Visual(PieceEntities.Model(layout.Models[i]), layout.Pieces[i], p.Frame, p.Parent, p.Color, p.Skin);
+                    // The bare body first, then the piece over it (Show).
+                    if (layout.Bare[i] != null)
+                    {
+                        p.Bares[i] = PieceEntities.Visual(PieceEntities.Model(layout.Bare[i]), layout.Pieces[i], p.Frame, p.Parent, p.Color, p.Skin, 1);
+                        budget--;
+                    }
+                    p.Entities[i] = PieceEntities.Visual(PieceEntities.Model(layout.Models[i]), layout.Pieces[i], p.Frame, p.Parent, p.Color, p.Skin,
+                        layout.Glow(i, p.SelectedStart, p.SelectedEnd));
+                    p.Show(i);
                     budget--;
                 }
             }

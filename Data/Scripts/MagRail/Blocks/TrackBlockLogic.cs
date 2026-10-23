@@ -375,6 +375,18 @@ namespace MagRail
             return Array.IndexOf(BranchPorts, info.Ports[port].Name);
         }
 
+        // A branch port of a Rail Switch: the copper of its spans fades out towards it while it is not selected
+        // (TrackLayout.Glow); SelectedInstead: the selected branch (SwitchBranch) then, else -1.
+        public bool IsBranchPort(int port)
+        {
+            return Kind == TrackKind.Switch && port >= 0 && PortsKnown && Array.IndexOf(BranchPorts, PortName(port)) >= 0;
+        }
+
+        public int SelectedInstead(int port)
+        {
+            return IsBranchPort(port) && PortName(port) != BranchPorts[(int)Settings.Branch] ? (int)Settings.Branch : -1;
+        }
+
         public MatrixD PortBlockLocal(int port)
         {
             PartInfo info = GetPartInfo();

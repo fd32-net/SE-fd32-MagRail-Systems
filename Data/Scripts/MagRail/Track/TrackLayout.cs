@@ -24,6 +24,12 @@ namespace MagRail
     // gap half on their ends: a whole gap on every joint), half of it on each piece: a model has the gap halves its
     // stretch of the copper texture has (TrackStyle), and every piece is the model, turned round or not, whose halves
     // fall on exactly the gaps of its boundaries. No module has two (a span of one module: only at its start).
+    // An end on a branch port of a Rail Switch: the copper there is dark while the branch is not selected (Glow), from
+    // where its plates start (the first module past its strip modules) and comes back after it (the overlap would eat
+    // up the fade). Up to SwitchFade past where it is clear of every branch the straight pieces are a gap to gap stretch at most (the glow
+    // steps hide in the gaps); that does not depend on the selection, so turning the switch only relights the pieces.
+    // Where it lies over the other branches (its strip modules), a module also has a bare model (no copper, Bare): an
+    // unselected branch shows that one there (TrackPieces), so only the selected branch's copper is seen.
     public class TrackLayout
     {
         public const double Module = 0.625;
@@ -41,6 +47,9 @@ namespace MagRail
         // Straight modules join into one piece while the curve points between them stay this close to its chord, m,
         // and its ends' ups within half a step.
         const double StraightTolerance = 0.003;
+        // An unselected switch branch: its copper is dark where its plates start and comes back to full glow over this
+        // length, m, or over the rest of the span if that is shorter.
+        public const double SwitchFade = 20;
 
         public readonly SpanCurve Curve;
         public readonly TrackStyle Style;
@@ -48,13 +57,25 @@ namespace MagRail
         public readonly List<string> Models = new List<string>();       // model names
         public readonly List<MatrixD> Pieces = new List<MatrixD>();     // stretched along Forward
         public readonly List<MatrixD> Collision = new List<MatrixD>();
+        // By Pieces: the bare model shown instead while the switch branch is not selected (Bared), or null.
+        public readonly List<string> Bare = new List<string>();
+        readonly List<bool> bareAtStart = new List<bool>();
+        // Arc lengths of the pieces' ends, m (by Pieces).
+        readonly List<double> pieceStart = new List<double>(), pieceEnd = new List<double>();
+        // The span's start / end is on a switch branch port (fades out while the branch is not selected).
+        readonly bool fadeStart, fadeEnd;
+        // Distance from the span's start / end where its plates start (past the strip modules), m.
+        double platesStart, platesEnd;
         int modules;
+        double moduleLength;
 
-        TrackLayout(SpanCurve curve, TrackStyle style, FanLevel level)
+        TrackLayout(SpanCurve curve, TrackStyle style, FanLevel level, bool fadeStart, bool fadeEnd)
         {
             Curve = curve;
             Style = style;
             this.level = level;
+            this.fadeStart = fadeStart;
+            this.fadeEnd = fadeEnd;
         }
 
         // Unscaled piece of CollisionLength, its collision used for the Collision matrices.
@@ -63,16 +84,18 @@ namespace MagRail
             get { return Style.Straight((int)Math.Round(CollisionLength / Module)); }
         }
 
-        public static TrackLayout Build(SpanCurve c, TrackStyle style, FanLevel level)
+        // fadeStart, fadeEnd: the span's start / end is on a branch port of a Rail Switch.
+        public static TrackLayout Build(SpanCurve c, TrackStyle style, FanLevel level, bool fadeStart, bool fadeEnd)
         {
-            TrackLayout layout = new TrackLayout(c, style, level);
+            TrackLayout layout = new TrackLayout(c, style, level, fadeStart, fadeEnd);
             double length = c.Length;
             int n = Math.Max(1, (int)Math.Round(length / Module));
             double m = length / n;      // stretched module
             layout.modules = n;
+            layout.moduleLength = m;
 
             if (n == 1)
-                layout.Add(style.Straight(1), Chord(layout.Drawn(0), layout.Drawn(length), c.UpAt(0) + c.UpAt(length), Module));
+                layout.Add(style.Straight(1), Chord(layout.Drawn(0), layout.Drawn(length), c.UpAt(0) + c.UpAt(length), Module), 0, 1);
             else
                 layout.Rail(n, m);
 
@@ -100,9 +123,19 @@ namespace MagRail
 
             // Per module: bend steps on one axis (yaw, pitch, roll), or a joint; strip: no gaps (a switch's overlap).
             int[][] steps = { new int[n], new int[n], new int[n] };
-            bool[] joint = new bool[n], strip = new bool[n];
+            bool[] joint = new bool[n], strip = new bool[n], fade = new bool[n];
             for (int k = 0; k < n; k++)
                 strip[k] = Strip(k * m, k == n - 1 ? c.Length : (k + 1) * m);
+            int first = 0, last = n;
+            while (first < n && strip[first])
+                first++;
+            while (last > 0 && strip[last - 1])
+                last--;
+            platesStart = Math.Min(first * m, c.Length);
+            platesEnd = Math.Max(0, c.Length - last * m);
+            double fadeFromStart = fadeStart ? platesStart + SwitchFade : 0, fadeFromEnd = fadeEnd ? platesEnd + SwitchFade : 0;
+            for (int k = 0; k < n; k++)
+                fade[k] = k * m < fadeFromStart || (k + 1) * m > c.Length - fadeFromEnd;
             double[] carry = new double[3], want = new double[3];
             int[] rounded = new int[3];
             for (int k = 0; k < n; k++)
@@ -142,7 +175,7 @@ namespace MagRail
                 {
                     bool start, end;
                     Ends(i, false, out start, out end);
-                    AddModule(i, pos, up, start || end ? Style.JointGap : Style.Joint, end);
+                    AddModule(i, pos, up, start || end ? Style.JointGap : Style.Joint, end, null);
                     i++;
                     continue;
                 }
@@ -152,8 +185,9 @@ namespace MagRail
                     i++;
                     continue;
                 }
-                int left = 1;
-                while (!strip[i] && i + left < n && !joint[i + left] && !strip[i + left]
+                // Where the copper may fade (a switch branch), a gap to gap stretch at most, not across the fade's edge.
+                int left = 1, most = fade[i] ? GapModules : n;
+                while (!strip[i] && left < most && i + left < n && !joint[i + left] && !strip[i + left] && fade[i + left] == fade[i]
                        && yaw[i + left] == 0 && pitch[i + left] == 0 && roll[i + left] == 0)
                     left++;
                 bool turn;
@@ -162,12 +196,13 @@ namespace MagRail
                 {
                     bool start, end;
                     Ends(i, strip[i], out start, out end);
-                    AddModule(i, pos, up, Style.Straight(1, !start && !end && Style.HasStrips), end);
+                    AddModule(i, pos, up, Style.Straight(1, !start && !end && Style.HasStrips), end,
+                        strip[i] && Style.HasBare ? Style.StraightBare : null);
                 }
                 else
                 {
                     MatrixD piece = Chord(pos[i], pos[i + take], up[i] + up[i + take], take * Module);
-                    Add(Style.Straight(take), turn ? TurnedRound(piece) : piece);
+                    Add(Style.Straight(take), turn ? TurnedRound(piece) : piece, i, i + take);
                 }
                 i += take;
             }
@@ -263,6 +298,7 @@ namespace MagRail
         {
             bool start, end;
             Ends(k, strip, out start, out end);
+            string bare = strip && Style.HasBare ? Style.BendBare(ys, ps, rs) : null;
             if (ys != 0)
             {
                 bool left = ys < 0;
@@ -274,17 +310,18 @@ namespace MagRail
                 }
                 ys = Math.Abs(ys);
                 AddModule(k, pos, up, start ? Style.Bend(ys, 0, 0) : end ? Style.BendEnd(ys)
-                    : Style.Bend(ys, 0, 0, Style.HasStrips), left);
+                    : Style.Bend(ys, 0, 0, Style.HasStrips), left, bare);
             }
             else
-                AddModule(k, pos, up, Style.Bend(0, ps, rs, !start && !end && Style.HasStrips), end);
+                AddModule(k, pos, up, Style.Bend(0, ps, rs, !start && !end && Style.HasStrips), end, bare);
         }
 
-        // One module long model on module k's chord, turned round or not.
-        void AddModule(int k, Vector3D[] pos, Vector3D[] up, string model, bool turn)
+        // One module long model on module k's chord, turned round or not; bare: its bare model (Bare) or null.
+        void AddModule(int k, Vector3D[] pos, Vector3D[] up, string model, bool turn, string bare)
         {
             MatrixD m = Chord(pos[k], pos[k + 1], up[k] + up[k + 1], Module);
-            Add(model, turn ? TurnedRound(m) : m);
+            Add(model, turn ? TurnedRound(m) : m, k, k + 1);
+            Bare[Bare.Count - 1] = bare;
         }
 
         // The piece turned round about its up (its ends swapped).
@@ -301,10 +338,43 @@ namespace MagRail
             return Math.Asin(MathHelper.Clamp(Vector3D.Dot(b, side), -1, 1)) - Math.Asin(MathHelper.Clamp(Vector3D.Dot(a, side), -1, 1));
         }
 
-        void Add(string model, MatrixD m)
+        // The piece from module boundary k0 to k1.
+        void Add(string model, MatrixD m, int k0, int k1)
         {
             Models.Add(model);
             Pieces.Add(m);
+            pieceStart.Add(k0 * moduleLength);
+            pieceEnd.Add(k1 == modules ? Curve.Length : k1 * moduleLength);
+            Bare.Add(null);
+            bareAtStart.Add(k0 + k1 < modules);
+        }
+
+        // Piece i shows its bare model: it has one and the switch branch at its end of the span is not selected
+        // (selectedStart, selectedEnd as in Glow).
+        public bool Bared(int i, int selectedStart, int selectedEnd)
+        {
+            return Bare[i] != null && (bareAtStart[i] ? selectedStart : selectedEnd) >= 0;
+        }
+
+        // Share of the full copper glow on piece i, 0..1; selectedStart, selectedEnd: the selected branch (rank) of the
+        // switch at the span's start / end when it is not this span's branch, else -1. Dark up to where the plates start,
+        // then linear over SwitchFade (or the rest of the span), by the piece's end nearer to the switch.
+        public float Glow(int i, int selectedStart, int selectedEnd)
+        {
+            double g = 1;
+            if (selectedStart >= 0 && fadeStart)
+                g = Math.Min(g, Fade(pieceStart[i], platesStart));
+            if (selectedEnd >= 0 && fadeEnd)
+                g = Math.Min(g, Fade(Curve.Length - pieceEnd[i], platesEnd));
+            return (float)MathHelper.Clamp(g, 0, 1);
+        }
+
+        // d: distance from the switch point; plates: where the plates start from it.
+        double Fade(double d, double plates)
+        {
+            if (d < plates)
+                return 0;
+            return (d - plates) / Math.Max(Module, Math.Min(SwitchFade, Curve.Length - plates));
         }
 
         // Piece on the chord p0 -> p1, up made square to it; modelLength > 0 stretches the model to the chord.

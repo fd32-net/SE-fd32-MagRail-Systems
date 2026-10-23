@@ -28,10 +28,11 @@ namespace MagRail
         public static readonly Color CopperColor = Color.White;
         const float CopperDim = 0.4f;
 
-        public static void LightCopper(MyEntity e)
+        // glow: share of the default glow, 0..1 (an unselected switch branch fades, TrackLayout.Glow).
+        public static void LightCopper(MyEntity e, float glow = 1)
         {
-            e.SetEmissiveParts("Emissive", CopperColor, CopperDim);
-            e.SetEmissiveParts("MagRail_Copper", CopperColor, CopperDim);
+            e.SetEmissiveParts("Emissive", CopperColor, CopperDim * glow);
+            e.SetEmissiveParts("MagRail_Copper", CopperColor, CopperDim * glow);
         }
 
         static string modelFolder;
@@ -61,8 +62,8 @@ namespace MagRail
         }
 
         // m: piece matrix in the span's frame (frame: TrackNetwork.FrameMatrix; a child uses m alone);
-        // color, skin: colour mask HSV and armour skin, as on a block.
-        public static MyEntity Visual(string model, MatrixD m, MatrixD frame, MyEntity parent, Vector3 color, string skin)
+        // color, skin: colour mask HSV and armour skin, as on a block; glow: of the copper (LightCopper).
+        public static MyEntity Visual(string model, MatrixD m, MatrixD frame, MyEntity parent, Vector3 color, string skin, float glow)
         {
             MyEntity e = new MyEntity();
             e.Init(null, model, null, null, null);
@@ -70,7 +71,7 @@ namespace MagRail
             Paint(e, color, skin, false);
             Place(e, m, frame, parent);
             // After Place: the render object exists once the entity is in the scene.
-            LightCopper(e);
+            LightCopper(e, glow);
             return e;
         }
 

@@ -449,7 +449,8 @@ namespace MagRail
             TrackStyle style = s.Owner.Style;
             bool fanChanged = style.HasStrips && FanLevel.KeyChanged(this, s);
             if (s.Layout == null || s.Layout.Curve != c || fanChanged)
-                s.Layout = TrackLayout.Build(c, style, style.HasStrips ? FanLevel.Build(this, s, c, style.Width) : null);
+                s.Layout = TrackLayout.Build(c, style, style.HasStrips ? FanLevel.Build(this, s, c, style.Width) : null,
+                    s.Owner.IsBranchPort(s.OwnerPort), s.Partner.IsBranchPort(s.PartnerPort));
             return s.Layout;
         }
 

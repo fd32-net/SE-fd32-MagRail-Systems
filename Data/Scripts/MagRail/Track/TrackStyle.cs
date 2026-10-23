@@ -72,6 +72,9 @@ namespace MagRail
         public readonly bool Solid;
         // It has the whole set of strip and variant models (VariantModels; found at session load, Check).
         public bool HasStrips { get; private set; }
+        // It has them and the bare ones too (BareModels): the copper of unselected switch branches is hidden where they
+        // lie over the others (TrackLayout.Bare).
+        public bool HasBare { get; private set; }
 
         TrackStyle(string name, string prefix, float minHeight, double width, double crestHeight, double top, double feet,
             float faceHalfWidth, float faceBottom, float faceTop, bool solid = true)
@@ -158,6 +161,12 @@ namespace MagRail
                     Log.Error("TrackStyle.Check", style.Name + ": strip models missing (" + string.Join(", ", missing)
                         + "), no gaps, switch branches are laid without strips");
                 Log.Info("Rail type " + style.Name + (style.HasStrips ? ": strip models found" : ": no strip models"));
+                missing = style.BareModels()
+                    .Where(m => !MyAPIGateway.Utilities.FileExistsInModLocation(PieceEntities.ModelFile(m), mod)).ToList();
+                style.HasBare = style.HasStrips && missing.Count == 0;
+                if (missing.Count > 0 && missing.Count < style.BareModels().Count())
+                    Log.Error("TrackStyle.Check", style.Name + ": bare models missing (" + string.Join(", ", missing)
+                        + "), switch branches keep their copper");
             }
         }
 
@@ -174,6 +183,20 @@ namespace MagRail
                 yield return Bend(0, -steps, 0, true);
                 yield return Bend(0, 0, steps, true);
                 yield return Bend(0, 0, -steps, true);
+            }
+        }
+
+        // The bare module and every bare bend (blocks/TrackBare.py).
+        IEnumerable<string> BareModels()
+        {
+            yield return StraightBare;
+            for (int steps = 1; steps <= TrackLayout.BendSteps; steps++)
+            {
+                yield return BendBare(steps, 0, 0);
+                yield return BendBare(0, steps, 0);
+                yield return BendBare(0, -steps, 0);
+                yield return BendBare(0, 0, steps);
+                yield return BendBare(0, 0, -steps);
             }
         }
 
@@ -198,6 +221,20 @@ namespace MagRail
             int steps = yaw != 0 ? yaw : pitch != 0 ? pitch : roll;
             string axis = yaw != 0 ? "Y" : pitch != 0 ? "P" : "R";
             return prefix + (strip ? "BendStrip_" : "Bend_") + axis + (steps < 0 ? "m" : "") + Math.Abs(steps);
+        }
+
+        // Without copper (blocks/TrackBare.py): the module, and a bend as Bend (a yaw bend: one model for all its copper
+        // variants; to the left, turned round as they are).
+        public string StraightBare
+        {
+            get { return prefix + "TrackBare_625"; }
+        }
+
+        public string BendBare(int yaw, int pitch, int roll)
+        {
+            int steps = yaw != 0 ? Math.Abs(yaw) : pitch != 0 ? pitch : roll;
+            string axis = yaw != 0 ? "Y" : pitch != 0 ? "P" : "R";
+            return prefix + "BendBare_" + axis + (steps < 0 ? "m" : "") + Math.Abs(steps);
         }
 
         // A yaw bend to the right with the gap half at its end.
