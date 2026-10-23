@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using VRage.Game.Entity;
 using VRageMath;
 
@@ -21,6 +22,22 @@ namespace MagRail
         // the piece over it only while the branch is selected (Show; the bodies are the same): swapping the two left a
         // hole for a frame, an entity shown again comes a frame late; now at most the copper does.
         public MyEntity[] Bares;
+        // By Entities (TrackCollision): the collision piece is stage 0's low one.
+        public bool[] Low;
+        // A span being built (TrackPieces): its welding as last applied (ApplyWeld; null: built), the stage pieces
+        // (TrackLayout.Stages) and the stage each placed one shows.
+        public float[] Weld;
+        public int WeldRevision = -1;
+        public MyEntity[] Stages;
+        public int[] StageShown;
+        // Every piece the welding asks for is placed (TrackPieces.Build).
+        public bool Done;
+        // Done once for this layout, or the pieces of the one before still stand in (Leaving): SpanLines no longer
+        // draws the span (a new welding places its pieces again over a few ticks, and the steel line flashed meanwhile).
+        public bool Shown;
+        // The pieces of the layout before, kept until this one's are all placed (Take, keep): a span finished to 100 %
+        // or ground from it is laid anew (TrackLayout.Segmented) and was a hole for a few ticks.
+        public readonly List<MyEntity> Leaving = new List<MyEntity>();
         public int Stamp;
         public double Distance;
 
@@ -29,16 +46,29 @@ namespace MagRail
             Span = span;
         }
 
-        public void Take(TrackLayout layout, MyEntity parent, MatrixD frame, int count)
+        // keep: the pieces of a fully placed layout on the same curve and parent stand in until the new ones are placed
+        // (Leaving, TrackPieces.Build).
+        public void Take(TrackLayout layout, MyEntity parent, MatrixD frame, int count, bool keep = false)
         {
             if (layout == Layout && parent == Parent)
                 return;
-            Clear();
+            keep &= Shown && Layout != null && layout.Curve == Layout.Curve && parent == Parent;
+            if (keep)
+                Hand();
+            else
+                Clear();
             Layout = layout;
             Parent = parent;
             Frame = frame;
             Entities = new MyEntity[count];
             Bares = new MyEntity[count];
+            Low = new bool[count];
+            Stages = new MyEntity[layout.Stages.Count];
+            StageShown = new int[layout.Stages.Count];
+            Weld = null;
+            WeldRevision = -1;
+            Done = false;
+            Shown = keep;
         }
 
         public int Count
@@ -54,11 +84,56 @@ namespace MagRail
                         if (Bares[i] != null)
                             n++;
                     }
-                return n;
+                if (Stages != null)
+                    for (int i = 0; i < Stages.Length; i++)
+                        if (Stages[i] != null)
+                            n++;
+                return n + Leaving.Count;
             }
         }
 
-        // Repaints the placed pieces and the ones still to come.
+        // Track piece i is shown: built, or its segment finished (TrackStyle.Working).
+        public bool Wanted(int i)
+        {
+            return Weld == null || SpanWeld.Stage(Weld[Layout.PieceSegment(i)], Layout.Style.Working) == SpanWeld.Finished;
+        }
+
+        // The construction stage stage piece j shows (0..3), or -1: none (built, or its segment finished).
+        public int StageWanted(int j)
+        {
+            if (Weld == null)
+                return -1;
+            int stage = SpanWeld.Stage(Weld[Layout.StageSegment[j]], Layout.Style.Working);
+            return stage == SpanWeld.Finished ? -1 : stage;
+        }
+
+        // New welding: the pieces it no longer asks for go (the missing ones come with TrackPieces.Build).
+        public void ApplyWeld(float[] weld, int revision)
+        {
+            Weld = weld;
+            WeldRevision = revision;
+            Done = false;
+            for (int i = 0; i < Entities.Length; i++)
+            {
+                if (Entities[i] != null && !Wanted(i))
+                {
+                    PieceEntities.Remove(Entities[i]);
+                    PieceEntities.Remove(Bares[i]);
+                    Entities[i] = null;
+                    Bares[i] = null;
+                }
+            }
+            for (int j = 0; j < Stages.Length; j++)
+            {
+                if (Stages[j] != null && StageShown[j] != StageWanted(j))
+                {
+                    PieceEntities.Remove(Stages[j]);
+                    Stages[j] = null;
+                }
+            }
+        }
+
+        // Repaints the placed pieces and the ones still to come (not the stages: bare construction steel).
         public void Paint(Vector3 color, string skin)
         {
             bool newSkin = skin != Skin;
@@ -99,8 +174,31 @@ namespace MagRail
                 Entities[i].Render.Visible = !Layout.Bared(i, SelectedStart, SelectedEnd);
         }
 
+        // The placed pieces go to Leaving (Take, keep).
+        void Hand()
+        {
+            for (int i = 0; i < Entities.Length; i++)
+            {
+                if (Entities[i] != null)
+                    Leaving.Add(Entities[i]);
+                if (Bares[i] != null)
+                    Leaving.Add(Bares[i]);
+            }
+            for (int j = 0; j < Stages.Length; j++)
+                if (Stages[j] != null)
+                    Leaving.Add(Stages[j]);
+        }
+
+        public void Release()
+        {
+            for (int i = 0; i < Leaving.Count; i++)
+                PieceEntities.Remove(Leaving[i]);
+            Leaving.Clear();
+        }
+
         public void Clear()
         {
+            Release();
             if (Entities == null)
                 return;
             for (int i = 0; i < Entities.Length; i++)
@@ -109,6 +207,11 @@ namespace MagRail
                 PieceEntities.Remove(Bares[i]);
                 Entities[i] = null;
                 Bares[i] = null;
+            }
+            for (int j = 0; j < Stages.Length; j++)
+            {
+                PieceEntities.Remove(Stages[j]);
+                Stages[j] = null;
             }
         }
     }

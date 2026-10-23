@@ -14,7 +14,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.10.33";
+        public const string Version = "V0.10.47";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -40,6 +40,7 @@ namespace MagRail
             PieceEntities.Load(ModContext.ModPath);
             TrackStyle.Check(ModContext.ModItem);
             Net.Load();
+            SpanDamage.Load();
             if (client)
             {
                 linker = new RailLinker();
@@ -55,11 +56,13 @@ namespace MagRail
         public override void BeforeStart()
         {
             Started = true;
+            SpanDamage.Start();
         }
 
         protected override void UnloadData()
         {
             Net.Unload();
+            SpanDamage.Unload();
             if (client)
             {
                 MyAPIGateway.Utilities.MessageEntered -= Commands.OnMessage;
@@ -71,6 +74,7 @@ namespace MagRail
             AutopilotLogic.Clear();
             Rides.Clear();
             TrackDebug.Clear();
+            SpanWelding.Clear();
             RideLog.Stop();
             if (Pieces != null)
                 Pieces.Clear();
@@ -102,9 +106,14 @@ namespace MagRail
                 tick++;
                 Network.Update();
                 Collision.Update(Network);
+                if (MyAPIGateway.Session.IsServer)
+                    SpanWelding.ServerUpdate(Network, tick);
+                SpanDamage.Update(Network, tick);
                 if (client)
                 {
                     Pieces.Update(Network);
+                    SpanWelding.ClientUpdate(Network);
+                    SpanDamage.ClientUpdate(Network, tick);
                     UpdateEngineParts();
                     TrainControlLogic.UpdateLights(ControlUnits, tick);
                     TrackDebug.Update();
@@ -156,6 +165,7 @@ namespace MagRail
                 LinkerDisplay.DrawOthers(MagRail.Draw.Camera);
                 if (Hud.Begin())
                     linker.DrawHud();
+                SpanWelding.DrawHud(Network);
                 TrackDebug.DrawFrame(this);
                 DrawTime.Stop();
             }

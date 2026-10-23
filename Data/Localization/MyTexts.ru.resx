@@ -181,7 +181,7 @@
     <value>Рельс</value>
   </data>
   <data name="Description_Item_MagRail_Rail" xml:space="preserve">
-    <value>Отрезок рельса маглева. Пойдёт на постройку пролётов.</value>
+    <value>Отрезок рельса маглева. Из него строятся блоки пути и пролёты: 4 на 2.5 м узкого рельса, 8 — широкого.</value>
   </data>
   <data name="MagRail_Linker_From" xml:space="preserve">
     <value>От {0}</value>
@@ -266,6 +266,33 @@
   </data>
   <data name="MagRail_Linker_ToPrototype" xml:space="preserve">
     <value>Пролёт теперь прототип</value>
+  </data>
+  <data name="MagRail_Linker_ToRailWeld" xml:space="preserve">
+    <value>Пролёт теперь рельс под стройку: заварите его сварщиком</value>
+  </data>
+  <data name="MagRail_Linker_Welded" xml:space="preserve">
+    <value>В рельсе есть компоненты: сначала срежьте их болгаркой</value>
+  </data>
+  <data name="MagRail_Linker_Blocked" xml:space="preserve">
+    <value>Пролёт задевает блок: {0}</value>
+  </data>
+  <data name="MagRail_Mode_Building" xml:space="preserve">
+    <value>Рельс в стройке</value>
+  </data>
+  <data name="MagRail_Weld_Span" xml:space="preserve">
+    <value>Пролёт рельса</value>
+  </data>
+  <data name="MagRail_Weld_Segment" xml:space="preserve">
+    <value>Участок рельса {0} из {1}</value>
+  </data>
+  <data name="MagRail_Weld_NoGaps" xml:space="preserve">
+    <value>Разрывов нет</value>
+  </data>
+  <data name="MagRail_Weld_Gaps" xml:space="preserve">
+    <value>Разрывов: {0}</value>
+  </data>
+  <data name="MagRail_Weld_Finished" xml:space="preserve">
+    <value>готово {0} из {1}</value>
   </data>
   <data name="MagRail_Linker_RailWaits" xml:space="preserve">
     <value>станет рельсом, когда будет можно: {0}</value>

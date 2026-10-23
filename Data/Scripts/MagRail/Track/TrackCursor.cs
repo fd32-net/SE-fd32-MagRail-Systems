@@ -22,6 +22,8 @@ namespace MagRail
     // only to capture the rail. Advance runs along the track through spans, lanes, joints and switches:
     // coming in through a switch entry it takes the selected branch, through a branch it goes to the entry.
     // The lateral offset moves the point to the right of the cursor's direction; S stays the centre line's.
+    // On a span still being built only its finished stretches carry trains (Span.Ride): a stretch's end inside the
+    // span ends the track there, as a rail's end does (a segment not finished: a gap, PastEnd from both sides).
     public class TrackCursor
     {
         const double Window = 10;       // local projection looks this far around S, m
@@ -88,10 +90,35 @@ namespace MagRail
             get { return Span != null ? TrackNetwork.FrameMatrix(Span) : Lane.Block.Block.WorldMatrix; }
         }
 
-        // The piece still carries trains (a span can turn prototype or lose a block).
+        // The piece still carries trains here (a span can turn prototype, lose a block, or be ground below finished).
         public bool Rideable
         {
-            get { return Span != null ? Span.Bound && Span.IsRail : Lane.Block.Rideable; }
+            get
+            {
+                double lo, hi;
+                return Span != null ? Span.Ride(Network, S, Touch, out lo, out hi) : Lane.Block.Rideable;
+            }
+        }
+
+        // Arc lengths an S at the end of a finished stretch may be off it (rounding).
+        const double Touch = 1e-4;
+
+        // The stretch of the piece the cursor rides within: a lane's or a built span's whole curve, a span being built's
+        // finished stretch at S. False: none (see Rideable; then the whole curve).
+        bool Stretch(out double lo, out double hi)
+        {
+            if (Span != null && Span.Ride(Network, S, Touch, out lo, out hi))
+                return true;
+            lo = 0;
+            hi = Curve.Length;
+            return Span == null;
+        }
+
+        // Leaving the stretch lo..hi moving `move` (+1 / -1 along S) leads off the piece (not into a segment of the span
+        // that is not finished).
+        bool OpenEnd(int move, double lo, double hi)
+        {
+            return move > 0 ? hi >= Curve.Length - 1e-6 : lo <= 1e-6;
         }
 
         IMyCubeGrid Carrier
@@ -153,20 +180,22 @@ namespace MagRail
             for (int hop = 0; hop < 4; hop++)
             {
                 SpanCurve c = Curve;
+                double lo, hi;
+                Stretch(out lo, out hi);
                 Vector3D local = ToLocal(pos, Frame);
-                int first = c.Index(Math.Max(0, S - Window));
-                int last = Math.Min(c.Index(Math.Min(c.Length, S + Window)) + 1, c.Pos.Count - 1);
+                int first = c.Index(Math.Max(lo, S - Window));
+                int last = Math.Min(c.Index(Math.Min(hi, S + Window)) + 1, c.Pos.Count - 1);
                 double d2;
-                S = Nearest(c, local, lateral * Dir, first, last, out d2);
+                S = MathHelper.Clamp(Nearest(c, local, lateral * Dir, first, last, out d2), lo, hi);
                 int past = 0;
-                if (S >= c.Length - 1e-6 && Vector3D.Dot(local - c.Pos[c.Pos.Count - 1], c.Tan[c.Tan.Count - 1]) > 1e-3)
+                if (S >= hi - 1e-6 && Vector3D.Dot(local - c.PosAt(hi), c.TanAt(hi)) > 1e-3)
                     past = 1;
-                else if (S <= 1e-6 && Vector3D.Dot(local - c.Pos[0], c.Tan[0]) < -1e-3)
+                else if (S <= lo + 1e-6 && Vector3D.Dot(local - c.PosAt(lo), c.TanAt(lo)) < -1e-3)
                     past = -1;
                 if (past == 0)
                     return;
                 int move = past;
-                if (!Cross(past > 0 ? 1 : 0, ref move))
+                if (!OpenEnd(past, lo, hi) || !Cross(past > 0 ? 1 : 0, ref move))
                 {
                     DeadEnd = true;
                     return;
@@ -217,7 +246,16 @@ namespace MagRail
                 SpanCurve curve = Network.CurveOf(e.Span);
                 Vector3D spanLocal = ToLocal(pos, TrackNetwork.FrameMatrix(e.Span));
                 s = Nearest(curve, spanLocal, 0, e.First, Math.Min(e.Last, curve.Pos.Count - 1), out d2);
-                if (Math.Sqrt(d2) < best && !IsPastEnd(curve, spanLocal, s))
+                double lo, hi;
+                if (Math.Sqrt(d2) >= best || IsPastEnd(curve, spanLocal, s) || !e.Span.Ride(Network, s, PastEnd, out lo, out hi))
+                    continue;
+                // Over a segment not finished, up to PastEnd from a finished stretch: at its end.
+                if (s < lo || s > hi)
+                {
+                    s = MathHelper.Clamp(s, lo, hi);
+                    d2 = Vector3D.DistanceSquared(spanLocal, curve.PosAt(s));
+                }
+                if (Math.Sqrt(d2) < best)
                 {
                     best = Math.Sqrt(d2);
                     bestSpan = e.Span;
@@ -322,8 +360,9 @@ namespace MagRail
             double left = Math.Abs(distance);
             for (int hop = 0; hop < MaxHops; hop++)
             {
-                double length = Curve.Length;
-                double room = move > 0 ? length - S : S;
+                double lo, hi;
+                Stretch(out lo, out hi);
+                double room = Math.Max(0, move > 0 ? hi - S : S - lo);
                 if (left <= room)
                 {
                     S += move * left;
@@ -331,6 +370,12 @@ namespace MagRail
                     return true;
                 }
                 left -= room;
+                if (!OpenEnd(move, lo, hi))
+                {
+                    S = move > 0 ? hi : lo;
+                    DeadEnd = true;
+                    return false;
+                }
                 if (!Cross(move > 0 ? 1 : 0, ref move))
                 {
                     DeadEnd = true;
@@ -340,10 +385,15 @@ namespace MagRail
             return false;
         }
 
-        // Metres from S to the end of the piece the cursor faces.
+        // Metres from S to the end of the piece the cursor faces (of its finished stretch, on a span being built).
         public double PieceLeft
         {
-            get { return Dir > 0 ? Curve.Length - S : S; }
+            get
+            {
+                double lo, hi;
+                Stretch(out lo, out hi);
+                return Math.Max(0, Dir > 0 ? hi - S : S - lo);
+            }
         }
 
         public bool SamePiece(TrackCursor other)
@@ -351,11 +401,12 @@ namespace MagRail
             return Span == other.Span && Lane == other.Lane;
         }
 
-        // Moves to the start of the next piece the cursor faces (route walks: Route). False: the end of the track,
-        // or the piece is no rail any more.
+        // Moves to the start of the next piece the cursor faces (route walks: Route). False: the end of the track
+        // (also a segment not finished ahead), or the piece is no rail any more.
         public bool NextPiece()
         {
-            if (!Valid || !Rideable)
+            double lo, hi;
+            if (!Valid || !Rideable || !Stretch(out lo, out hi) || !OpenEnd(Dir, lo, hi))
                 return false;
             int move = Dir;
             return Cross(Dir > 0 ? 1 : 0, ref move);
@@ -398,11 +449,12 @@ namespace MagRail
             Span s = network.SpanAt(block, port);
             if (s != null)
             {
-                // A prototype ends the track.
-                if (!s.IsRail)
+                // A prototype (or a rail whose segment at this end is not finished yet) ends the track.
+                entry = s.Owner == block && s.OwnerPort == port ? 0 : 1;
+                double lo, hi;
+                if (!s.Ride(network, entry == 0 ? 0 : network.CurveOf(s).Length, Touch, out lo, out hi))
                     return false;
                 nextSpan = s;
-                entry = s.Owner == block && s.OwnerPort == port ? 0 : 1;
                 return true;
             }
             TrackBlockLogic other;

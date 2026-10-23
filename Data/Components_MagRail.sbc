@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <!-- Rail component: track blocks are built from it (1 narrow, 2 wide); spans will cost it later (PLAN 10.8).
+  <!-- Rail component: track blocks and spans are built from it (2 narrow, 4 wide per block / 2.5 m span segment;
+       a segment is finished at all but one: TrackStyle.Working; PLAN 10.8; half of the first one, 2026-10-23).
        Model: a 1 m piece of the narrow rail (ModelSource/blocks/RailComponent.py); icon rendered
-       from it (ModelSource/build_icons.py). Recipe in Blueprints_MagRail.sbc. -->
+       from it (ModelSource/build_icons.py). Recipe in Blueprints_MagRail.sbc.
+       MaxIntegrity as a steel plate's (about as much iron): a weld segment holds its Rails' (SpanDamage). -->
   <Components>
     <Component>
       <Id>
@@ -17,8 +19,8 @@
         <Y>0.16</Y>
         <Z>1</Z>
       </Size>
-      <Mass>40</Mass>
-      <Volume>40</Volume>
+      <Mass>20</Mass>
+      <Volume>20</Volume>
       <Model>Models\Components\MagRail_Rail.mwm</Model>
       <PhysicalMaterial>Metal</PhysicalMaterial>
       <MaxIntegrity>100</MaxIntegrity>

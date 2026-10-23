@@ -34,6 +34,9 @@ namespace MagRail
         // The span ignores the ground (no TerrainLift): laid with the Rail Linker without Shift (the default). Spans
         // laid before this existed have false: they rest on the ground.
         [ProtoMember(15)] public bool NoLift;
+        // A rail still being built (survival, SpanWeld): how far each segment is welded. null: built (switched to rail
+        // in creative or with the admin creative tools on, or welded to the end; also every rail laid before welding existed).
+        [ProtoMember(16)] public SpanWeld Weld;
     }
 
     [ProtoContract]
@@ -61,7 +64,7 @@ namespace MagRail
     public class Span
     {
         public readonly TrackBlockLogic Owner;
-        public readonly SpanRecord Record;
+        public SpanRecord Record { get; private set; }
         public int OwnerPort = -1;
         public TrackBlockLogic Partner;     // null while the partner is not loaded (or gone)
         public int PartnerPort = -1;
@@ -102,6 +105,124 @@ namespace MagRail
         public bool IsRail
         {
             get { return Record.WantRail && Problem == null; }
+        }
+
+        // Where trains ride: the finished stretch (its segments' integrity finished, SpanWeld.Stage, TrackStyle.Working;
+        // a built rail: all of it) at arc length s, lo..hi. s up to `reach` off a finished segment (onto one not finished)
+        // still finds the stretch next to it. False: not bound, no rail, or no finished segment there.
+        public bool Ride(TrackNetwork network, double s, double reach, out double lo, out double hi)
+        {
+            lo = hi = 0;
+            if (!Bound || !IsRail)
+                return false;
+            if (Record.Weld == null)
+            {
+                hi = network.CurveOf(this).Length;
+                return true;
+            }
+            TrackLayout layout = network.LayoutOf(this);
+            float[] done = Integrity(layout);
+            if (stretchOf != done)
+                Stretches(done, layout.Style.Working);
+            int g = layout.SegmentAt(s);
+            if (stretchFirst[g] < 0)
+            {
+                // The nearer finished neighbour within reach (a gap of one segment: they hand over in its middle).
+                double back = g > 0 && stretchFirst[g - 1] >= 0 ? s - layout.SegmentStart(g) : double.MaxValue;
+                double ahead = g < done.Length - 1 && stretchFirst[g + 1] >= 0 ? layout.SegmentEnd(g) - s : double.MaxValue;
+                if (Math.Min(back, ahead) > reach)
+                    return false;
+                g += back <= ahead ? -1 : 1;
+            }
+            lo = layout.SegmentStart(stretchFirst[g]);
+            hi = layout.SegmentEnd(stretchLast[g]);
+            return true;
+        }
+
+        // By segment: the first and last segment of the finished stretch it is in, -1 if not finished (for stretchOf).
+        int[] stretchFirst, stretchLast;
+        float[] stretchOf;
+
+        void Stretches(float[] done, float working)
+        {
+            stretchOf = done;
+            stretchFirst = new int[done.Length];
+            stretchLast = new int[done.Length];
+            for (int g = 0; g < done.Length; g++)
+            {
+                bool finished = SpanWeld.Stage(done[g], working) == SpanWeld.Finished;
+                stretchFirst[g] = !finished ? -1 : g > 0 && stretchFirst[g - 1] >= 0 ? stretchFirst[g - 1] : g;
+            }
+            for (int g = done.Length - 1; g >= 0; g--)
+                stretchLast[g] = stretchFirst[g] < 0 ? -1 : g < done.Length - 1 && stretchLast[g + 1] >= 0 ? stretchLast[g + 1] : g;
+        }
+
+        // Changes whenever the welding does (track pieces and collision follow it).
+        public int WeldRevision { get; private set; }
+        SpanWeld weldOf;
+        float[] weld;
+
+        // How far each of the layout's segments is welded (SpanWeld), or null: built. Do not change the array.
+        public float[] Weld(TrackLayout layout)
+        {
+            if (Record.Weld == null)
+                return null;
+            if (weld == null || weldOf != Record.Weld || weld.Length != layout.Segments)
+            {
+                weldOf = Record.Weld;
+                weld = Record.Weld.Expand(layout.Segments);
+            }
+            return weld;
+        }
+
+        float[] integrity;
+        SpanWeld integrityOf;
+
+        // What is left of each segment (Weld less the damage, SpanWeld.Lost): what it works by. null: built. Do not
+        // change the array.
+        public float[] Integrity(TrackLayout layout)
+        {
+            float[] done = Weld(layout);
+            if (done == null || Record.Weld.Damaged == null)
+                return done;
+            if (integrity == null || integrityOf != Record.Weld || integrity.Length != done.Length)
+            {
+                integrityOf = Record.Weld;
+                float[] lost = Record.Weld.ExpandLost(done.Length);
+                integrity = new float[done.Length];
+                for (int g = 0; g < done.Length; g++)
+                    integrity[g] = Math.Max(0, done[g] - lost[g]);
+            }
+            return integrity;
+        }
+
+        // Server: the segments' new progress, stock and lost integrity (SpanWeld.Lost, null: none; stored; null or all
+        // welded full and whole with nothing in stock: built).
+        public void SetWeld(float[] done, int stock, float[] lost = null)
+        {
+            Record.Weld = done != null ? SpanWeld.Pack(done, stock, lost) : null;
+            WeldRevision++;
+        }
+
+        // Components in the span not welded in yet (SpanWeld.Stock).
+        public int Stock
+        {
+            get { return Record.Weld != null ? Record.Weld.Stock : 0; }
+        }
+
+        // Server: switched to rail with nothing welded yet (building), or built / back to prototype.
+        public void BeginWeld(bool building)
+        {
+            Record.Weld = building ? new SpanWeld() : null;
+            WeldRevision++;
+        }
+
+        // Client: the server's copy of this span's record, the same span otherwise (TrackNetwork.ReplaceOwnerSpans).
+        public void Adopt(SpanRecord record)
+        {
+            if (record.Weld != null || Record.Weld != null)
+                WeldRevision++;
+            Record = record;
         }
 
         public TrackBlockLogic Other(TrackBlockLogic block)

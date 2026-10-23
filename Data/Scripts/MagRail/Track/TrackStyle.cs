@@ -41,7 +41,7 @@ namespace MagRail
             .FixedHeight("MagRail_EmbeddedRail", "MagRail_EmbeddedRailHalf");
 
         public static readonly TrackStyle Wide = new TrackStyle("Wide", "MagRail_Wide", minHeight: 0.45f, width: 2.0,
-                crestHeight: 0.33, top: 0.35, feet: 0.24, faceHalfWidth: 1.2f, faceBottom: -0.555f, faceTop: 0.645f)
+                crestHeight: 0.33, top: 0.35, feet: 0.24, faceHalfWidth: 1.2f, faceBottom: -0.555f, faceTop: 0.645f, segmentRails: 4)
             .Blocks(TrackKind.Rail, "MagRail_WideRailBlock1", "MagRail_WideEmbeddedRail", "MagRail_WideEmbeddedRailHalf")
             .Blocks(TrackKind.FreeRail, "MagRail_WideFreeRail")
             .Blocks(TrackKind.Switch, "MagRail_WideSwitch1")
@@ -65,7 +65,16 @@ namespace MagRail
         // The end face overlay (Draw.Face): its texture's box from the rail point, m (FACES in
         // ModelSource/overlay_textures.py, which draws the section's outline into it).
         public readonly float FaceHalfWidth, FaceBottom, FaceTop;
+        // Rail components (MagRail_Rail) a weld segment of a span costs (SpanWelding), as many as the style's track blocks.
+        public readonly int SegmentRails;
         readonly MyStringId[] faceLines, faceFills;
+
+        // A weld segment is finished from here on (SpanWeld.Stage): all its Rail components but one welded in (narrow
+        // 1 of 2, wide 3 of 4), as a block over its working line.
+        public float Working
+        {
+            get { return (SegmentRails - 1f) / SegmentRails; }
+        }
         // Players can walk on it: its spans get collision pieces (TrackCollision) and its blocks' rail parts physics
         // (TrackBlockLogic). Without it (an energy beam) a player falls through; trains ride as always (they do not
         // touch collision). The blocks themselves keep theirs.
@@ -77,8 +86,9 @@ namespace MagRail
         public bool HasBare { get; private set; }
 
         TrackStyle(string name, string prefix, float minHeight, double width, double crestHeight, double top, double feet,
-            float faceHalfWidth, float faceBottom, float faceTop, bool solid = true)
+            float faceHalfWidth, float faceBottom, float faceTop, bool solid = true, int segmentRails = 2)
         {
+            SegmentRails = segmentRails;
             Name = name;
             this.prefix = prefix;
             MinHeight = minHeight;
@@ -241,6 +251,12 @@ namespace MagRail
         public string BendEnd(int yaw)
         {
             return prefix + "BendEnd_Y" + yaw;
+        }
+
+        // Construction stage 0..3 of a piece (blocks/TrackStages.py): the module, or `full` a whole weld segment of four.
+        public string Stage(int stage, bool full)
+        {
+            return prefix + "TrackStage" + stage + "_" + (full ? TrackLayout.GapModules * 625 : 625);
         }
 
         // Without a gap.

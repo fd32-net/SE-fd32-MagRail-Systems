@@ -181,7 +181,7 @@
     <value>Rail</value>
   </data>
   <data name="Description_Item_MagRail_Rail" xml:space="preserve">
-    <value>Maglev rail section. Will be used to build spans.</value>
+    <value>Maglev rail section. Track blocks and spans are built from it: 4 per 2.5 m of narrow rail, 8 of wide.</value>
   </data>
   <data name="MagRail_Linker_From" xml:space="preserve">
     <value>From {0}</value>
@@ -266,6 +266,33 @@
   </data>
   <data name="MagRail_Linker_ToPrototype" xml:space="preserve">
     <value>Span is a prototype now</value>
+  </data>
+  <data name="MagRail_Linker_ToRailWeld" xml:space="preserve">
+    <value>Span is a rail to build now: weld it with a welder</value>
+  </data>
+  <data name="MagRail_Linker_Welded" xml:space="preserve">
+    <value>This rail has parts in it: grind them out first</value>
+  </data>
+  <data name="MagRail_Linker_Blocked" xml:space="preserve">
+    <value>The span cuts into a block: {0}</value>
+  </data>
+  <data name="MagRail_Mode_Building" xml:space="preserve">
+    <value>Rail being built</value>
+  </data>
+  <data name="MagRail_Weld_Span" xml:space="preserve">
+    <value>Rail span</value>
+  </data>
+  <data name="MagRail_Weld_Segment" xml:space="preserve">
+    <value>Rail segment {0} of {1}</value>
+  </data>
+  <data name="MagRail_Weld_NoGaps" xml:space="preserve">
+    <value>No gaps</value>
+  </data>
+  <data name="MagRail_Weld_Gaps" xml:space="preserve">
+    <value>Gaps: {0}</value>
+  </data>
+  <data name="MagRail_Weld_Finished" xml:space="preserve">
+    <value>finished {0} of {1}</value>
   </data>
   <data name="MagRail_Linker_RailWaits" xml:space="preserve">
     <value>rail as soon as possible: {0}</value>

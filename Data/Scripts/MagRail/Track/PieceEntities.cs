@@ -75,10 +75,11 @@ namespace MagRail
             return e;
         }
 
-        // Collision only (no render model), a static body in the world; model: name (TrackLayout.CollisionModel).
-        public static MyEntity Collision(string model, MatrixD m, MatrixD frame)
+        // Collision only (no render model), a static body in the world; model: name (TrackLayout.CollisionModel). A part
+        // of span s (SpanPart): what hits it hits the span.
+        public static MyEntity Collision(string model, MatrixD m, MatrixD frame, Span s)
         {
-            MyEntity e = new MyEntity();
+            MyEntity e = new SpanPart(s);
             e.Init(null, null, null, null, Model(model));
             Place(e, m, frame, null);
             e.InitModelPhysics(RigidBodyFlag.RBF_STATIC, StaticLayer);

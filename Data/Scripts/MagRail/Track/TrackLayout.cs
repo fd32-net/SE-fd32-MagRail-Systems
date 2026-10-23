@@ -30,6 +30,11 @@ namespace MagRail
     // steps hide in the gaps); that does not depend on the selection, so turning the switch only relights the pieces.
     // Where it lies over the other branches (its strip modules), a module also has a bare model (no copper, Bare): an
     // unselected branch shows that one there (TrackPieces), so only the selected branch's copper is seen.
+    // Weld segments (SpanWeld, PLAN 10.8): the stretches between the copper's gaps (every GapModules modules but the
+    // one a module before the end), about 2.5 m. The collision is laid per segment (a span being built is walked on from
+    // stage 0 on). A span still being built is laid
+    // Segmented: no straight piece crosses a segment's end, so a segment shows its own finished pieces; and with
+    // construction stage pieces (Stages), single modules on their chords or one for a straight whole segment.
     public class TrackLayout
     {
         public const double Module = 0.625;
@@ -59,6 +64,16 @@ namespace MagRail
         public readonly List<MatrixD> Collision = new List<MatrixD>();
         // By Pieces: the bare model shown instead while the switch branch is not selected (Bared), or null.
         public readonly List<string> Bare = new List<string>();
+        // By Collision: the segment it belongs to, half its chord's length (the box is the CollisionLength model).
+        public readonly List<int> CollisionSegment = new List<int>();
+        public readonly List<double> CollisionHalf = new List<double>();
+        // Laid for a span being built (see above); then the stage pieces: their chords (stretched to the stage model,
+        // a module or a whole segment: StageFull) and segments.
+        public readonly bool Segmented;
+        public readonly List<MatrixD> Stages = new List<MatrixD>();
+        public readonly List<bool> StageFull = new List<bool>();
+        public readonly List<int> StageSegment = new List<int>();
+        readonly List<int> pieceSegment = new List<int>();
         readonly List<bool> bareAtStart = new List<bool>();
         // Arc lengths of the pieces' ends, m (by Pieces).
         readonly List<double> pieceStart = new List<double>(), pieceEnd = new List<double>();
@@ -69,8 +84,9 @@ namespace MagRail
         int modules;
         double moduleLength;
 
-        TrackLayout(SpanCurve curve, TrackStyle style, FanLevel level, bool fadeStart, bool fadeEnd)
+        TrackLayout(SpanCurve curve, TrackStyle style, FanLevel level, bool fadeStart, bool fadeEnd, bool segmented)
         {
+            Segmented = segmented;
             Curve = curve;
             Style = style;
             this.level = level;
@@ -84,42 +100,129 @@ namespace MagRail
             get { return Style.Straight((int)Math.Round(CollisionLength / Module)); }
         }
 
-        // fadeStart, fadeEnd: the span's start / end is on a branch port of a Rail Switch.
-        public static TrackLayout Build(SpanCurve c, TrackStyle style, FanLevel level, bool fadeStart, bool fadeEnd)
+        // fadeStart, fadeEnd: the span's start / end is on a branch port of a Rail Switch; segmented: the span is being
+        // built (see above).
+        public static TrackLayout Build(SpanCurve c, TrackStyle style, FanLevel level, bool fadeStart, bool fadeEnd, bool segmented)
         {
-            TrackLayout layout = new TrackLayout(c, style, level, fadeStart, fadeEnd);
+            TrackLayout layout = new TrackLayout(c, style, level, fadeStart, fadeEnd, segmented);
             double length = c.Length;
             int n = Math.Max(1, (int)Math.Round(length / Module));
             double m = length / n;      // stretched module
             layout.modules = n;
             layout.moduleLength = m;
 
-            if (n == 1)
-                layout.Add(style.Straight(1), Chord(layout.Drawn(0), layout.Drawn(length), c.UpAt(0) + c.UpAt(length), Module), 0, 1);
-            else
-                layout.Rail(n, m);
-
-            int count = Math.Max(1, (int)Math.Ceiling(length / CollisionLength - 1e-6));
-            for (int i = 0; i < count; i++)
-            {
-                double a = length * i / count, b = length * (i + 1) / count;
-                layout.Collision.Add(Chord(c.PosAt(a), c.PosAt(b), c.UpAt(a) + c.UpAt(b), 0));
-            }
-            return layout;
-        }
-
-        void Rail(int n, double m)
-        {
-            SpanCurve c = Curve;
             // Module ends: the first and last are the ports, so the rail leaves and enters them along their direction.
             Vector3D[] pos = new Vector3D[n + 1], tan = new Vector3D[n + 1], up = new Vector3D[n + 1];
             for (int k = 0; k <= n; k++)
             {
                 double s = k == n ? c.Length : k * m;
-                pos[k] = Drawn(s);
+                pos[k] = layout.Drawn(s);
                 tan[k] = c.TanAt(s);
                 up[k] = c.UpAt(s);
             }
+
+            if (n == 1)
+                layout.Add(style.Straight(1), Chord(pos[0], pos[1], up[0] + up[1], Module), 0, 1);
+            else
+                layout.Rail(n, pos, tan, up);
+            if (segmented)
+                layout.LayStages(pos, up);
+
+            for (int g = 0; g < layout.Segments; g++)
+            {
+                double a = layout.SegmentStart(g), b = layout.SegmentEnd(g);
+                int count = Math.Max(1, (int)Math.Ceiling((b - a) / CollisionLength - 0.1));
+                for (int i = 0; i < count; i++)
+                {
+                    double s0 = a + (b - a) * i / count, s1 = a + (b - a) * (i + 1) / count;
+                    layout.Collision.Add(Chord(c.PosAt(s0), c.PosAt(s1), c.UpAt(s0) + c.UpAt(s1), 0));
+                    layout.CollisionSegment.Add(g);
+                    layout.CollisionHalf.Add((s1 - s0) / 2);
+                }
+            }
+            return layout;
+        }
+
+        // ---- weld segments ----
+
+        public int Segments
+        {
+            get { return modules < 2 ? 1 : 1 + (modules - 2) / GapModules; }
+        }
+
+        // The segment module k (from 0) is in.
+        int SegmentOf(int k)
+        {
+            return Math.Min(k / GapModules, Segments - 1);
+        }
+
+        // Module boundary k ends a segment (not the span's ends).
+        bool SegmentBoundary(int k)
+        {
+            return k > 0 && k % GapModules == 0 && k < modules - 1;
+        }
+
+        int SegmentFirstModule(int g)
+        {
+            return g * GapModules;
+        }
+
+        int SegmentEndModule(int g)
+        {
+            return g == Segments - 1 ? modules : (g + 1) * GapModules;
+        }
+
+        // The segment arc length s (m) is in.
+        public int SegmentAt(double s)
+        {
+            return SegmentOf(Math.Max(0, (int)(s / moduleLength)));
+        }
+
+        // Arc lengths of segment g's ends, m.
+        public double SegmentStart(int g)
+        {
+            return SegmentFirstModule(g) * moduleLength;
+        }
+
+        public double SegmentEnd(int g)
+        {
+            int k = SegmentEndModule(g);
+            return k == modules ? Curve.Length : k * moduleLength;
+        }
+
+        // The segment track piece i lies in (Segmented: wholly).
+        public int PieceSegment(int i)
+        {
+            return pieceSegment[i];
+        }
+
+        // The stage pieces: a straight whole segment as one, else module by module.
+        void LayStages(Vector3D[] pos, Vector3D[] up)
+        {
+            for (int g = 0; g < Segments; g++)
+            {
+                int a = SegmentFirstModule(g), b = SegmentEndModule(g);
+                if (b - a == GapModules && IsStraight(pos, up, a, b))
+                {
+                    AddStage(Chord(pos[a], pos[b], up[a] + up[b], GapModules * Module), true, g);
+                    continue;
+                }
+                for (int k = a; k < b; k++)
+                    AddStage(Chord(pos[k], pos[k + 1], up[k] + up[k + 1], Module), false, g);
+            }
+        }
+
+        void AddStage(MatrixD m, bool full, int segment)
+        {
+            Stages.Add(m);
+            StageFull.Add(full);
+            StageSegment.Add(segment);
+        }
+
+        void Rail(int n, Vector3D[] pos, Vector3D[] tan, Vector3D[] up)
+        {
+            SpanCurve c = Curve;
+            double m = moduleLength;
 
             // Per module: bend steps on one axis (yaw, pitch, roll), or a joint; strip: no gaps (a switch's overlap).
             int[][] steps = { new int[n], new int[n], new int[n] };
@@ -185,10 +288,11 @@ namespace MagRail
                     i++;
                     continue;
                 }
-                // Where the copper may fade (a switch branch), a gap to gap stretch at most, not across the fade's edge.
-                int left = 1, most = fade[i] ? GapModules : n;
+                // Where the copper may fade (a switch branch), a gap to gap stretch at most, not across the fade's edge;
+                // segmented, not across a segment's end.
+                int left = 1, most = fade[i] || Segmented ? GapModules : n;
                 while (!strip[i] && left < most && i + left < n && !joint[i + left] && !strip[i + left] && fade[i + left] == fade[i]
-                       && yaw[i + left] == 0 && pitch[i + left] == 0 && roll[i + left] == 0)
+                       && yaw[i + left] == 0 && pitch[i + left] == 0 && roll[i + left] == 0 && !(Segmented && SegmentBoundary(i + left)))
                     left++;
                 bool turn;
                 int take = StraightTake(i, left, pos, up, out turn);
@@ -347,6 +451,7 @@ namespace MagRail
             pieceEnd.Add(k1 == modules ? Curve.Length : k1 * moduleLength);
             Bare.Add(null);
             bareAtStart.Add(k0 + k1 < modules);
+            pieceSegment.Add(SegmentOf(k0));
         }
 
         // Piece i shows its bare model: it has one and the switch branch at its end of the span is not selected

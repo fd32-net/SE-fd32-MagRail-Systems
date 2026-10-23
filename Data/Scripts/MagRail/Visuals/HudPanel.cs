@@ -208,7 +208,7 @@ namespace MagRail
         }
 
         // `text` on one line: cut where it overflows, with "..." (the game font has no ellipsis sign).
-        static string Cut(HudFont font, string text, float scale, float width)
+        public static string Cut(HudFont font, string text, float scale, float width)
         {
             if (font.Measure(text, scale) <= width)
                 return text;

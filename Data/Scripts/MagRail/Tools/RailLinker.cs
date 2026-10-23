@@ -50,6 +50,8 @@ namespace MagRail
         static readonly Color AimColor = new Color(255, 230, 70);
         // A port that cannot take the span being laid flashes red and shakes this long after the click.
         const double FlashSeconds = 0.5;
+        // A block a prototype cuts into stays outlined this long after the click that would make it a rail.
+        const double BlockedSeconds = 5;
 
         // The help window (top right, like the welder's): the mouse buttons, an empty line, then what is aimed at and its
         // numbers or what is wrong (ShowInfo, DrawHud).
@@ -63,6 +65,8 @@ namespace MagRail
         TrackBlockLogic flashBlock;
         int flashPort;
         double flashUntil;
+        IMySlimBlock blockedBy;
+        double blockedUntil;
         SpanCurve preview;          // while laying: start port -> aimed port or free end
         string previewProblem;      // why the aimed port cannot take the span (Loc key)
         // What the preview was built for (BuildPreview), and its lift over the ground (TerrainLift.Measure: reads voxels,
@@ -412,12 +416,30 @@ namespace MagRail
             }
             if (aimSpan != null)
             {
-                bool rail = !aimSpan.Record.WantRail;
+                bool rail = !aimSpan.Record.WantRail, free = TrackNetwork.FreeRails;
+                // Survival: a rail with parts welded in is ground off first (TrackNetwork.CanUnbuild, the server checks too).
+                if (!rail && !TrackNetwork.CanUnbuild(aimSpan, free))
+                {
+                    Draw.Notify(Loc.T("MagRail_Linker_Welded"), MyFontEnum.Red, 3000);
+                    LinkerDisplay.Flash(LinkerDisplay.Button.Left, false);
+                    return;
+                }
+                // Not through blocks (TrackCollision.BlockInside): the one in the way is outlined for a while.
+                IMySlimBlock inside = rail ? TrackCollision.BlockInside(Network, aimSpan) : null;
+                if (inside != null)
+                {
+                    blockedBy = inside;
+                    blockedUntil = Now + BlockedSeconds;
+                    Draw.Notify(Loc.F("MagRail_Linker_Blocked", BlockName(inside)), MyFontEnum.Red, 3000);
+                    LinkerDisplay.Flash(LinkerDisplay.Button.Left, false);
+                    return;
+                }
                 Network.RequestMode(aimSpan, rail);
                 if (rail && aimSpan.Problem != null)
                     Draw.Notify(Loc.F("MagRail_Linker_RailWaits", Loc.T(aimSpan.Problem)), MyFontEnum.Red, 3000);
                 else
-                    Draw.Notify(Loc.T(rail ? "MagRail_Linker_ToRail" : "MagRail_Linker_ToPrototype"), MyFontEnum.Green);
+                    Draw.Notify(Loc.T(!rail ? "MagRail_Linker_ToPrototype" : free ? "MagRail_Linker_ToRail"
+                        : "MagRail_Linker_ToRailWeld"), MyFontEnum.Green, rail && !free ? 3000 : 2000);
                 LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);     // switched (a rail that waits shows its cross)
                 return;
             }
@@ -582,7 +604,7 @@ namespace MagRail
             // The aimed span may have just been deleted (RMB) or lost its partner.
             if (aimSpan != null && aimSpan.Bound)
             {
-                what = Loc.T(aimSpan.IsRail ? "MagRail_Mode_Rail" : "MagRail_Mode_Prototype");
+                what = Loc.T(!aimSpan.IsRail ? "MagRail_Mode_Prototype" : aimSpan.Record.Weld != null ? "MagRail_Mode_Building" : "MagRail_Mode_Rail");
                 if (aimSpan.Record.WantRail && aimSpan.Problem != null)
                 {
                     detail = Loc.F("MagRail_Linker_RailWaits", Loc.T(aimSpan.Problem));
@@ -715,9 +737,40 @@ namespace MagRail
             }
             if (preview != null)
                 SpanLines.DrawCurve(preview, MatrixD.Identity, startBlock.Style, LineStyle.Preview);
+            if (blockedBy != null)
+                DrawBlocked();
             IMyCharacter character = MyAPIGateway.Session.ControlledObject as IMyCharacter;
             if (character != null)
                 LinkerDisplay.Draw(character.EquippedTool, DisplayColor(), Screen(), true);
+        }
+
+        static readonly Vector3D[] corners = new Vector3D[8];
+
+        // The block a span would cut into (Left): its box outlined in red, seen through everything, for a while.
+        void DrawBlocked()
+        {
+            if (Now > blockedUntil || blockedBy.IsDestroyed || blockedBy.CubeGrid.Closed)
+            {
+                blockedBy = null;
+                return;
+            }
+            MyOrientedBoundingBoxD box = TrackCollision.BlockBox(blockedBy);
+            Vector3D x = Vector3D.Transform(Vector3D.Right * box.HalfExtent.X, box.Orientation);
+            Vector3D y = Vector3D.Transform(Vector3D.Up * box.HalfExtent.Y, box.Orientation);
+            Vector3D z = Vector3D.Transform(Vector3D.Backward * box.HalfExtent.Z, box.Orientation);
+            for (int i = 0; i < 8; i++)
+                corners[i] = box.Center + ((i & 1) != 0 ? x : -x) + ((i & 2) != 0 ? y : -y) + ((i & 4) != 0 ? z : -z);
+            float width = MagRail.Draw.Width(Vector3D.Distance(box.Center, MagRail.Draw.Camera), 0.03f);
+            for (int i = 0; i < 8; i++)
+                for (int bit = 1; bit < 8; bit <<= 1)
+                    if ((i & bit) == 0)
+                        MagRail.Draw.Line(corners[i], corners[i | bit], MagRail.Draw.Red, width, true, throughAlpha: 1);
+        }
+
+        static string BlockName(IMySlimBlock b)
+        {
+            IMyTerminalBlock terminal = b.FatBlock as IMyTerminalBlock;
+            return terminal != null ? terminal.CustomName : b.BlockDefinition.DisplayNameText;
         }
 
         // The display's picture of what the tool is doing (ModelSource/display/linker_screens.svg): the start or aimed

@@ -266,21 +266,54 @@ namespace MagRail
             s.Curve = null;
         }
 
-        // Client: the server's version of an owner's spans.
+        // Client: the server's version of an owner's spans. A span that stays the same rail or prototype between the same
+        // ports keeps its Span (Adopt): its track pieces stay (welding, paint).
         public void ReplaceOwnerSpans(TrackBlockLogic owner, SpanStore store)
         {
+            scratch.Clear();
             for (int i = spans.Count - 1; i >= 0; i--)
             {
                 if (spans[i].Owner == owner)
                 {
-                    Unbind(spans[i]);
+                    scratch.Add(spans[i]);
                     spans.RemoveAt(i);
                 }
             }
             owner.SetSpanStore(store);
             for (int i = 0; i < store.Spans.Count; i++)
-                spans.Add(new Span(owner, store.Spans[i]));
+            {
+                SpanRecord r = store.Spans[i];
+                int same = scratch.FindIndex(old => old.Bound && Same(old.Record, r));
+                if (same >= 0)
+                {
+                    scratch[same].Adopt(r);
+                    spans.Add(scratch[same]);
+                    scratch.RemoveAt(same);
+                }
+                else
+                    spans.Add(new Span(owner, r));
+            }
+            for (int i = 0; i < scratch.Count; i++)
+                Unbind(scratch[i]);
+            scratch.Clear();
             Resolve();
+        }
+
+        // The same span in the same mode and shape (the curve stays).
+        static bool Same(SpanRecord a, SpanRecord b)
+        {
+            if (a.OwnerPort != b.OwnerPort || a.PartnerId != b.PartnerId || a.PartnerPort != b.PartnerPort || a.WantRail != b.WantRail
+                || a.NoLift != b.NoLift || (a.Lift == null) != (b.Lift == null))
+                return false;
+            if (a.Lift != null)
+            {
+                if (a.Lift.Length != b.Lift.Length)
+                    return false;
+                for (int i = 0; i < a.Lift.Length; i++)
+                    if (a.Lift[i] != b.Lift[i])
+                        return false;
+            }
+            return true;
         }
 
         // ---- update ----
@@ -311,11 +344,10 @@ namespace MagRail
             apart.Clear();
         }
 
-        // Why these two ports cannot carry a rail now (Loc key), or null.
+        // Why these two ports cannot carry a rail now (Loc key), or null. A damaged end block is none: the span stays
+        // and carries trains, only the block itself does not (TrackBlockLogic.Rideable: a dead end there).
         public static string Problem(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort)
         {
-            if (!a.Block.IsFunctional || !b.Block.IsFunctional)
-                return "MagRail_Problem_Damaged";
             if (a.Style != b.Style)
                 return "MagRail_Problem_Style";
             return GridsOrLengthProblem(a, aPort, b, bPort);
@@ -439,7 +471,8 @@ namespace MagRail
                 : SpanCurve.Build(s.Owner.PortWorld(s.OwnerPort), s.Partner.PortWorld(s.PartnerPort));
         }
 
-        // How the span is laid from track pieces (for its current curve).
+        // How the span is laid from track pieces (for its current curve; segmented while it is being built, until every
+        // segment is finished: then laid as built, so a scratch on a built rail does not lay it anew).
         public TrackLayout LayoutOf(Span s)
         {
             SpanCurve c = CurveOf(s);
@@ -448,10 +481,41 @@ namespace MagRail
             // A style without strip models lays its switch branches as they are (no FanLevel).
             TrackStyle style = s.Owner.Style;
             bool fanChanged = style.HasStrips && FanLevel.KeyChanged(this, s);
-            if (s.Layout == null || s.Layout.Curve != c || fanChanged)
+            bool segmented = s.Record.WantRail && s.Record.Weld != null && !s.Record.Weld.AllFinished(style.Working);
+            if (s.Layout == null || s.Layout.Curve != c || fanChanged || s.Layout.Segmented != segmented)
                 s.Layout = TrackLayout.Build(c, style, style.HasStrips ? FanLevel.Build(this, s, c, style.Width) : null,
-                    s.Owner.IsBranchPort(s.OwnerPort), s.Partner.IsBranchPort(s.PartnerPort));
+                    s.Owner.IsBranchPort(s.OwnerPort), s.Partner.IsBranchPort(s.PartnerPort), segmented);
             return s.Layout;
+        }
+
+        // ---- welding (PLAN 10.8) ----
+
+        // Rails are built at once and for free (and go back to prototype at once, whatever is welded in, as vanilla
+        // creative removes a block): creative worlds, or a player with the admin creative tools on (Alt+F10). In survival
+        // a span switched to rail is welded segment by segment (SpanWeld).
+        // The local player. The game shows mods the tools' switch only through EnableCopyPaste: in survival it is true
+        // only with the tools on (and the rights to them).
+        public static bool FreeRails
+        {
+            get
+            {
+                IMySession session = MyAPIGateway.Session;
+                return session.CreativeMode || (session.HasCreativeRights && session.EnableCopyPaste);
+            }
+        }
+
+        // Server: a player's request. The tools' switch is the client's word (FreeRails there), the rights are checked
+        // here: Space Master or higher, as the game's own creative tools.
+        public static bool FreeRailsFor(ulong steamId, bool toolsOn)
+        {
+            return MyAPIGateway.Session.CreativeMode
+                || (toolsOn && MyAPIGateway.Session.GetUserPromoteLevel(steamId) >= MyPromoteLevel.SpaceMaster);
+        }
+
+        // The rail may go back to prototype: free rails, or nothing welded into it yet.
+        public static bool CanUnbuild(Span s, bool free)
+        {
+            return !s.Record.WantRail || free || (s.Record.Weld != null && s.Record.Weld.Empty);
         }
 
         // ---- changes (server; a client sends a request instead) ----
@@ -476,9 +540,9 @@ namespace MagRail
         public void RequestMode(Span s, bool wantRail)
         {
             if (Net.IsServer)
-                SetMode(s, wantRail);
+                SetMode(s, wantRail, FreeRails);
             else
-                Net.SendModeRequest(s.Owner, s.Record.OwnerPort, wantRail);
+                Net.SendModeRequest(s.Owner, s.Record.OwnerPort, wantRail, FreeRails);
         }
 
         // Rails only (a prototype is not painted).
@@ -526,6 +590,29 @@ namespace MagRail
             Changed(a);
         }
 
+        // Server: the block was taken off its grid (not moved to another one by a split). Its spans go: the ones it owns
+        // with it, the ones it is the partner of are deleted (else they would wait for it forever). Ground off or
+        // destroyed: what was welded into them and their stock drop out (SpanWelding.Spill); removed whole (creative
+        // tools): they just go.
+        public void Removed(TrackBlockLogic block)
+        {
+            IMySlimBlock slim = block.Block.SlimBlock;
+            bool spill = slim.IsFullyDismounted || slim.IsDestroyed;
+            int rails = 0;
+            for (int i = spans.Count - 1; i >= 0; i--)
+            {
+                Span s = spans[i];
+                if (s.Owner != block && s.Partner != block)
+                    continue;
+                if (spill)
+                    rails += SpanWelding.Contents(this, s);
+                if (s.Owner != block)
+                    Unlink(s);
+            }
+            if (rails > 0)
+                SpanWelding.Spill(rails, block.Block);
+        }
+
         public void Unlink(Span s)
         {
             Unbind(s);
@@ -534,14 +621,28 @@ namespace MagRail
             Changed(s.Owner);
         }
 
-        public void SetMode(Span s, bool wantRail)
+        // free: FreeRails of the player who asked.
+        public void SetMode(Span s, bool wantRail, bool free)
         {
+            if (wantRail == s.Record.WantRail || (!wantRail && !CanUnbuild(s, free)))
+                return;
+            s.BeginWeld(wantRail && !free);
             // Built as it lies now: the prototype's lift over the ground is kept with the rail.
             s.Record.Lift = null;
             if (wantRail && s.Bound && !s.Record.NoLift && s.Owner.Block.CubeGrid.IsStatic && s.Partner.Block.CubeGrid.IsStatic)
                 s.Record.Lift = TerrainLift.Measure(BaseCurve(s), FrameMatrix(s), s.Owner.Style);
             s.Record.WantRail = wantRail;
             s.Curve = null;
+            Changed(s.Owner);
+        }
+
+        // The segments' progress (Span.Weld's form), the components in stock (all finished, none in stock: built) and
+        // the integrity damage took off them (SpanWeld.Lost, null: none).
+        public void SetWeld(Span s, float[] done, int stock, float[] lost = null)
+        {
+            if (!s.Record.WantRail || (s.Record.Weld == null && done == null))
+                return;
+            s.SetWeld(done, stock, lost);
             Changed(s.Owner);
         }
 

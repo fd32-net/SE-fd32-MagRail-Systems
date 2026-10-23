@@ -22,7 +22,7 @@
         <Component Subtype="Construction" Count="5" />
         <Component Subtype="SmallTube" Count="4" />
         <Component Subtype="Motor" Count="4" />
-        <Component Subtype="MagRail_Rail" Count="1" />
+        <Component Subtype="MagRail_Rail" Count="2" />
         <Component Subtype="SteelPlate" Count="5" />
       </Components>
       <CriticalComponent Subtype="MagRail_Rail" Index="0" />
@@ -67,7 +67,7 @@
         <Component Subtype="Construction" Count="5" />
         <Component Subtype="SmallTube" Count="4" />
         <Component Subtype="Motor" Count="8" />
-        <Component Subtype="MagRail_Rail" Count="1" />
+        <Component Subtype="MagRail_Rail" Count="2" />
         <Component Subtype="SteelPlate" Count="5" />
       </Components>
       <CriticalComponent Subtype="MagRail_Rail" Index="0" />
@@ -111,7 +111,7 @@
         <Component Subtype="SmallTube" Count="4" />
         <Component Subtype="Motor" Count="4" />
         <Component Subtype="Computer" Count="5" />
-        <Component Subtype="MagRail_Rail" Count="1" />
+        <Component Subtype="MagRail_Rail" Count="2" />
         <Component Subtype="SteelPlate" Count="5" />
       </Components>
       <CriticalComponent Subtype="MagRail_Rail" Index="0" />
@@ -157,7 +157,7 @@
       <Model>Models\Cubes\Large\MagRail_EmbeddedRail.mwm</Model>
       <Components>
         <Component Subtype="SteelPlate" Count="15" />
-        <Component Subtype="MagRail_Rail" Count="1" />
+        <Component Subtype="MagRail_Rail" Count="2" />
         <Component Subtype="SteelPlate" Count="5" />
       </Components>
       <CriticalComponent Subtype="MagRail_Rail" Index="0" />
@@ -201,7 +201,7 @@
       <Model>Models\Cubes\Large\MagRail_EmbeddedRailHalf.mwm</Model>
       <Components>
         <Component Subtype="SteelPlate" Count="5" />
-        <Component Subtype="MagRail_Rail" Count="1" />
+        <Component Subtype="MagRail_Rail" Count="2" />
         <Component Subtype="SteelPlate" Count="5" />
       </Components>
       <CriticalComponent Subtype="MagRail_Rail" Index="0" />

@@ -29,7 +29,8 @@ namespace MagRail
         static readonly Color Steel = new Color(175, 185, 200);
 
         // `aimed` (under the Linker's crosshair) pulses white, `marked` (a click on the aimed port takes it away) pulses
-        // red; a built rail is drawn only then (over its track pieces).
+        // red; a built rail is drawn only then (over its track pieces), and then only its sections: a line would make it
+        // look like a prototype.
         public static void DrawAll(TrackNetwork network, TrackPieces pieces, Span aimed, Span marked)
         {
             for (int i = 0; i < network.Spans.Count; i++)
@@ -50,15 +51,17 @@ namespace MagRail
         public static void DrawCurve(SpanCurve c, MatrixD frame, TrackStyle style, LineStyle look, bool aimed = false,
             bool marked = false)
         {
-            int last = c.Pos.Count - 1;
+            int last = c.Pos.Count - 1, i = 0;
             float glow = marked ? 0.3f + 0.6f * Draw.Pulse : aimed ? 0.05f + 0.25f * Draw.Pulse : 0;
             Color tint = marked ? Draw.Red : Color.White;
             aimed |= marked;
+            // A rail aimed at: its sections only (see DrawAll).
+            if (look == LineStyle.Rail && aimed)
+                i = last;
             // Aimed or marked: brighter too, pulsing (the colour alone hardly shows on a steel rail).
             float bright = aimed ? 2 + 2 * Draw.Pulse : 1;
             double halfWidth = style.Width / 2;
             Vector3D a = Vector3D.Transform(c.Pos[0], frame);
-            int i = 0;
             while (i < last)
             {
                 double distance = Vector3D.Distance(a, Draw.Camera);

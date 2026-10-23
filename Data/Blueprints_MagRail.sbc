@@ -29,12 +29,12 @@
       <DisplayName>DisplayName_Item_MagRail_Rail</DisplayName>
       <Icon>Textures\Icons\MagRail_Rail.dds</Icon>
       <Prerequisites>
-        <Item Amount="40" TypeId="Ingot" SubtypeId="Iron" />
-        <Item Amount="10" TypeId="Ingot" SubtypeId="Nickel" />
-        <Item Amount="5" TypeId="Ingot" SubtypeId="Cobalt" />
+        <Item Amount="20" TypeId="Ingot" SubtypeId="Iron" />
+        <Item Amount="5" TypeId="Ingot" SubtypeId="Nickel" />
+        <Item Amount="2.5" TypeId="Ingot" SubtypeId="Cobalt" />
       </Prerequisites>
       <Result Amount="1" TypeId="Component" SubtypeId="MagRail_Rail" />
-      <BaseProductionTimeInSeconds>4</BaseProductionTimeInSeconds>
+      <BaseProductionTimeInSeconds>2</BaseProductionTimeInSeconds>
       <IsPrimary>true</IsPrimary>
     </Blueprint>
   </Blueprints>

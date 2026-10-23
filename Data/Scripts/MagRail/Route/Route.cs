@@ -31,8 +31,9 @@ namespace MagRail
                 if (walker.SamePiece(to))
                 {
                     double ahead = (to.S - walker.S) * walker.Dir;
-                    // On the first piece the station may be behind: walk on (a loop may bring it ahead).
-                    if (ahead >= 0)
+                    // On the first piece the station may be behind: walk on (a loop may bring it ahead). Past a
+                    // segment not finished yet (PieceLeft ends there) it is not reached.
+                    if (ahead >= 0 && ahead <= walker.PieceLeft + 1e-6)
                         return walked + ahead <= maxLength ? walked + ahead : -1;
                 }
                 walked += walker.PieceLeft;

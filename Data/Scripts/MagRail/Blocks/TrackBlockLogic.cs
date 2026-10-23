@@ -128,6 +128,7 @@ namespace MagRail
                 indexedGrid = Block.CubeGrid;
                 indexedStatic = Block.CubeGrid.IsStatic;
                 indexedGrid.OnBlockIntegrityChanged += OnIntegrity;
+                indexedGrid.OnBlockRemoved += OnRemoved;
                 // An embedded rail has nothing to set: out of the terminal and the toolbar's block list (synced properties,
                 // set by the server; the player may show it again, it changes nothing).
                 if (FixedHeight && Net.IsServer)
@@ -154,7 +155,9 @@ namespace MagRail
                 if (registered && (Block.CubeGrid != indexedGrid || Block.CubeGrid.IsStatic != indexedStatic))
                 {
                     indexedGrid.OnBlockIntegrityChanged -= OnIntegrity;
+                    indexedGrid.OnBlockRemoved -= OnRemoved;
                     Block.CubeGrid.OnBlockIntegrityChanged += OnIntegrity;
+                    Block.CubeGrid.OnBlockRemoved += OnRemoved;
                     indexedGrid = Block.CubeGrid;
                     indexedStatic = Block.CubeGrid.IsStatic;
                     Network.Touch();
@@ -175,12 +178,23 @@ namespace MagRail
                 NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
         }
 
+        // The grid tells it right after the block was taken off: closed already when it is gone (ground off, destroyed,
+        // removed), not when a split moves it to a new grid. Not told when the whole grid closes (deleted, unloaded).
+        void OnRemoved(IMySlimBlock slim)
+        {
+            if (slim == Block.SlimBlock && Block.MarkedForClose && Net.IsServer && registered && MagRailSession.Instance != null)
+                Network.Removed(this);
+        }
+
         public override void Close()
         {
             if (registered && MagRailSession.Instance != null)
                 Network.Unregister(this);
             if (registered)
+            {
                 indexedGrid.OnBlockIntegrityChanged -= OnIntegrity;
+                indexedGrid.OnBlockRemoved -= OnRemoved;
+            }
             registered = false;
             if (lift != null)
                 lift.Remove();

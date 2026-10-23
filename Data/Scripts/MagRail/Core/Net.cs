@@ -24,6 +24,7 @@ namespace MagRail
         Cruise = 12,                // server -> clients: a unit's cruise: Values = engaged, has target, target, note
         AutopilotRequest = 13,      // client -> server: autopilot command: Values = command, value; Block2 = argument; Text = text
         Autopilot = 14,             // server -> clients: an autopilot's settings (Text) and status (Port); Flag = show it as a note
+        CreativeTools = 16,         // client -> server: the player's free rails (creative tools on) changed: Flag (SpanWelding)
     }
 
     [ProtoContract]
@@ -201,6 +202,11 @@ namespace MagRail
             }
         }
 
+        public static void SendCreativeTools(bool on)
+        {
+            ToServer(new Packet { Type = PacketType.CreativeTools, Flag = on });
+        }
+
         public static void SendLinkRequest(TrackBlockLogic a, string aPort, TrackBlockLogic b, string bPort, bool noLift)
         {
             ToServer(new Packet { Type = PacketType.LinkRequest, Block = a.Block.EntityId, Port = aPort, Block2 = b.Block.EntityId, Port2 = bPort,
@@ -212,9 +218,11 @@ namespace MagRail
             ToServer(new Packet { Type = PacketType.UnlinkRequest, Block = owner.Block.EntityId, Port = port });
         }
 
-        public static void SendModeRequest(TrackBlockLogic owner, string port, bool wantRail)
+        // free: the sender's TrackNetwork.FreeRails (the server checks the rights).
+        public static void SendModeRequest(TrackBlockLogic owner, string port, bool wantRail, bool free)
         {
-            ToServer(new Packet { Type = PacketType.ModeRequest, Block = owner.Block.EntityId, Port = port, Flag = wantRail });
+            ToServer(new Packet { Type = PacketType.ModeRequest, Block = owner.Block.EntityId, Port = port, Flag = wantRail,
+                Values = new[] { free ? 1f : 0f } });
         }
 
         public static void SendPaintRequest(TrackBlockLogic owner, string port, Vector3 hsv, string skin)
@@ -254,6 +262,12 @@ namespace MagRail
                 if (p.Type == PacketType.AutopilotRequest || p.Type == PacketType.Autopilot)
                 {
                     ReceiveAutopilot(p, sender, fromServer);
+                    return;
+                }
+                if (p.Type == PacketType.CreativeTools)
+                {
+                    if (IsServer)
+                        SpanWelding.SetToolsOn(sender, p.Flag);
                     return;
                 }
                 TrackNetwork network = MagRailSession.Instance.Network;
@@ -308,7 +322,8 @@ namespace MagRail
                             network.Unlink(s);
                     }
                     else if (p.Type == PacketType.ModeRequest)
-                        network.SetMode(s, p.Flag);
+                        network.SetMode(s, p.Flag, TrackNetwork.FreeRailsFor(sender,
+                            p.Values != null && p.Values.Length == 1 && p.Values[0] > 0.5f));
                     else if (p.Values != null && p.Values.Length == 3 && s.Record.WantRail)     // prototypes are not painted
                         network.SetPaint(s, new Vector3(p.Values[0], p.Values[1], p.Values[2]), p.Skin ?? "");
                     break;

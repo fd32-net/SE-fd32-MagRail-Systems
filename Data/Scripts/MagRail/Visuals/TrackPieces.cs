@@ -8,7 +8,8 @@ namespace MagRail
 {
     // Track pieces of the spans in rail mode within view (clients): placed nearest span first, a few
     // per tick, removed once a span is out of range (with a margin, so they do not blink at the edge).
-    // Until a span is complete, SpanLines draws it as a steel line.
+    // Until a span's pieces are first all placed, SpanLines draws it as a steel line. A span being built (SpanWeld) shows construction
+    // stage pieces (stage 0 where nothing is welded in yet), the finished pieces on its finished segments.
     public class TrackPieces
     {
         const double EnterRange = 2000, ExitRange = 2300;
@@ -26,12 +27,7 @@ namespace MagRail
         public bool Complete(Span s)
         {
             PlacedPieces p;
-            return placed.TryGetValue(s, out p) && p.Layout == s.Layout && Done(p);
-        }
-
-        static bool Done(PlacedPieces p)
-        {
-            return p.Entities[p.Entities.Length - 1] != null;
+            return placed.TryGetValue(s, out p) && p.Layout == s.Layout && p.Shown;
         }
 
         public void Update(TrackNetwork network)
@@ -74,7 +70,10 @@ namespace MagRail
                     p = new PlacedPieces(s);
                     placed[s] = p;
                 }
-                p.Take(layout, PieceEntities.ParentOf(s), frame, layout.Pieces.Count);
+                p.Take(layout, PieceEntities.ParentOf(s), frame, layout.Pieces.Count, true);
+                // The pieces before go a refresh after the new ones are all placed: a new entity shows a frame late.
+                if (p.Done && p.Leaving.Count > 0)
+                    p.Release();
                 Vector3 color = s.Color;
                 string skin = s.Skin;
                 if (color != p.Color || skin != p.Skin)
@@ -82,9 +81,12 @@ namespace MagRail
                 int selectedStart = s.Owner.SelectedInstead(s.OwnerPort), selectedEnd = s.Partner.SelectedInstead(s.PartnerPort);
                 if (selectedStart != p.SelectedStart || selectedEnd != p.SelectedEnd)
                     p.Light(selectedStart, selectedEnd);
+                float[] weld = s.Weld(layout);
+                if (p.WeldRevision != s.WeldRevision || p.Weld != weld)
+                    p.ApplyWeld(weld, s.WeldRevision);
                 p.Stamp = stamp;
                 p.Distance = d;
-                if (!Done(p))
+                if (!p.Done)
                     queue.Add(p);
             }
             int count = 0;
@@ -117,7 +119,7 @@ namespace MagRail
                 TrackLayout layout = p.Layout;
                 for (int i = 0; i < p.Entities.Length && budget > 0; i++)
                 {
-                    if (p.Entities[i] != null)
+                    if (p.Entities[i] != null || !p.Wanted(i))
                         continue;
                     // The bare body first, then the piece over it (Show).
                     if (layout.Bare[i] != null)
@@ -129,6 +131,49 @@ namespace MagRail
                         layout.Glow(i, p.SelectedStart, p.SelectedEnd));
                     p.Show(i);
                     budget--;
+                }
+                for (int j = 0; j < p.Stages.Length && budget > 0; j++)
+                {
+                    int stage = p.StageWanted(j);
+                    if (p.Stages[j] != null || stage < 0)
+                        continue;
+                    p.Stages[j] = PieceEntities.Visual(PieceEntities.Model(layout.Style.Stage(stage, layout.StageFull[j])), layout.Stages[j],
+                        p.Frame, p.Parent, p.Color, p.Skin, 1);
+                    p.StageShown[j] = stage;
+                    budget--;
+                }
+                // Gone through it all with budget to spare: nothing is missing.
+                if (budget > 0)
+                    p.Done = p.Shown = true;
+            }
+        }
+
+        // The shown piece of span s nearest to a world point (a bullet's mark goes on it, SpanPart), or null: none placed.
+        public MyEntity PieceNear(Span s, Vector3D point)
+        {
+            PlacedPieces p;
+            if (!placed.TryGetValue(s, out p) || p.Entities == null)
+                return null;
+            MyEntity best = null;
+            double bestDistance = double.MaxValue;
+            Nearest(p.Entities, point, ref best, ref bestDistance);
+            Nearest(p.Bares, point, ref best, ref bestDistance);
+            Nearest(p.Stages, point, ref best, ref bestDistance);
+            return best;
+        }
+
+        static void Nearest(MyEntity[] entities, Vector3D point, ref MyEntity best, ref double bestDistance)
+        {
+            for (int i = 0; i < entities.Length; i++)
+            {
+                MyEntity e = entities[i];
+                if (e == null || e.MarkedForClose || !e.InScene || !e.Render.Visible)
+                    continue;
+                double d = e.PositionComp.WorldAABB.Distance(point);
+                if (d < bestDistance)
+                {
+                    best = e;
+                    bestDistance = d;
                 }
             }
         }
