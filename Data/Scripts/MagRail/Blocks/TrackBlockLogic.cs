@@ -128,6 +128,13 @@ namespace MagRail
                 indexedGrid = Block.CubeGrid;
                 indexedStatic = Block.CubeGrid.IsStatic;
                 indexedGrid.OnBlockIntegrityChanged += OnIntegrity;
+                // An embedded rail has nothing to set: out of the terminal and the toolbar's block list (synced properties,
+                // set by the server; the player may show it again, it changes nothing).
+                if (FixedHeight && Net.IsServer)
+                {
+                    Block.ShowInTerminal = false;
+                    Block.ShowInToolbarConfig = false;
+                }
                 TrackTerminal.Create();
                 NeedsUpdate |= MyEntityUpdateEnum.EACH_100TH_FRAME;
             }

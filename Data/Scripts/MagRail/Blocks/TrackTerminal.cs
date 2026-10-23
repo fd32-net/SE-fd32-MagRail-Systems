@@ -135,6 +135,45 @@ namespace MagRail
             Add(flipped, b => IsKind(b, TrackKind.Switch));
 
             CreateActions();
+            HideOnOff();
+        }
+
+        // A rail always works and carries trains only while functional (TrackBlockLogic.Rideable): no On/Off switch, no actions.
+        // The Autopilot is an UpgradeModule too and keeps them. The switch's separator (MyFunctionalBlock adds it right
+        // after the switch; through the mod API a separator's Id is "") goes with it: a bare line on top of the terminal otherwise.
+        static void HideOnOff()
+        {
+            List<IMyTerminalControl> vanilla;
+            MyAPIGateway.TerminalControls.GetControls<IMyUpgradeModule>(out vanilla);
+            for (int i = 0; i < vanilla.Count; i++)
+            {
+                if (vanilla[i].Id != "OnOff")
+                    continue;
+                HideOnTrack(vanilla[i]);
+                if (i + 1 < vanilla.Count && vanilla[i + 1] is IMyTerminalControlSeparator)
+                    HideOnTrack(vanilla[i + 1]);
+            }
+            List<IMyTerminalAction> actions;
+            MyAPIGateway.TerminalControls.GetActions<IMyUpgradeModule>(out actions);
+            foreach (IMyTerminalAction action in actions)
+            {
+                if (action.Id == null || !action.Id.StartsWith("OnOff", StringComparison.Ordinal))
+                    continue;
+                Func<IMyTerminalBlock, bool> enabled = action.Enabled;
+                action.Enabled = b => !IsTrack(b) && (enabled == null || enabled(b));
+            }
+        }
+
+        static void HideOnTrack(IMyTerminalControl control)
+        {
+            Func<IMyTerminalBlock, bool> visible = control.Visible;
+            control.Visible = b => !IsTrack(b) && (visible == null || visible(b));
+        }
+
+        // Any track block, also one without settings yet.
+        static bool IsTrack(IMyTerminalBlock b)
+        {
+            return b != null && b.GameLogic != null && b.GameLogic.GetAs<TrackBlockLogic>() != null;
         }
 
         static void Add(IMyTerminalControl control, Func<IMyTerminalBlock, bool> visible)
