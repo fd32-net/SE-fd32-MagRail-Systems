@@ -828,6 +828,12 @@
   <data name="MagRail_Ap_Park_Tip" xml:space="preserve">
     <value>Включает ручной тормоз поезда по прибытии.</value>
   </data>
+  <data name="MagRail_Ap_Precise" xml:space="preserve">
+    <value>Точная остановка</value>
+  </data>
+  <data name="MagRail_Ap_Precise_Tip" xml:space="preserve">
+    <value>Вкл: поезд встаёт точно на станцию, в конце медленно подъезжая к ней. Выкл: тормозит сразу до остановки, примерно в пределах полуметра, и не сдаёт назад, если проехал — быстрее.</value>
+  </data>
   <data name="MagRail_Ap_ShowGps" xml:space="preserve">
     <value>Показывать станции</value>
   </data>

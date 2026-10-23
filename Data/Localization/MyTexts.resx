@@ -828,6 +828,12 @@
   <data name="MagRail_Ap_Park_Tip" xml:space="preserve">
     <value>Puts the train's hand brake on when it arrives.</value>
   </data>
+  <data name="MagRail_Ap_Precise" xml:space="preserve">
+    <value>Precise stop</value>
+  </data>
+  <data name="MagRail_Ap_Precise_Tip" xml:space="preserve">
+    <value>On: the train stops exactly over the station, creeping up to it at the end. Off: it brakes straight to a stop within about half a metre and does not back up if it rolls past — faster.</value>
+  </data>
   <data name="MagRail_Ap_ShowGps" xml:space="preserve">
     <value>Show stations</value>
   </data>

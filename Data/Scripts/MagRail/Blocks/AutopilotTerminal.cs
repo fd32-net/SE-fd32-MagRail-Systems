@@ -197,6 +197,14 @@ namespace MagRail
             park.Visible = IsAutopilot;
             tc.AddControl<IMyUpgradeModule>(park);
 
+            IMyTerminalControlCheckbox precise = tc.CreateControl<IMyTerminalControlCheckbox, IMyUpgradeModule>("MagRail_ApPrecise");
+            precise.Title = Loc.Id("MagRail_Ap_Precise");
+            precise.Tooltip = Loc.Id("MagRail_Ap_Precise_Tip");
+            precise.Getter = b => IsAutopilot(b) && Get(b).Config.Precise;
+            precise.Setter = (b, v) => Run(b, CmdPrecise, v ? 1 : 0);
+            precise.Visible = IsAutopilot;
+            tc.AddControl<IMyUpgradeModule>(precise);
+
             IMyTerminalControlCheckbox show = tc.CreateControl<IMyTerminalControlCheckbox, IMyUpgradeModule>("MagRail_ApShowGps");
             show.Title = Loc.Id("MagRail_Ap_ShowGps");
             show.Tooltip = Loc.Id("MagRail_Ap_ShowGps_Tip");

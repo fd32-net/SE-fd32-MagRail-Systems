@@ -47,6 +47,8 @@ namespace MagRail
         public bool Active;
         // Park the train (hand brake) on arrival; show the stations as GPS marks.
         public bool Park, ShowStations;
+        // Stop exactly over the station (creeping up to it, backing up if past), else wherever the braking curve ends.
+        public bool Precise = true;
         // Acceleration and braking asked of the train (m/s^2), and the side force allowed in curves (g; 0 = no
         // limit, curves do not slow it). User decisions 2026-10-15: set per autopilot, 1..50 m/s^2 (default 20),
         // 1..9 g or no limit.
@@ -60,7 +62,7 @@ namespace MagRail
         }
 
         // Line 1: header; line 2: selected, max speed, running, target, last, active, park, show stations,
-        // acceleration, braking, side acceleration (tab separated); then a line per station: world x y z, grid id, local x y z, timer id, name.
+        // acceleration, braking, side acceleration, precise stop (tab separated); then a line per station: world x y z, grid id, local x y z, timer id, name.
         public string Save()
         {
             StringBuilder sb = new StringBuilder();
@@ -68,7 +70,7 @@ namespace MagRail
                 .Append('\t').Append(Target).Append('\t').Append(Last).Append('\t').Append(Active ? 1 : 0)
                 .Append('\t').Append(Park ? 1 : 0).Append('\t').Append(ShowStations ? 1 : 0)
                 .Append('\t').Append(Accel.ToString("R", CultureInfo.InvariantCulture)).Append('\t').Append(Brake.ToString("R", CultureInfo.InvariantCulture))
-                .Append('\t').Append(Lateral.ToString("R", CultureInfo.InvariantCulture));
+                .Append('\t').Append(Lateral.ToString("R", CultureInfo.InvariantCulture)).Append('\t').Append(Precise ? 1 : 0);
             for (int i = 0; i < Stations.Count; i++)
             {
                 Station s = Stations[i];
@@ -116,6 +118,8 @@ namespace MagRail
                 if (Num(head[10], out v))
                     c.Lateral = ClampLateral(v);
             }
+            if (head.Length > 11)
+                c.Precise = head[11] != "0";
             for (int i = 2; i < lines.Length; i++)
             {
                 string[] f = lines[i].Split('\t');

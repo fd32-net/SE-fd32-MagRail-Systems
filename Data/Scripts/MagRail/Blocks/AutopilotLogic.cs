@@ -36,7 +36,7 @@ namespace MagRail
             // value = tenths of m/s^2 (CmdLateral: of g, 0 = no limit)
             CmdAccel = 12, CmdBrake = 13, CmdLateral = 14,
             // value = the station, arg = -1 up the list / +1 down
-            CmdOrder = 15;
+            CmdOrder = 15, CmdPrecise = 16;
 
         // The speed asked for runs at most this far ahead of the train's own while it speeds up (m/s).
         const double RampLead = 1.0, Step = 1.0 / 60.0;
@@ -45,6 +45,9 @@ namespace MagRail
         const double ApproachGain = 1.0, CreepSpeed = 0.15, StopZone = 0.1, BackupSpeed = 1.0;
         // Overshot this far at most (the station is looked for behind the train within this).
         const double OvershootSearch = 50;
+        // Not precise: the braking curve all the way (never below RoughCreep); within RoughDistance or past the
+        // station the train brakes to a stop where it is.
+        const double RoughCreep = 1.0, RoughDistance = 0.5;
         // Arrived: within ArriveDistance and moved less than ArriveStill over ArriveTicks, or SettleTicks after first
         // reaching it (parking waits for the stop however long it takes).
         const double ArriveDistance = 0.2, ArriveStill = 0.02;
@@ -53,6 +56,9 @@ namespace MagRail
         const double HaltSpeed = 0.1;
         const int HaltTicks = 10;
         const double RailDistance = 5;      // the block's drop point is at most this far from the rail
+        // The braking curve counts on at most this share of what the train's engines can stop its mass with (slopes,
+        // a short network); never below MinBrake (a train without engines creeps).
+        const double BrakeMargin = 0.8, MinBrake = 0.1;
         const int EngineRefreshTicks = 60, StationRefreshTicks = 60, ScanTicks = 15, StatusTicks = 60, GroupRefreshTicks = 60;
 
         static readonly Guid StorageGuid = new Guid("7c1e4a90-3d2b-4f86-a5e1-9b0c6d2f8e47");
@@ -71,6 +77,7 @@ namespace MagRail
         static readonly Dictionary<IMyCubeGrid, Command> commands = new Dictionary<IMyCubeGrid, Command>();
         static readonly List<IMyCubeGrid> groupScratch = new List<IMyCubeGrid>();
         static readonly List<IMyShipController> controllerScratch = new List<IMyShipController>();
+        static readonly List<IMyPowerProducer> producerScratch = new List<IMyPowerProducer>();
         static int tick;
 
         public IMyUpgradeModule Block { get; private set; }
@@ -87,7 +94,7 @@ namespace MagRail
         HoverEngineLogic engine;
         int engineTick = -999, stationTick = -999, scanTick = -999, statusTick = -999, groupTick = -999;
         readonly List<Route.Limit> limits = new List<Route.Limit>();
-        double scanDistance, trainLength, distance, lastSpeed;
+        double scanDistance, trainLength, distance, lastSpeed, brake;
         Vector3D direction;
         int arriveTicks, arriveStart = -1, haltStart, haltTicks;
         double arriveRef;
@@ -292,7 +299,7 @@ namespace MagRail
             TrackSample s = cursor.Sample(Block.WorldMatrix.Translation, 0);
             direction = s.Tangent;
 
-            if (Arrived(c))
+            if (c.Precise ? Arrived(c) : RoughArrived(c))
                 return;
 
             double maxSpeed = Math.Min(c.MaxSpeed, Cruise.MaxSpeed(Block.CubeGrid));
@@ -300,18 +307,19 @@ namespace MagRail
             {
                 scanTick = tick;
                 scanDistance = distance;
-                double look = maxSpeed * maxSpeed / (2 * c.Brake) + trainLength + 10;
+                brake = TrainBrake(c.Brake);
+                double look = maxSpeed * maxSpeed / (2 * brake) + trainLength + 10;
                 if (c.Lateral > 0)
                     Route.CurveLimits(cursor, Math.Min(look, Math.Max(0, distance)), c.LateralAccel, maxSpeed, limits);
                 else
                     limits.Clear();
             }
             // The speed asked for and what sets it (shown in the status: the player sees why it is not faster).
-            double speed = StationSpeed(distance, maxSpeed, c.Brake), radius = 0;
+            double speed = StationSpeed(distance, maxSpeed, brake, c.Precise), radius = 0;
             string why = speed >= maxSpeed ? "MagRail_Ap_DrivingMax" : "MagRail_Ap_DrivingStation";
             if (speed > 0)
             {
-                double curve = Math.Max(CreepSpeed, Route.Allowed(limits, scanDistance - distance, c.Brake, trainLength, maxSpeed, out radius));
+                double curve = Math.Max(CreepSpeed, Route.Allowed(limits, scanDistance - distance, brake, trainLength, maxSpeed, out radius));
                 if (curve < speed)
                 {
                     speed = curve;
@@ -373,10 +381,37 @@ namespace MagRail
             return false;
         }
 
-        // Speed asked for at `d` metres to go (minus = overshot): the max speed, a braking curve, a linear fall
-        // near the station with a creep speed, nothing within the stop zone, backing up when overshot.
-        static double StationSpeed(double d, double maxSpeed, double brake)
+        // Not precise: within RoughDistance or past the station the train brakes to a stop where it is; standing, or
+        // SettleTicks after, it has arrived (parked, if asked).
+        bool RoughArrived(AutopilotConfig c)
         {
+            if (arriveStart < 0)
+            {
+                if (distance >= RoughDistance)
+                    return false;
+                arriveStart = tick;
+            }
+            double own = Block.CubeGrid.Physics != null ? Math.Abs(Vector3D.Dot(Block.CubeGrid.Physics.LinearVelocity, direction)) : 0;
+            arriveTicks = own < HaltSpeed ? arriveTicks + 1 : 0;
+            if (arriveTicks >= HaltTicks || tick - arriveStart >= SettleTicks)
+            {
+                if (c.Park)
+                    SetHandBrake(true);
+                Finish(AutopilotStatus.Make(c.Park ? "MagRail_Ap_ArrivedParked" : "MagRail_Ap_Arrived", targetArg), true, true);
+                return true;
+            }
+            lastSpeed = 0;
+            SendCommand(0);
+            return true;
+        }
+
+        // Speed asked for at `d` metres to go (minus = overshot): the max speed, a braking curve, a linear fall
+        // near the station with a creep speed, nothing within the stop zone, backing up when overshot. Not precise:
+        // the braking curve to the end (RoughArrived stops the train).
+        static double StationSpeed(double d, double maxSpeed, double brake, bool precise)
+        {
+            if (!precise)
+                return Math.Min(maxSpeed, Math.Max(RoughCreep, Math.Sqrt(2 * brake * Math.Max(0, d))));
             if (Math.Abs(d) < StopZone)
                 return 0;
             if (d < 0)
@@ -544,6 +579,54 @@ namespace MagRail
             return max > min ? max - min : 0;
         }
 
+        // The braking the curve counts on (m/s^2): the set one, or less if the train's engines (full force against
+        // the motion: Drive.AutopilotThrust) cannot stop its mass that hard, or its network cannot power them for it.
+        double TrainBrake(double set)
+        {
+            RefreshTrain(false);
+            double mass = 0, force = 0, power = 0, enginesNow = 0;
+            for (int i = 0; i < train.Count; i++)
+                if (train[i].Physics != null)
+                    mass += train[i].Physics.Mass;
+            List<HoverEngineLogic> engines = MagRailSession.Instance.Engines;
+            for (int i = 0; i < engines.Count; i++)
+            {
+                HoverEngineLogic e = engines[i];
+                if (!e.Held || !train.Contains(e.Block.CubeGrid))
+                    continue;
+                enginesNow += e.PowerNow;
+                if (e.Block.Propulsion && e.Block.PropulsionOverride == 0)
+                {
+                    force += e.Force;
+                    power += e.MaxPower;
+                }
+            }
+            if (mass <= 0)
+                return set;
+            double spare = SparePower(enginesNow);
+            if (power > spare)
+                force *= spare / power;
+            return Math.Max(MinBrake, Math.Min(set, force / mass * BrakeMargin));
+        }
+
+        // Power the train's network could give its engines now, MW: what its producers can put out at most, less what
+        // everything but the engines (enginesNow, MW) draws.
+        double SparePower(double enginesNow)
+        {
+            producerScratch.Clear();
+            var terminal = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(Block.CubeGrid);
+            if (terminal != null)
+                terminal.GetBlocksOfType(producerScratch, p => p.IsFunctional && p.Enabled);
+            double max = 0, now = 0;
+            for (int i = 0; i < producerScratch.Count; i++)
+            {
+                max += producerScratch[i].MaxOutput;
+                now += producerScratch[i].CurrentOutput;
+            }
+            producerScratch.Clear();
+            return Math.Max(0, max - Math.Max(0, now - enginesNow));
+        }
+
         void SendCommand(double speed)
         {
             RefreshTrain(false);
@@ -623,7 +706,7 @@ namespace MagRail
         {
             return command == CmdSelect || command == CmdRename || command == CmdTimer || command == CmdRemove || command == CmdMaxSpeed
                 || command == CmdPark || command == CmdShowStations || command == CmdAccel || command == CmdBrake || command == CmdLateral
-                || command == CmdOrder;
+                || command == CmdOrder || command == CmdPrecise;
         }
 
         public void ServerCommand(int command, int value, long arg, string text)
@@ -736,6 +819,9 @@ namespace MagRail
                     break;
                 case CmdShowStations:
                     c.ShowStations = value != 0;
+                    break;
+                case CmdPrecise:
+                    c.Precise = value != 0;
                     break;
                 case CmdMaxSpeed:
                     c.MaxSpeed = MathHelper.Clamp(value, 1, (int)Cruise.MaxSpeed(Block.CubeGrid));
