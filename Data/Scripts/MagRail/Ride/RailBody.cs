@@ -357,7 +357,7 @@ namespace MagRail
         // rail ~0.1 s ahead (the grid pitches into a slope or banks into a curve slightly before it gets there);
         // pathForward stays the rail's own tangent. Several: the best-fit line through their targets (long
         // grids follow the chord of a curve, not one end's tangent) and their mean up; pathForward the same line
-        // through their rail points.
+        // through their rail points. Engines side by side on parallel rails count as if on one rail.
         void Frame(HoverEngineLogic first, Vector3D firstTangent, Vector3D relative, Vector3D com,
             out Vector3D railForward, out Vector3D up, out Vector3D pathForward)
         {
@@ -383,34 +383,50 @@ namespace MagRail
             }
 
             Vector3D reference = points[0].Tangent;
+            // Engines on parallel rails (side by side across the grid): every point is moved across its rail by its
+            // engine's place across the grid (from the engines' mean) before the fit, so the line runs along the
+            // rails, not from one rail to the other. Engines in one line along the grid are not moved.
+            Vector3D across = GridAxisAlong(Vector3D.Cross(reference, points[0].Up));
+            double acrossMean = 0;
+            for (int i = 0; i < points.Count; i++)
+                acrossMean += Vector3D.Dot(points[i].Position - com, across);
+            acrossMean /= points.Count;
             Vector3D centroid = Vector3D.Zero, upSum = Vector3D.Zero, weighted = Vector3D.Zero;
             Vector3D railCentroid = Vector3D.Zero, railWeighted = Vector3D.Zero;
             double scoreSum = 0, rear = double.MaxValue, front = double.MinValue;
-            GuidePoint rearPoint = points[0], frontPoint = points[0];
+            Vector3D rearTarget = points[0].Target, frontTarget = rearTarget;
+            Vector3D rearRail = points[0].RailPoint, frontRail = rearRail;
             for (int i = 0; i < points.Count; i++)
             {
                 GuidePoint g = points[i];
+                Vector3D side = Reject(Vector3D.Cross(g.Tangent, g.Up), g.Tangent);
+                if (Vector3D.Dot(side, across) < 0)
+                    side = -side;
+                Vector3D shift = side * (Vector3D.Dot(g.Position - com, across) - acrossMean);
+                Vector3D target = g.Target - shift, railPoint = g.RailPoint - shift;
                 double score = Vector3D.Dot(g.Position, reference);
-                centroid += g.Target;
-                railCentroid += g.RailPoint;
+                centroid += target;
+                railCentroid += railPoint;
                 upSum += g.Up;
                 scoreSum += score;
-                weighted += g.Target * score;
-                railWeighted += g.RailPoint * score;
+                weighted += target * score;
+                railWeighted += railPoint * score;
                 if (score < rear)
                 {
                     rear = score;
-                    rearPoint = g;
+                    rearTarget = target;
+                    rearRail = railPoint;
                 }
                 if (score > front)
                 {
                     front = score;
-                    frontPoint = g;
+                    frontTarget = target;
+                    frontRail = railPoint;
                 }
             }
             centroid /= points.Count;
             railCentroid /= points.Count;
-            Vector3D chosen = Chord(weighted - centroid * scoreSum, frontPoint.Target - rearPoint.Target);
+            Vector3D chosen = Chord(weighted - centroid * scoreSum, frontTarget - rearTarget);
             if (chosen.LengthSquared() > 0.25)
             {
                 railForward = Orient(chosen, reference);
@@ -418,7 +434,7 @@ namespace MagRail
                 // The motion goes along the same line through the rail points, not the targets: engines at different
                 // heights tilt the targets' line, and keeping the speed along it while gravity is cancelled across the
                 // rail rolled the train down that tilt for free (a slope that is not there).
-                Vector3D rail = Chord(railWeighted - railCentroid * scoreSum, frontPoint.RailPoint - rearPoint.RailPoint);
+                Vector3D rail = Chord(railWeighted - railCentroid * scoreSum, frontRail - rearRail);
                 if (rail.LengthSquared() > 0.25)
                     pathForward = Orient(rail, reference);
             }
@@ -758,6 +774,24 @@ namespace MagRail
         {
             MatrixD m = Grid.WorldMatrix;
             return axis == 1 ? m.Left : axis == 2 ? m.Up : m.Forward;
+        }
+
+        // Grid axis most aligned with the direction (its sign kept).
+        Vector3D GridAxisAlong(Vector3D direction)
+        {
+            Vector3D best = GridAxis(0);
+            double bestDot = Vector3D.Dot(best, direction);
+            for (int i = 1; i < 3; i++)
+            {
+                Vector3D axis = GridAxis(i);
+                double d = Vector3D.Dot(axis, direction);
+                if (Math.Abs(d) > Math.Abs(bestDot))
+                {
+                    best = axis;
+                    bestDot = d;
+                }
+            }
+            return bestDot < 0 ? -best : best;
         }
 
         // Rotation vector (axis * angle) that turns frame 1 onto frame 2; exact at any angle.
