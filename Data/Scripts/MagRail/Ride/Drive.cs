@@ -163,7 +163,9 @@ namespace MagRail
 
         // The autopilot's speed along its direction (minus = back), held as the cruise holds its own: pushing the
         // way the grid moves takes the engines' thrust (Power, Speed Limit), against it their full force. A grid
-        // square to the direction (a far wagon in a tight curve) goes the way it moves.
+        // square to the direction (a far wagon in a tight curve) goes the way it moves. along: the speed after this
+        // tick's physics (gravity added), so a lift keeps the speed asked and stops at its station, not g/60 m/s
+        // short of it.
         double AutopilotThrust(List<HoverEngineLogic> held, Vector3D pathForward, double along, double mass, double ramp, int tick)
         {
             State = DriveState.Autopilot;
@@ -248,7 +250,7 @@ namespace MagRail
         // Cruise thrust: every tick the engines put this grid back on the target speed, as far as their thrust (or
         // the gentle cruise brake) reaches on this grid's own mass; whatever the wagons, slopes and drag take away is
         // made up on the next tick, so nothing is learned and nothing swings (the old Maglev's cruise). Engines with
-        // Propulsion off or an override do not cruise.
+        // Propulsion off or an override do not cruise. along: the speed after this tick's physics, as the autopilot's.
         double CruiseThrust(List<HoverEngineLogic> held, Vector3D pathForward, double along, double mass, double ramp, int tick)
         {
             State = DriveState.Cruise;
@@ -320,10 +322,10 @@ namespace MagRail
             if (BrakeForce > 0)
                 State = parked ? DriveState.Parked : DriveState.Braking;
             if (autopilot && BrakeForce <= 0)
-                return AutopilotThrust(held, pathForward, along, mass, ramp, tick);
+                return AutopilotThrust(held, pathForward, along + drift, mass, ramp, tick);
             // W over the cruise is gas over the target: the pilot's thrust instead.
             if (cruising && cruiseMove <= 0.1 && BrakeForce <= 0)
-                return CruiseThrust(held, pathForward, along, mass, ramp, tick);
+                return CruiseThrust(held, pathForward, along + drift, mass, ramp, tick);
             if (!anyInput)
                 return BrakeForce <= 0 && Dampers() ? Damp(held, along + drift, mass, ramp) : 0;
             if (reference == null || reference.MarkedForClose)

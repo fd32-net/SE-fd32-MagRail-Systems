@@ -18,9 +18,10 @@ namespace MagRail
     // before). It keeps up to 10 stations; a station is the rail point under the block where the train stood when
     // it was remembered. "Go" drives the train there along the track with the switches as they are (Route: no way
     // there = error, the train does not start) until the block is over the point again; then the station's timer
-    // is triggered (and the train parked, if asked). On the way the route is walked again every tick: a switch
-    // thrown, a rail turned prototype or a block lost and the train brakes to a stop with that error. Stop brakes
-    // it to a stop as well; switching the block off lets go at once.
+    // is triggered (and the train parked, if asked: hand brake and its connectors with Parking on, as the vanilla
+    // P). On the way the route is walked again every tick: a switch thrown, a rail turned prototype or a block lost
+    // and the train brakes to a stop with that error. Stop brakes it to a stop as well; switching the block off
+    // lets go at once.
     // Speed: the max speed (m/s), speeding up at the set acceleration, a braking curve to the station at the set
     // braking, and slower before curves, so the side acceleration stays within the set one until the whole train has
     // left the curve (user decisions 2026-10-15; the rail itself takes any curve at any speed: RailBody). Every grid of the train holds the speed asked with its own engines (Drive.AutopilotThrust).
@@ -78,6 +79,7 @@ namespace MagRail
         static readonly List<IMyCubeGrid> groupScratch = new List<IMyCubeGrid>();
         static readonly List<IMyShipController> controllerScratch = new List<IMyShipController>();
         static readonly List<IMyPowerProducer> producerScratch = new List<IMyPowerProducer>();
+        static readonly List<IMyShipConnector> connectorScratch = new List<IMyShipConnector>();
         static int tick;
 
         public IMyUpgradeModule Block { get; private set; }
@@ -248,6 +250,7 @@ namespace MagRail
             c.Last = c.Target;
             Store();
             SetHandBrake(false);
+            ParkConnectors(false);
             targetArg = c.Arg(c.Target);
             arrivalTimer = c.Stations[c.Target].TimerId;
             RefreshTrain(true);
@@ -370,6 +373,7 @@ namespace MagRail
                 if (arriveTicks < ArriveTicks)
                     return false;
                 SetHandBrake(true);
+                ParkConnectors(true);
                 Finish(AutopilotStatus.Make("MagRail_Ap_ArrivedParked", targetArg), true, true);
                 return true;
             }
@@ -396,7 +400,10 @@ namespace MagRail
             if (arriveTicks >= HaltTicks || tick - arriveStart >= SettleTicks)
             {
                 if (c.Park)
+                {
                     SetHandBrake(true);
+                    ParkConnectors(true);
+                }
                 Finish(AutopilotStatus.Make(c.Park ? "MagRail_Ap_ArrivedParked" : "MagRail_Ap_Arrived", targetArg), true, true);
                 return true;
             }
@@ -647,6 +654,26 @@ namespace MagRail
             for (int i = 0; i < controllerScratch.Count; i++)
                 controllerScratch[i].HandBrake = on;
             controllerScratch.Clear();
+        }
+
+        // Parking as the vanilla P parks: the train's connectors with Parking on lock if ready (park) or unlock
+        // (start). Connectors coupling wagons need Parking off, as for the P in the cockpit.
+        void ParkConnectors(bool on)
+        {
+            RefreshTrain(false);
+            connectorScratch.Clear();
+            var terminal = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(Block.CubeGrid);
+            if (terminal != null)
+                terminal.GetBlocksOfType(connectorScratch, k => train.Contains(k.CubeGrid) && k.IsParkingEnabled);
+            for (int i = 0; i < connectorScratch.Count; i++)
+            {
+                IMyShipConnector k = connectorScratch[i];
+                if (on && k.Status == Sandbox.ModAPI.Ingame.MyShipConnectorStatus.Connectable)
+                    k.Connect();
+                else if (!on && k.IsConnected)
+                    k.Disconnect();
+            }
+            connectorScratch.Clear();
         }
 
         bool HandBrakeOn()
