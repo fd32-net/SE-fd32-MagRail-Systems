@@ -227,8 +227,10 @@ namespace MagRail
                     return;
                 }
             }
+            // The station first: the engine is chosen by the way to it.
+            bool stationFound = FindStation(true);
             string error = FindPlace(true);
-            if (error == null && !FindStation(true))
+            if (error == null && !stationFound)
                 error = "MagRail_Ap_ErrStationRail";
             if (error != null)
             {
@@ -497,35 +499,45 @@ namespace MagRail
 
         // ---- where the train is ----
 
-        // The block's place on the rail (cursor): the block dropped onto the rail plane of the nearest engine of
-        // the train that holds the rail (its height above the rail taken out). Returns an error key or null.
+        // The block's place on the rail (cursor): the block dropped onto the rail plane of the engine whose rail it
+        // follows (its height above the rail taken out). The engine is chosen at the start and kept while it holds:
+        // on rails side by side the station is on one of them, and another engine's rail plane would drop the block
+        // beside the cursor's rail. Returns an error key or null.
         string FindPlace(bool fresh)
         {
-            if (fresh || engine == null || !engine.Held || engine.Block.MarkedForClose || tick - engineTick >= EngineRefreshTicks)
+            if (fresh || engine == null || !engine.Held || engine.Block.MarkedForClose || !engine.Cursor.Valid
+                || (tick - engineTick >= EngineRefreshTicks && !SameTrain(engine.Block.CubeGrid, Block.CubeGrid)))
             {
                 engineTick = tick;
-                engine = NearestEngine();
+                engine = ChooseEngine();    // leaves the cursor reset: it starts again on the chosen rail
             }
+            else if (tick - engineTick >= EngineRefreshTicks)
+                engineTick = tick;
             if (engine == null)
                 return "MagRail_Ap_ErrNoEngine";
-            if (!engine.Cursor.Valid)
-                return "MagRail_Ap_ErrNoRail";
-            TrackSample rail = engine.Cursor.Sample(engine.GuidePoint, 0);
-            Vector3D at = Block.WorldMatrix.Translation;
-            Vector3D drop = at - rail.Up * Vector3D.Dot(at - rail.Point, rail.Up);
-            if (fresh || !cursor.Valid)
-                cursor.CopyFrom(engine.Cursor);
-            TrackSample s;
-            if (!cursor.TryProject(drop, rail.Tangent, RailDistance, 0, out s))
-                return "MagRail_Ap_ErrNoRail";
-            return null;
+            return Project(engine);
         }
 
-        HoverEngineLogic NearestEngine()
+        // The cursor on e's rail under the block (from e's own place when it has none yet).
+        string Project(HoverEngineLogic e)
+        {
+            TrackSample rail = e.Cursor.Sample(e.GuidePoint, 0);
+            Vector3D at = Block.WorldMatrix.Translation;
+            Vector3D drop = at - rail.Up * Vector3D.Dot(at - rail.Point, rail.Up);
+            if (!cursor.Valid)
+                cursor.CopyFrom(e.Cursor);
+            TrackSample s;
+            return cursor.TryProject(drop, rail.Tangent, RailDistance, 0, out s) ? null : "MagRail_Ap_ErrNoRail";
+        }
+
+        // The train's engine whose rail leads to the station the shortest way, ahead or behind (a train on rails
+        // side by side: the station is on one of them; a lift whose rails wind round, the nearest engine at the
+        // bottom may ride another rail than at the top). No station or no rail leads there: the nearest engine.
+        HoverEngineLogic ChooseEngine()
         {
             List<HoverEngineLogic> engines = MagRailSession.Instance.Engines;
-            HoverEngineLogic best = null;
-            double bestDistance = double.MaxValue;
+            HoverEngineLogic nearest = null, best = null;
+            double nearestDistance = double.MaxValue, bestRoute = double.MaxValue;
             Vector3D at = Block.WorldMatrix.Translation;
             for (int i = 0; i < engines.Count; i++)
             {
@@ -533,13 +545,30 @@ namespace MagRail
                 if (!e.Held || !e.Cursor.Valid || !SameTrain(e.Block.CubeGrid, Block.CubeGrid))
                     continue;
                 double d = Vector3D.DistanceSquared(e.Block.WorldMatrix.Translation, at);
-                if (d < bestDistance)
+                if (d < nearestDistance)
                 {
-                    bestDistance = d;
+                    nearestDistance = d;
+                    nearest = e;
+                }
+                if (!station.Valid)
+                    continue;
+                cursor.Reset();
+                if (Project(e) != null)
+                    continue;
+                double route = Route.Distance(cursor, station, Math.Min(bestRoute, Route.MaxLength));
+                back.CopyFrom(cursor);
+                back.Reverse();
+                double behind = Route.Distance(back, station, Math.Min(route >= 0 ? route : bestRoute, Route.MaxLength));
+                if (behind >= 0 && (route < 0 || behind < route))
+                    route = behind;
+                if (route >= 0 && route < bestRoute)
+                {
+                    bestRoute = route;
                     best = e;
                 }
             }
-            return best;
+            cursor.Reset();
+            return best ?? nearest;
         }
 
         // The target station's place on the track (re-found now and then: its rail may be on a ship).
@@ -874,6 +903,9 @@ namespace MagRail
         void Remember(int index, string name)
         {
             AutopilotConfig c = Config;
+            // Idle: the station of the last run must not choose the engine (the nearest one's rail is taken).
+            if (phase == Phase.Idle)
+                station.Reset();
             string error = phase == Phase.Idle ? FindPlace(true) : null;
             if (error == null && !cursor.Valid)
                 error = "MagRail_Ap_ErrNoRail";
