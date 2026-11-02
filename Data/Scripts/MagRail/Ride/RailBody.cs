@@ -76,6 +76,10 @@ namespace MagRail
         // outside push per tick as measured (along / side / up the rail, m/s; spin, rad/s) and the engines holding.
         public double Speed, MaxError, Yaw, Pitch, Roll, PushAlong, PushSide, PushUp;
         public int HeldCount;
+        // The along-rail direction of the motion and the drift along it this tick (gravity and the rail's own
+        // acceleration, m/s).
+        public Vector3D PathForward;
+        public double Drift;
         // Where the first holding engine is: the span (its two blocks) or the block, its place on it (m), the
         // rail's radius there (m, 0 = straight).
         public string Place = "";
@@ -217,6 +221,8 @@ namespace MagRail
             // The drive: thrust at the centre of mass, then the brakes (Drive); in a curve with the curve's turn.
             Drive.ReadInput(tick, pathForward);
             double drift = Vector3D.Dot(gravity - RailAcceleration(points[0]), pathForward) * Step;
+            PathForward = pathForward;
+            Drift = drift;
             double thrust = Drive.Thrust(held, pathForward, along, drift, physics.Mass, ramp, tick);
             alongChange += thrust;
             along += thrust;
@@ -357,7 +363,8 @@ namespace MagRail
         // rail ~0.1 s ahead (the grid pitches into a slope or banks into a curve slightly before it gets there);
         // pathForward stays the rail's own tangent. Several: the best-fit line through their targets (long
         // grids follow the chord of a curve, not one end's tangent) and their mean up; pathForward the same line
-        // through their rail points. Engines side by side on parallel rails count as if on one rail.
+        // through their rail points. Engines side by side on parallel rails, or facing each other from two rails,
+        // count as if on one rail.
         void Frame(HoverEngineLogic first, Vector3D firstTangent, Vector3D relative, Vector3D com,
             out Vector3D railForward, out Vector3D up, out Vector3D pathForward)
         {
@@ -386,22 +393,24 @@ namespace MagRail
             // Engines on parallel rails (side by side across the grid): every point is moved across its rail by its
             // engine's place across the grid (from the engines' mean) before the fit, so the line runs along the
             // rails, not from one rail to the other. Engines in one line along the grid are not moved.
-            // When rails have inconsistent Up directions (e.g., two vertical rails with arbitrary rotation around their
-            // tangent), the shift logic breaks because Cross(tangent, up) gives different "side" for each rail.
-            // Check if all Up vectors are consistent (dot > 0.7) before applying shifts.
-            bool consistentUp = true;
-            Vector3D refUp = points[0].Up;
+            Vector3D across = GridAxisAlong(Vector3D.Cross(reference, points[0].Up));
+            // Engines facing each other from two rails (a lift between two walls): such a rail's up is the other
+            // way round. Its point counts as if on top of its rail (the rail point folded over the target), and every
+            // point is also moved along up by its engine's place up the grid, so the fit does not run from one wall
+            // to the other.
+            Vector3D upAxis = GridAxisAlong(points[0].Up);
+            bool facing = false;
             for (int i = 1; i < points.Count; i++)
-                if (Vector3D.Dot(points[i].Up, refUp) < 0.7) // ~45 degrees
-                {
-                    consistentUp = false;
-                    break;
-                }
-            Vector3D across = Vector3D.Normalize(Vector3D.Cross(reference, points[0].Up));
-            double acrossMean = 0;
+                if (Vector3D.Dot(points[i].Up, points[0].Up) < 0)
+                    facing = true;
+            double acrossMean = 0, upMean = 0;
             for (int i = 0; i < points.Count; i++)
+            {
                 acrossMean += Vector3D.Dot(points[i].Position - com, across);
+                upMean += Vector3D.Dot(points[i].Position - com, upAxis);
+            }
             acrossMean /= points.Count;
+            upMean /= points.Count;
             Vector3D centroid = Vector3D.Zero, upSum = Vector3D.Zero, weighted = Vector3D.Zero;
             Vector3D railCentroid = Vector3D.Zero, railWeighted = Vector3D.Zero;
             double scoreSum = 0, rear = double.MaxValue, front = double.MinValue;
@@ -410,19 +419,23 @@ namespace MagRail
             for (int i = 0; i < points.Count; i++)
             {
                 GuidePoint g = points[i];
-                Vector3D shift = Vector3D.Zero;
-                if (consistentUp)
+                Vector3D pointUp = g.Up, pointRail = g.RailPoint;
+                if (Vector3D.Dot(pointUp, points[0].Up) < 0)
                 {
-                    Vector3D side = Reject(Vector3D.Cross(g.Tangent, g.Up), g.Tangent);
-                    if (Vector3D.Dot(side, across) < 0)
-                        side = -side;
-                    shift = side * (Vector3D.Dot(g.Position - com, across) - acrossMean);
+                    pointUp = -pointUp;
+                    pointRail = g.Target * 2 - g.RailPoint;
                 }
-                Vector3D target = g.Target - shift, railPoint = g.RailPoint - shift;
+                Vector3D side = Reject(Vector3D.Cross(g.Tangent, pointUp), g.Tangent);
+                if (Vector3D.Dot(side, across) < 0)
+                    side = -side;
+                Vector3D shift = side * (Vector3D.Dot(g.Position - com, across) - acrossMean);
+                if (facing)
+                    shift += pointUp * (Vector3D.Dot(g.Position - com, upAxis) - upMean);
+                Vector3D target = g.Target - shift, railPoint = pointRail - shift;
                 double score = Vector3D.Dot(g.Position, reference);
                 centroid += target;
                 railCentroid += railPoint;
-                upSum += g.Up;
+                upSum += pointUp;
                 scoreSum += score;
                 weighted += target * score;
                 railWeighted += railPoint * score;

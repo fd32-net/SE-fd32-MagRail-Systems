@@ -17,6 +17,7 @@ namespace MagRail
         const string Header = "tick,grid,held,engines,mass_t,speed,input_fwd,input_side,input_up,dampers,pilot,err_max,"
             + "yaw_deg,pitch_deg,roll_deg,push_along,push_side,push_up,push_spin,hold_pct,turn_pct,drops,"
             + "drive,thrust_kn,brake_kn,power_pct,"
+            + "drift,path_fwd_x,path_fwd_y,path_fwd_z,"
             + "place,place_m,radius_m,x,y,z";
 
         static TextWriter writer;
@@ -75,6 +76,7 @@ namespace MagRail
                     + "," + N(b.PushAlong) + "," + N(b.PushSide) + "," + N(b.PushUp) + "," + N(b.PushAngular)
                     + "," + N(b.HoldLoad * 100) + "," + N(b.SpinLoad * 100) + "," + b.Drops
                     + "," + b.Drive.State + "," + N(b.Drive.Force / 1000) + "," + N(b.Drive.BrakeForce / 1000) + "," + N(b.Drive.PowerShare * 100)
+                    + "," + N(b.Drift) + "," + N(b.PathForward.X) + "," + N(b.PathForward.Y) + "," + N(b.PathForward.Z)
                     + "," + b.Place.Replace(',', ' ') + "," + N(b.PlaceS) + "," + N(b.Radius)
                     + "," + N(pos.X) + "," + N(pos.Y) + "," + N(pos.Z));
             }
