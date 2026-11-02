@@ -14,7 +14,7 @@ namespace MagRail
     [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation | MyUpdateOrder.AfterSimulation, 500)]
     public class MagRailSession : MySessionComponentBase
     {
-        public const string Version = "V0.10.56";
+        public const string Version = "V0.10.58";
 
         public static MagRailSession Instance { get; private set; }
 
@@ -25,6 +25,8 @@ namespace MagRail
         public readonly List<TrainControlLogic> ControlUnits = new List<TrainControlLogic>();
         public readonly Rides Rides = new Rides();
         public readonly PerfCounter UpdateTime = new PerfCounter(), DrawTime = new PerfCounter(), RideTime = new PerfCounter();
+        // The Rail Linker: its input (aim, clicks, preview; not in UpdateTime) and its own drawing (in DrawTime).
+        public readonly PerfCounter LinkerInputTime = new PerfCounter(), LinkerDrawTime = new PerfCounter();
 
         int tick;
         bool client;
@@ -144,7 +146,9 @@ namespace MagRail
                 return;
             try
             {
+                LinkerInputTime.Start();
                 linker.HandleInput();
+                LinkerInputTime.Stop();
             }
             catch (Exception e)
             {
@@ -161,7 +165,9 @@ namespace MagRail
                 DrawTime.Start();
                 MagRail.Draw.Begin(linker.Held);
                 SpanLines.DrawAll(Network, Pieces, linker.AimedSpan, linker.MarkedSpan);
+                LinkerDrawTime.Start();
                 linker.DrawFrame();
+                LinkerDrawTime.Stop();
                 LinkerDisplay.DrawOthers(MagRail.Draw.Camera);
                 if (Hud.Begin())
                     linker.DrawHud();

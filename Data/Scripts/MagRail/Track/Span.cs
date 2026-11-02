@@ -37,6 +37,15 @@ namespace MagRail
         // A rail still being built (survival, SpanWeld): how far each segment is welded. null: built (switched to rail
         // in creative or with the admin creative tools on, or welded to the end; also every rail laid before welding existed).
         [ProtoMember(16)] public SpanWeld Weld;
+        // Laid beside another span (Rail Linker, Ctrl+LMB: a bundle): this far right and up of it, m, as seen from the
+        // owner port looking out, its up turned BesideRoll (rad, about the way out) from the other's. The curve is that
+        // span's curve moved across and turned (SpanCurve.Beside): every cross-section the same. Its ports are found back
+        // from this span's own, so it needs nothing of the other span. Only with InBundle (a span on the bundle's middle
+        // has them all 0).
+        [ProtoMember(17)] public float BesideRight;
+        [ProtoMember(18)] public float BesideUp;
+        [ProtoMember(19)] public float BesideRoll;
+        [ProtoMember(20)] public bool InBundle;
     }
 
     [ProtoContract]

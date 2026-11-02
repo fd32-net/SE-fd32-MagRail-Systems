@@ -231,6 +231,9 @@
   <data name="MagRail_Linker_DoGround" xml:space="preserve">
     <value>hold: follow the ground</value>
   </data>
+  <data name="MagRail_Linker_DoMate" xml:space="preserve">
+    <value>add a parallel port ({0} of {1} rails)</value>
+  </data>
   <data name="MagRail_Linker_Linked" xml:space="preserve">
     <value>Span laid (prototype)</value>
   </data>
@@ -239,6 +242,9 @@
   </data>
   <data name="MagRail_Linker_LinkedGround" xml:space="preserve">
     <value>Span laid (prototype) along the ground</value>
+  </data>
+  <data name="MagRail_Linker_LinkedBundle" xml:space="preserve">
+    <value>{0} spans laid side by side (prototypes)</value>
   </data>
   <data name="MagRail_Linker_Started" xml:space="preserve">
     <value>Span from {0}: aim at the other port</value>
@@ -254,6 +260,15 @@
   </data>
   <data name="MagRail_Linker_PickedUp" xml:space="preserve">
     <value>End picked up: aim at a new port</value>
+  </data>
+  <data name="MagRail_Linker_MateOn" xml:space="preserve">
+    <value>Parallel port added: {0} of {1} rails</value>
+  </data>
+  <data name="MagRail_Linker_MateOff" xml:space="preserve">
+    <value>Parallel port removed: {0} of {1} rails</value>
+  </data>
+  <data name="MagRail_Linker_MateLost" xml:space="preserve">
+    <value>A parallel port is gone or taken: removed from the bundle</value>
   </data>
   <data name="MagRail_Linker_Deleted" xml:space="preserve">
     <value>Span deleted</value>
@@ -321,6 +336,21 @@
   <data name="MagRail_Problem_Style" xml:space="preserve">
     <value>a span joins only rails of one type</value>
   </data>
+  <data name="MagRail_Problem_BundleFull" xml:space="preserve">
+    <value>at most 4 rails side by side</value>
+  </data>
+  <data name="MagRail_Problem_MateTaken" xml:space="preserve">
+    <value>the port has a span</value>
+  </data>
+  <data name="MagRail_Problem_NotParallel" xml:space="preserve">
+    <value>not parallel to the start port (same direction, same cross-section)</value>
+  </data>
+  <data name="MagRail_Problem_MateMissing" xml:space="preserve">
+    <value>no free port here for every rail beside (same distances and turn)</value>
+  </data>
+  <data name="MagRail_Problem_MateFolds" xml:space="preserve">
+    <value>too tight a turn for the rails beside</value>
+  </data>
   <data name="MagRail_Port_port_a" xml:space="preserve">
     <value>end A</value>
   </data>
@@ -347,6 +377,9 @@
   </data>
   <data name="MagRail_Cmd_Perf" xml:space="preserve">
     <value>Mod time, ms (average / worst over 10 s): update {0} / {1}, draw {2} / {3}</value>
+  </data>
+  <data name="MagRail_Cmd_Linker" xml:space="preserve">
+    <value>Rail Linker, ms: input {0} / {1}, its drawing {2} / {3}</value>
   </data>
   <data name="MagRail_Debug_EnginesOn" xml:space="preserve">
     <value>Engine lines on: green = rail captured, yellow = found but too far or tilted</value>

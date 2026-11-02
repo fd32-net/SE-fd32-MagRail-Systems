@@ -79,6 +79,9 @@ namespace MagRail
             MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Pieces", session.Pieces.EntityCount, session.Collision.EntityCount));
             MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Perf", session.UpdateTime.Average.ToString("0.00"),
                 session.UpdateTime.Worst.ToString("0.00"), session.DrawTime.Average.ToString("0.00"), session.DrawTime.Worst.ToString("0.00")));
+            MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Linker", session.LinkerInputTime.Average.ToString("0.00"),
+                session.LinkerInputTime.Worst.ToString("0.00"), session.LinkerDrawTime.Average.ToString("0.00"),
+                session.LinkerDrawTime.Worst.ToString("0.00")));
             MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Rides", session.Engines.Count, session.Rides.Count,
                 session.RideTime.Average.ToString("0.00"), session.RideTime.Worst.ToString("0.00")));
             MyAPIGateway.Utilities.ShowMessage("MagRail", Loc.F("MagRail_Cmd_Terrain", TerrainLift.Calls, TerrainLift.Lifted,

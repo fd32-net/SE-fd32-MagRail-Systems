@@ -18,7 +18,8 @@ namespace MagRail
     // switched back to prototype first (LMB on it), then changed or deleted.
     //   Ports: LMB on a port, LMB on another port: lay a prototype (a prototype on either port is replaced; a port that
     //   cannot take it flashes red). LMB on a port with a prototype: pick that end up (the span goes, its other end is
-    //   the new start). RMB: cancel; on a port with a prototype: delete it.
+    //   the new start). RMB: cancel; on a port with a prototype: delete it. Ctrl+LMB while laying: a port beside the start
+    //   joins the bundle (or leaves it): its span is laid with the start's one, beside it all the way (Mate).
     //   Spans: LMB: prototype <-> rail. RMB on a prototype: delete it. MMB on a rail: paint it.
     //   A span ignores the ground (SpanRecord.NoLift) unless Shift is held on the click: then it rests on the ground
     //   (TerrainLift; the preview shows it while Shift is held).
@@ -75,11 +76,38 @@ namespace MagRail
         int previewAimPort = -1;
         TrackBlockLogic previewAimBlock;
         Vector3D previewFrom, previewTo, previewToForward, previewFocus;
-        bool previewGround;
+        bool previewGround, previewBundle;
         float[] previewLift;
         double previewLiftTime = double.NegativeInfinity;
         bool previewLiftStale;      // the curve moved since its lift was measured
         readonly LinkerDisplay.Screen screen = new LinkerDisplay.Screen();
+
+        // The bundle (Ctrl+LMB while laying): ports beside the start port - facing the same way, in its cross-section,
+        // turned any way about the rail - whose spans are laid with the start's one, to the ports as far across and as
+        // turned from the aimed one; all of them or none. The start's span leads: it is aimed, the others follow it. All
+        // of them, the start's too, follow one curve through the bundle's middle (BundleMiddle), each as far beside it and
+        // as turned as its port is (SpanCurve.Beside): a bundle turned about the rail (a spiral) turns round its middle.
+        // Not remembered when the tool is put away. While Ctrl is held, the previews are hidden and the bundle's ports lit
+        // (Picking).
+        const int BundleMax = 4;
+        // Beside the start port: facing the same way within this angle, in its cross-section within this distance; the
+        // ports at the other end are found as closely.
+        static readonly double MateCos = Math.Cos(MathHelper.ToRadians(1));
+        const double MateDistance = 0.05;
+
+        // Right, Up, Roll: the port's place and turn as seen from the start port.
+        class Mate
+        {
+            public TrackBlockLogic Block, Target;
+            public int Port, TargetPort = -1;
+            public float Right, Up, Roll;
+            public SpanCurve Preview;
+        }
+
+        readonly List<Mate> mates = new List<Mate>();
+        SpanCurve guidePreview;     // laying a bundle: the curve through its middle (the start's preview is moved from it)
+        SpanCurve matesPreview;     // the guide the mates' previews were moved from
+        readonly List<TrackIndex.Entry> found = new List<TrackIndex.Entry>();
 
         // In the local player's hand (overlays see through models: Draw.SeeThrough).
         public bool Held
@@ -143,8 +171,15 @@ namespace MagRail
                 return;
             if (startBlock != null && !StartUsable(startBlock, startPort))
             {
-                startBlock = null;
+                Stop();
                 Draw.Notify(Loc.T("MagRail_Linker_StartLost"), MyFontEnum.Red);
+            }
+            for (int i = mates.Count - 1; i >= 0; i--)
+            {
+                if (StartUsable(mates[i].Block, mates[i].Port))
+                    continue;
+                mates.RemoveAt(i);
+                Draw.Notify(Loc.T("MagRail_Linker_MateLost"), MyFontEnum.Red);
             }
             RefreshJoints();
             if (MyAPIGateway.Gui.IsCursorVisible || MyAPIGateway.Gui.ChatEntryVisible)
@@ -154,13 +189,201 @@ namespace MagRail
             VRage.ModAPI.IMyInput input = MyAPIGateway.Input;
             LinkerDisplay.Press(input.IsLeftMousePressed() || input.IsRightMousePressed() || input.IsMiddleMousePressed());
             if (MyAPIGateway.Input.IsNewLeftMousePressed())
-                Left();
+            {
+                if (startBlock != null && input.IsAnyCtrlKeyPressed())
+                    ToggleMate();
+                else
+                    Left();
+            }
             else if (MyAPIGateway.Input.IsNewRightMousePressed())
                 Right();
             else if (MyAPIGateway.Input.IsNewMiddleMousePressed())
                 Middle();
             BuildPreview(true);
+            CheckBundle();
             ShowInfo();
+        }
+
+        // Laying ends (laid, cancelled, the start lost, the tool put away): the bundle goes with it.
+        void Stop()
+        {
+            startBlock = null;
+            mates.Clear();
+        }
+
+        // Laying, aimed at a port the span could go to (not at the start port).
+        bool AimsTarget
+        {
+            get { return aimBlock != null && !(aimBlock == startBlock && aimPort == startPort); }
+        }
+
+        int MateAt(TrackBlockLogic b, int port)
+        {
+            return mates.FindIndex(m => m.Block == b && m.Port == port);
+        }
+
+        // Ctrl+LMB while laying: the aimed port joins the bundle, or leaves it.
+        void ToggleMate()
+        {
+            int i = aimBlock != null ? MateAt(aimBlock, aimPort) : -1;
+            if (i >= 0)
+            {
+                mates.RemoveAt(i);
+                Draw.Notify(Loc.F("MagRail_Linker_MateOff", mates.Count + 1, BundleMax));
+                LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);
+                return;
+            }
+            if (!AimsTarget)
+            {
+                LinkerDisplay.Flash(LinkerDisplay.Button.Left, false);
+                return;
+            }
+            float right, up, roll;
+            string problem = MateProblem(aimBlock, aimPort, out right, out up, out roll);
+            if (problem != null)
+            {
+                Refuse(problem);
+                return;
+            }
+            mates.Add(new Mate { Block = aimBlock, Port = aimPort, Right = right, Up = up, Roll = roll });
+            matesPreview = null;
+            Draw.Notify(Loc.F("MagRail_Linker_MateOn", mates.Count + 1, BundleMax), MyFontEnum.Green);
+            LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);
+        }
+
+        // Why the port cannot join the bundle (Loc key), or null; right, up: where it is beside the start port, roll: how
+        // far its up is turned from the start's about the way out.
+        string MateProblem(TrackBlockLogic b, int port, out float right, out float up, out float roll)
+        {
+            MatrixD s = startBlock.PortWorld(startPort), m = b.PortWorld(port);
+            Vector3D d = m.Translation - s.Translation;
+            right = (float)Vector3D.Dot(d, s.Right);
+            up = (float)Vector3D.Dot(d, s.Up);
+            roll = (float)Math.Atan2(Vector3D.Dot(Vector3D.Cross(s.Up, m.Up), s.Forward), Vector3D.Dot(s.Up, m.Up));
+            if (mates.Count + 1 >= BundleMax)
+                return "MagRail_Problem_BundleFull";
+            if (!StartUsable(b, port))
+                return "MagRail_Problem_MateTaken";
+            if (Vector3D.Dot(m.Forward, s.Forward) < MateCos || Math.Abs(Vector3D.Dot(d, s.Forward)) > MateDistance)
+                return "MagRail_Problem_NotParallel";
+            return null;
+        }
+
+        // The aimed port refuses (a click): it flashes red, the reason in a message.
+        void Refuse(string problem)
+        {
+            flashBlock = aimBlock;
+            flashPort = aimPort;
+            flashUntil = Now + FlashSeconds;
+            Draw.Notify(Loc.T(problem), MyFontEnum.Red);
+            LinkerDisplay.Flash(LinkerDisplay.Button.Left, false);
+        }
+
+        // Every tick after BuildPreview: the mates' previews, and at an aimed port whether the bundle can go there.
+        void CheckBundle()
+        {
+            MatePreviews();
+            if (mates.Count > 0 && previewProblem == null && AimsTarget && preview != null && guidePreview != null)
+                previewProblem = BundleProblem(guidePreview);
+        }
+
+        // The mates' previews: the guide moved across.
+        void MatePreviews()
+        {
+            SpanCurve guide = mates.Count > 0 ? guidePreview : null;
+            if (guide == matesPreview)
+                return;
+            matesPreview = guide;
+            double middleRight, middleUp;
+            BundleMiddle(out middleRight, out middleUp);
+            for (int i = 0; i < mates.Count; i++)
+            {
+                Mate m = mates[i];
+                m.Preview = guide != null ? guide.Across(m.Right - middleRight, m.Up - middleUp, m.Roll) : null;
+            }
+        }
+
+        // The bundle's middle across, as seen from the start port: the mean of its ports' places (the start's is 0, 0;
+        // no bundle: 0, 0).
+        void BundleMiddle(out double right, out double up)
+        {
+            right = up = 0;
+            for (int i = 0; i < mates.Count; i++)
+            {
+                right += mates[i].Right;
+                up += mates[i].Up;
+            }
+            right /= mates.Count + 1;
+            up /= mates.Count + 1;
+        }
+
+        // A port moved across to the bundle's middle (side -1 at the far end: the curve runs into the port there, its
+        // right is the port's left).
+        static MatrixD ToMiddle(MatrixD port, double right, double up, double side)
+        {
+            port.Translation += port.Right * (right * side) + port.Up * up;
+            return port;
+        }
+
+        // Each mate's port at the aimed end (Mate.Target): as far across from the aimed port as the mate's is from the
+        // start port (the curve runs into the aimed port: its right is the port's left), facing the same way, its up
+        // turned as the mate's (about the curve, which runs into the port), free to take the span; and the mate's curve
+        // does not fold back (a turn tighter than the distance across; the start's either). guide: the curve through the
+        // bundle's middle to the aimed end. Loc key of what is wrong, or null.
+        string BundleProblem(SpanCurve guide)
+        {
+            MatrixD to = aimBlock.PortWorld(aimPort);
+            double middleRight, middleUp;
+            BundleMiddle(out middleRight, out middleUp);
+            bool previews = guide == matesPreview;
+            if ((previews ? preview : guide.Across(-middleRight, -middleUp, 0)).Folds(guide))
+                return "MagRail_Problem_MateFolds";
+            for (int i = 0; i < mates.Count; i++)
+            {
+                Mate m = mates[i];
+                m.Target = FindPort(to.Translation - to.Right * m.Right + to.Up * m.Up, to.Forward,
+                    SpanCurve.Turn(to.Up, -to.Forward, m.Roll), out m.TargetPort);
+                if (m.Target == null || (m.Target == startBlock && m.TargetPort == startPort) || MateAt(m.Target, m.TargetPort) >= 0)
+                    return "MagRail_Problem_MateMissing";
+                string problem = Network.LinkProblem(m.Block, m.Port, m.Target, m.TargetPort);
+                if (problem != null)
+                    return problem;
+                SpanCurve curve = previews && m.Preview != null ? m.Preview
+                    : guide.Across(m.Right - middleRight, m.Up - middleUp, m.Roll);
+                if (curve.Folds(guide))
+                    return "MagRail_Problem_MateFolds";
+            }
+            return null;
+        }
+
+        // A port at the point within MateDistance, facing forward with this up (the nearest), not joined end to end.
+        TrackBlockLogic FindPort(Vector3D at, Vector3D forward, Vector3D up, out int port)
+        {
+            TrackBlockLogic best = null;
+            double bestDistance = MateDistance;
+            port = -1;
+            found.Clear();
+            Network.Index.Query(Network, at, MateDistance, found);
+            for (int i = 0; i < found.Count; i++)
+            {
+                TrackBlockLogic b = found[i].Block;
+                if (b == null || !b.PortsKnown || !b.Block.IsFunctional)
+                    continue;
+                for (int q = 0; q < b.PortCount; q++)
+                {
+                    MatrixD m = b.PortWorld(q);
+                    double d = Vector3D.Distance(m.Translation, at);
+                    if (d <= bestDistance && Vector3D.Dot(m.Forward, forward) >= MateCos
+                        && Vector3D.Dot(m.Up, up) >= MateCos && !Joined(b, q))
+                    {
+                        bestDistance = d;
+                        best = b;
+                        port = q;
+                    }
+                }
+            }
+            found.Clear();
+            return best;
         }
 
         // Every tick (HandleInput: also why the aimed port cannot take it) and every frame (DrawFrame: the free end
@@ -169,7 +392,7 @@ namespace MagRail
         {
             if (tick)
                 previewProblem = null;
-            bool ground = FollowGround;
+            bool ground = Ground;
             if (startBlock == null)
             {
                 preview = null;
@@ -201,11 +424,17 @@ namespace MagRail
                 up = up.LengthSquared() > 1e-6 ? Vector3D.Normalize(up) : Vector3D.CalculatePerpendicularVector(back);
                 to = MatrixD.CreateWorld(end, back, up);
             }
+            // A bundle: the curve runs through its middle, the start's span beside it.
+            double middleRight, middleUp;
+            BundleMiddle(out middleRight, out middleUp);
+            from = ToMiddle(from, middleRight, middleUp, 1);
+            to = ToMiddle(to, middleRight, middleUp, -1);
 
             // Over planet ground the preview is lifted like the span will be (TerrainLift): the curve is rebuilt
             // whenever its ends move, the lift measured again every PreviewLiftSeconds (at once when the aimed port
             // changes) and laid on the new curve in between.
-            bool same = preview != null && Vector3D.DistanceSquared(from.Translation, previewFrom) < 1e-6
+            bool bundle = mates.Count > 0;
+            bool same = preview != null && bundle == previewBundle && Vector3D.DistanceSquared(from.Translation, previewFrom) < 1e-6
                         && Vector3D.DistanceSquared(to.Translation, previewTo) < 1e-6
                         && Vector3D.DistanceSquared(to.Forward, previewToForward) < 1e-8
                         && !(preview.Cut && Vector3D.DistanceSquared(MyAPIGateway.Session.Camera.Position, previewFocus)
@@ -222,7 +451,15 @@ namespace MagRail
             previewAimPort = aimPort;
             previewGround = ground;
             previewFocus = MyAPIGateway.Session.Camera.Position;
-            SpanCurve curve = SpanCurve.Build(from, to, PreviewMaxLength, previewFocus);
+            previewBundle = bundle;
+            SpanCurve curve = bundle ? SpanCurve.Bundle(from, to, PreviewMaxLength, previewFocus)
+                : SpanCurve.Build(from, to, PreviewMaxLength, previewFocus);
+            guidePreview = curve;
+            if (bundle)
+            {
+                preview = curve.Across(-middleRight, -middleUp, 0);
+                return;
+            }
             if (!ground || !startBlock.Block.CubeGrid.IsStatic || !toStatic)
             {
                 preview = curve;
@@ -366,26 +603,36 @@ namespace MagRail
         {
             if (startBlock != null)
             {
-                if (aimBlock == null || (aimBlock == startBlock && aimPort == startPort))
+                if (!AimsTarget || MateAt(aimBlock, aimPort) >= 0)
                 {
                     LinkerDisplay.Flash(LinkerDisplay.Button.Left, false);
                     return;
                 }
                 string problem = Network.LinkProblem(startBlock, startPort, aimBlock, aimPort);
+                double middleRight, middleUp;
+                BundleMiddle(out middleRight, out middleUp);
+                if (problem == null && mates.Count > 0)
+                    problem = BundleProblem(SpanCurve.Bundle(ToMiddle(startBlock.PortWorld(startPort), middleRight, middleUp, 1),
+                        ToMiddle(aimBlock.PortWorld(aimPort), middleRight, middleUp, -1)));
                 if (problem != null)
                 {
-                    flashBlock = aimBlock;
-                    flashPort = aimPort;
-                    flashUntil = Now + FlashSeconds;
-                    Draw.Notify(Loc.T(problem), MyFontEnum.Red);
-                    LinkerDisplay.Flash(LinkerDisplay.Button.Left, false);
+                    Refuse(problem);
                     return;
                 }
                 bool replaces = Network.SpanAt(aimBlock, aimPort) != null;
-                bool ground = FollowGround;
-                Network.RequestLink(startBlock, startPort, aimBlock, aimPort, !ground);
-                startBlock = null;
-                Draw.Notify(Loc.T(replaces ? "MagRail_Linker_Replaced" : ground ? "MagRail_Linker_LinkedGround" : "MagRail_Linker_Linked"),
+                bool ground = Ground;
+                Network.RequestLink(startBlock, startPort, aimBlock, aimPort, !ground,
+                    mates.Count > 0 ? new[] { (float)-middleRight, (float)-middleUp, 0f } : null);
+                for (int i = 0; i < mates.Count; i++)
+                {
+                    Mate m = mates[i];
+                    Network.RequestLink(m.Block, m.Port, m.Target, m.TargetPort, true,
+                        new[] { (float)(m.Right - middleRight), (float)(m.Up - middleUp), m.Roll });
+                }
+                int laid = mates.Count + 1;
+                Stop();
+                Draw.Notify(laid > 1 ? Loc.F("MagRail_Linker_LinkedBundle", laid)
+                    : Loc.T(replaces ? "MagRail_Linker_Replaced" : ground ? "MagRail_Linker_LinkedGround" : "MagRail_Linker_Linked"),
                     MyFontEnum.Green);
                 LinkerDisplay.Flash(LinkerDisplay.Button.Left, true);
                 return;
@@ -450,7 +697,7 @@ namespace MagRail
         {
             if (startBlock != null)
             {
-                startBlock = null;
+                Stop();
                 Draw.Notify(Loc.T("MagRail_Linker_Cancelled"));
                 LinkerDisplay.Flash(LinkerDisplay.Button.Right, true);
                 return;
@@ -492,6 +739,22 @@ namespace MagRail
             }
         }
 
+        // Ctrl held while laying: picking the bundle's ports (the menus and chat take the keyboard).
+        bool Picking
+        {
+            get
+            {
+                return startBlock != null && !MyAPIGateway.Gui.IsCursorVisible && !MyAPIGateway.Gui.ChatEntryVisible
+                       && MyAPIGateway.Input.IsAnyCtrlKeyPressed();
+            }
+        }
+
+        // A bundle ignores the ground: each span would follow its own and they would not stay side by side.
+        bool Ground
+        {
+            get { return FollowGround && mates.Count == 0; }
+        }
+
         // The span being laid when the tool is put away: its start by block id and port name (the block may stream out
         // and in again as a new object meanwhile).
         long rememberedBlock;
@@ -501,7 +764,7 @@ namespace MagRail
         {
             rememberedBlock = startBlock != null ? startBlock.Block.EntityId : 0;
             rememberedPort = startBlock != null ? startBlock.PortName(startPort) : null;
-            startBlock = null;
+            Stop();
         }
 
         // Taken again: goes on laying from the remembered port if it is still there and free.
@@ -630,14 +893,23 @@ namespace MagRail
             AddKey(LinkerDisplay.Button.Left, Keys.Control(MyControlsSpace.PRIMARY_TOOL_ACTION));
             AddKey(LinkerDisplay.Button.Right, Keys.Control(MyControlsSpace.SECONDARY_TOOL_ACTION));
             AddKey(LinkerDisplay.Button.Wheel, Keys.Mouse(MyMouseButtonsEnum.Middle));
-            // Shift: only while laying; held, it is lit.
+            // Shift: only while laying a single span; held, it is lit. Ctrl+LMB: only while laying, with the bundle's size;
+            // Ctrl held, it is lit.
             string shift = Keys.Key(MyKeys.Shift);
-            if (startBlock == null)
+            if (startBlock == null || mates.Count > 0)
                 panel.AddKey(shift, "—", HudPanel.Dim, HudPanel.Dim);
             else if (FollowGround)
                 panel.AddKey(shift, Loc.T("MagRail_Linker_DoGround"), HudPanel.Green, HudPanel.Green);
             else
                 panel.AddKey(shift, Loc.T("MagRail_Linker_DoGround"), HudPanel.Blue, HudPanel.Blue);
+            string ctrl = Keys.Key(MyKeys.Control) + "+" + Keys.Control(MyControlsSpace.PRIMARY_TOOL_ACTION);
+            if (startBlock == null)
+                panel.AddKey(ctrl, "—", HudPanel.Dim, HudPanel.Dim);
+            else
+            {
+                Vector4 lit = Picking ? HudPanel.Green : HudPanel.Blue;
+                panel.AddKey(ctrl, Loc.F("MagRail_Linker_DoMate", mates.Count + 1, BundleMax), lit, lit);
+            }
             panel.Add("", HudPanel.White);
             panel.Add(what, whatColor, true);
             panel.Add(detail, detailColor);
@@ -721,7 +993,10 @@ namespace MagRail
             if (!held)
                 return;
             if (!MyAPIGateway.Gui.IsCursorVisible && !MyAPIGateway.Gui.ChatEntryVisible)
+            {
                 BuildPreview(false);
+                MatePreviews();
+            }
             foreach (TrackBlockLogic b in Network.Blocks)
             {
                 if (!b.PortsKnown || Vector3D.DistanceSquared(b.Block.WorldMatrix.Translation, MagRail.Draw.Camera) > MarkerRange * MarkerRange)
@@ -735,8 +1010,13 @@ namespace MagRail
                         DrawPort(b, i);
                 }
             }
-            if (preview != null)
+            if (preview != null && !Picking)
+            {
                 SpanLines.DrawCurve(preview, MatrixD.Identity, startBlock.Style, LineStyle.Preview);
+                for (int i = 0; i < mates.Count; i++)
+                    if (mates[i].Preview != null)
+                        SpanLines.DrawCurve(mates[i].Preview, MatrixD.Identity, mates[i].Block.Style, LineStyle.Preview);
+            }
             if (blockedBy != null)
                 DrawBlocked();
             IMyCharacter character = MyAPIGateway.Session.ControlledObject as IMyCharacter;
@@ -796,7 +1076,7 @@ namespace MagRail
                 s.StubLeft = s.CapLeft = s.PortLeft = true;
                 s.BranchLeft = BranchLetter(startBlock, startPort);
                 s.ShiftKey = s.GroundShown = true;
-                s.Ground = FollowGround;
+                s.Ground = Ground;
                 s.Hints[(int)LinkerDisplay.Button.Right] = LinkerDisplay.HintKind.Cancel;
                 if (preview != null)
                 {
@@ -860,14 +1140,14 @@ namespace MagRail
         }
 
         // Ports offered to the player (drawn and aimed at): not joined end to end, not on a damaged block (the model
-        // shows what is wrong); while laying, the start port and the ports of other blocks of the same style.
+        // shows what is wrong); while laying, the start port, the bundle's and the ports of other blocks of the same style.
         bool Offered(TrackBlockLogic b, int port)
         {
             if (!b.Block.IsFunctional || Joined(b, port))
                 return false;
             if (startBlock == null)
                 return true;
-            return b == startBlock ? port == startPort : b.Style == startBlock.Style;
+            return b == startBlock ? port == startPort || MateAt(b, port) >= 0 : b.Style == startBlock.Style;
         }
 
         void DrawPort(TrackBlockLogic b, int port)
@@ -899,6 +1179,8 @@ namespace MagRail
             TrackStyle style = b.Style;
             Span span = Network.SpanAt(b, port);
             Color color = span == null ? FreeColor : span.Record.WantRail ? RailPortColor : LinkedColor;
+            if (Picking && ((b == startBlock && port == startPort) || MateAt(b, port) >= 0))
+                color = AimColor;
             float fill = SpanLines.FillAlpha, bright = Bright;
             double distance = Vector3D.Distance(face.Translation, MagRail.Draw.Camera);
             float scale = (float)Math.Max(1, distance * FaceOnScreen / style.Width);
@@ -932,11 +1214,25 @@ namespace MagRail
 
         // ---- joints ----
 
-        // Ports joined end to end to another block (TrackNetwork.FindJoint) get no marker and are not aimed at: a bit
-        // per port, found again every JointRefresh ticks for the blocks in marker range.
+        // Ports joined end to end to another block (TrackNetwork.FindJoint's test) get no marker and are not aimed at: a
+        // bit per port, found again every JointRefresh ticks for the blocks in marker range. All their free ports are put
+        // in cells of JointCell first and each is matched with the ports in its cell and the ones around it: a
+        // FindJoint per port (a track index query each) took ~100 ms near a big station.
         const int JointRefresh = 30;
+        const double JointCell = 1;     // not under TrackNetwork.JointDistance * 2: the cells around hold every match
         readonly Dictionary<TrackBlockLogic, int> joined = new Dictionary<TrackBlockLogic, int>();
         int jointTicks = JointRefresh;
+
+        struct FreePort
+        {
+            public TrackBlockLogic Block;
+            public int Port;
+            public Vector3D Point, Forward;
+        }
+
+        readonly List<FreePort> freePorts = new List<FreePort>();
+        readonly Dictionary<Vector3I, List<int>> portCells = new Dictionary<Vector3I, List<int>>();
+        readonly List<List<int>> cellPool = new List<List<int>>();
 
         bool Joined(TrackBlockLogic b, int port)
         {
@@ -950,20 +1246,70 @@ namespace MagRail
                 return;
             jointTicks = 0;
             joined.Clear();
+            freePorts.Clear();
+            foreach (List<int> list in portCells.Values)
+            {
+                list.Clear();
+                cellPool.Add(list);
+            }
+            portCells.Clear();
+            // A little past the marker range: a block just out of it may still meet one in it.
             Vector3D camera = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
+            double range = MarkerRange + 10;
             foreach (TrackBlockLogic b in Network.Blocks)
             {
-                if (!b.PortsKnown || Vector3D.DistanceSquared(b.Block.WorldMatrix.Translation, camera) > MarkerRange * MarkerRange)
+                if (!b.PortsKnown || Vector3D.DistanceSquared(b.Block.WorldMatrix.Translation, camera) > range * range)
                     continue;
-                int mask = 0;
-                TrackBlockLogic other;
-                int otherPort;
                 for (int i = 0; i < b.PortCount; i++)
-                    if (Network.FindJoint(b, i, out other, out otherPort))
-                        mask |= 1 << i;
-                if (mask != 0)
-                    joined[b] = mask;
+                {
+                    if (!b.IsJointPort(i) || Network.SpanAt(b, i) != null)
+                        continue;
+                    MatrixD m = b.PortWorld(i);
+                    Vector3I cell = Vector3I.Floor(m.Translation / JointCell);
+                    List<int> list;
+                    if (!portCells.TryGetValue(cell, out list))
+                    {
+                        list = cellPool.Count > 0 ? cellPool[cellPool.Count - 1] : new List<int>();
+                        if (cellPool.Count > 0)
+                            cellPool.RemoveAt(cellPool.Count - 1);
+                        portCells[cell] = list;
+                    }
+                    list.Add(freePorts.Count);
+                    freePorts.Add(new FreePort { Block = b, Port = i, Point = m.Translation, Forward = m.Forward });
+                }
             }
+            for (int n = 0; n < freePorts.Count; n++)
+            {
+                FreePort p = freePorts[n];
+                if (!Meets(p))
+                    continue;
+                int mask;
+                joined.TryGetValue(p.Block, out mask);
+                joined[p.Block] = mask | (1 << p.Port);
+            }
+        }
+
+        // A free port of another block, one a train can ride onto, meets this one end to end (TrackNetwork.FindJoint).
+        bool Meets(FreePort p)
+        {
+            Vector3I cell = Vector3I.Floor(p.Point / JointCell);
+            const double reach = TrackNetwork.JointDistance * TrackNetwork.JointDistance;
+            for (int x = -1; x <= 1; x++)
+                for (int y = -1; y <= 1; y++)
+                    for (int z = -1; z <= 1; z++)
+                    {
+                        List<int> list;
+                        if (!portCells.TryGetValue(cell + new Vector3I(x, y, z), out list))
+                            continue;
+                        for (int k = 0; k < list.Count; k++)
+                        {
+                            FreePort q = freePorts[list[k]];
+                            if (q.Block != p.Block && q.Block.Rideable && Vector3D.DistanceSquared(q.Point, p.Point) <= reach
+                                && Vector3D.Dot(q.Forward, p.Forward) <= TrackNetwork.JointFacingCos)
+                                return true;
+                        }
+                    }
+            return false;
         }
     }
 }

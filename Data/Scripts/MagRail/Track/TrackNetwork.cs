@@ -303,7 +303,8 @@ namespace MagRail
         static bool Same(SpanRecord a, SpanRecord b)
         {
             if (a.OwnerPort != b.OwnerPort || a.PartnerId != b.PartnerId || a.PartnerPort != b.PartnerPort || a.WantRail != b.WantRail
-                || a.NoLift != b.NoLift || (a.Lift == null) != (b.Lift == null))
+                || a.NoLift != b.NoLift || (a.Lift == null) != (b.Lift == null) || a.InBundle != b.InBundle
+                || a.BesideRight != b.BesideRight || a.BesideUp != b.BesideUp || a.BesideRoll != b.BesideRoll)
                 return false;
             if (a.Lift != null)
             {
@@ -386,8 +387,8 @@ namespace MagRail
         // ---- joints ----
 
         // Joint tolerance: port points this close, facing each other within this angle.
-        const double JointDistance = 0.5;
-        static readonly double JointFacingCos = -Math.Cos(MathHelper.ToRadians(15));
+        public const double JointDistance = 0.5;
+        public static readonly double JointFacingCos = -Math.Cos(MathHelper.ToRadians(15));
         readonly List<TrackIndex.Entry> jointScratch = new List<TrackIndex.Entry>();
 
         // A fixed block whose port meets this one end to end (on any grid, of any style: a train would drive across anyway),
@@ -466,9 +467,11 @@ namespace MagRail
         // The span's curve between its ports, before any lift over the ground.
         static SpanCurve BaseCurve(Span s)
         {
-            return InGridFrame(s)
-                ? SpanCurve.Build(s.Owner.PortGridLocal(s.OwnerPort), s.Partner.PortGridLocal(s.PartnerPort))
-                : SpanCurve.Build(s.Owner.PortWorld(s.OwnerPort), s.Partner.PortWorld(s.PartnerPort));
+            bool inGrid = InGridFrame(s);
+            MatrixD a = inGrid ? s.Owner.PortGridLocal(s.OwnerPort) : s.Owner.PortWorld(s.OwnerPort);
+            MatrixD b = inGrid ? s.Partner.PortGridLocal(s.PartnerPort) : s.Partner.PortWorld(s.PartnerPort);
+            SpanRecord r = s.Record;
+            return r.InBundle ? SpanCurve.Beside(a, b, r.BesideRight, r.BesideUp, r.BesideRoll) : SpanCurve.Build(a, b);
         }
 
         // How the span is laid from track pieces (for its current curve; segmented while it is being built, until every
@@ -520,13 +523,14 @@ namespace MagRail
 
         // ---- changes (server; a client sends a request instead) ----
 
-        // noLift: the span ignores the ground (SpanRecord.NoLift).
-        public void RequestLink(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort, bool noLift)
+        // noLift: the span ignores the ground (SpanRecord.NoLift); beside: right, up, roll in a bundle
+        // (SpanRecord.InBundle, BesideRight), null: none.
+        public void RequestLink(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort, bool noLift, float[] beside = null)
         {
             if (Net.IsServer)
-                Link(a, aPort, b, bPort, noLift);
+                Link(a, aPort, b, bPort, noLift, beside);
             else
-                Net.SendLinkRequest(a, a.PortName(aPort), b, b.PortName(bPort), noLift);
+                Net.SendLinkRequest(a, a.PortName(aPort), b, b.PortName(bPort), noLift, beside);
         }
 
         public void RequestUnlink(Span s)
@@ -556,8 +560,10 @@ namespace MagRail
                 Net.SendPaintRequest(s.Owner, s.Record.OwnerPort, hsv, skin);
         }
 
-        public void Link(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort, bool noLift)
+        public void Link(TrackBlockLogic a, int aPort, TrackBlockLogic b, int bPort, bool noLift, float[] beside = null)
         {
+            if (beside != null && beside.Length < 3)
+                beside = null;
             if (LinkProblem(a, aPort, b, bPort) != null)
                 return;
             // Prototypes on the two ports give way to the new span.
@@ -583,8 +589,14 @@ namespace MagRail
             {
                 OwnerPort = portName, PartnerId = b.Block.EntityId, PartnerPort = b.PortName(bPort),
                 SameGrid = a.Block.CubeGrid == b.Block.CubeGrid, PartnerX = pos.X, PartnerY = pos.Y, PartnerZ = pos.Z,
-                NoLift = noLift,
+                NoLift = noLift, InBundle = beside != null,
             };
+            if (beside != null)
+            {
+                r.BesideRight = beside[0];
+                r.BesideUp = beside[1];
+                r.BesideRoll = beside[2];
+            }
             a.SpanStore.Spans.Add(r);
             spans.Add(new Span(a, r));
             Changed(a);
