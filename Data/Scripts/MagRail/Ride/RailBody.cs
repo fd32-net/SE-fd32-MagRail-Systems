@@ -386,7 +386,7 @@ namespace MagRail
             // Engines on parallel rails (side by side across the grid): every point is moved across its rail by its
             // engine's place across the grid (from the engines' mean) before the fit, so the line runs along the
             // rails, not from one rail to the other. Engines in one line along the grid are not moved.
-            Vector3D across = GridAxisAlong(Vector3D.Cross(reference, points[0].Up));
+            Vector3D across = Vector3D.Normalize(Vector3D.Cross(reference, points[0].Up));
             double acrossMean = 0;
             for (int i = 0; i < points.Count; i++)
                 acrossMean += Vector3D.Dot(points[i].Position - com, across);
