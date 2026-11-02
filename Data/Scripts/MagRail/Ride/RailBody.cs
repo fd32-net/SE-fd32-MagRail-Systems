@@ -362,9 +362,8 @@ namespace MagRail
         // The rail's direction and up for the body. One engine: the rail under it, turned a little towards the
         // rail ~0.1 s ahead (the grid pitches into a slope or banks into a curve slightly before it gets there);
         // pathForward stays the rail's own tangent. Several: the best-fit line through their targets (long
-        // grids follow the chord of a curve, not one end's tangent) and their mean up; pathForward the same line
-        // through their rail points. Engines side by side on parallel rails, or facing each other from two rails,
-        // count as if on one rail.
+        // grids follow the chord of a curve, not one end's tangent) and their mean up; pathForward the rails' mean
+        // direction under them. Engines round several parallel rails count as if on one rail.
         void Frame(HoverEngineLogic first, Vector3D firstTangent, Vector3D relative, Vector3D com,
             out Vector3D railForward, out Vector3D up, out Vector3D pathForward)
         {
@@ -390,84 +389,60 @@ namespace MagRail
             }
 
             Vector3D reference = points[0].Tangent;
-            // Engines on parallel rails (side by side across the grid): every point is moved across its rail by its
-            // engine's place across the grid (from the engines' mean) before the fit, so the line runs along the
-            // rails, not from one rail to the other. Engines in one line along the grid are not moved.
-            Vector3D across = GridAxisAlong(Vector3D.Cross(reference, points[0].Up));
-            // Engines facing each other from two rails (a lift between two walls): such a rail's up is the other
-            // way round. Its point counts as if on top of its rail (the rail point folded over the target), and every
-            // point is also moved along up by its engine's place up the grid, so the fit does not run from one wall
-            // to the other.
-            Vector3D upAxis = GridAxisAlong(points[0].Up);
-            bool facing = false;
-            for (int i = 1; i < points.Count; i++)
-                if (Vector3D.Dot(points[i].Up, points[0].Up) < 0)
-                    facing = true;
-            double acrossMean = 0, upMean = 0;
+            // However the engines stand round their rails (in one line, side by side on parallel rails, facing each
+            // other from two walls, round a column), every target is moved by its engine's place across the grid
+            // (off the grid's axis along the rails, from the engines' mean) before the fit: the line runs along the
+            // rails, not from one rail to another, and is the line the grid's own axis has to take. Engines in one
+            // line along the grid are not moved.
+            Vector3D gridAlong = GridAxisAlong(reference);
+            Vector3D crossMean = Vector3D.Zero;
             for (int i = 0; i < points.Count; i++)
-            {
-                acrossMean += Vector3D.Dot(points[i].Position - com, across);
-                upMean += Vector3D.Dot(points[i].Position - com, upAxis);
-            }
-            acrossMean /= points.Count;
-            upMean /= points.Count;
-            Vector3D centroid = Vector3D.Zero, upSum = Vector3D.Zero, weighted = Vector3D.Zero;
-            Vector3D railCentroid = Vector3D.Zero, railWeighted = Vector3D.Zero;
+                crossMean += Across(points[i].Position - com, gridAlong);
+            crossMean /= points.Count;
+            MatrixD firstMatrix = first.Block.WorldMatrix;
+            Vector3D centroid = Vector3D.Zero, upSum = Vector3D.Zero, weighted = Vector3D.Zero, tangentSum = Vector3D.Zero;
             double scoreSum = 0, rear = double.MaxValue, front = double.MinValue;
             Vector3D rearTarget = points[0].Target, frontTarget = rearTarget;
-            Vector3D rearRail = points[0].RailPoint, frontRail = rearRail;
             for (int i = 0; i < points.Count; i++)
             {
                 GuidePoint g = points[i];
-                Vector3D pointUp = g.Up, pointRail = g.RailPoint;
-                if (Vector3D.Dot(pointUp, points[0].Up) < 0)
-                {
-                    pointUp = -pointUp;
-                    pointRail = g.Target * 2 - g.RailPoint;
-                }
-                Vector3D side = Reject(Vector3D.Cross(g.Tangent, pointUp), g.Tangent);
-                if (Vector3D.Dot(side, across) < 0)
-                    side = -side;
-                Vector3D shift = side * (Vector3D.Dot(g.Position - com, across) - acrossMean);
-                if (facing)
-                    shift += pointUp * (Vector3D.Dot(g.Position - com, upAxis) - upMean);
-                Vector3D target = g.Target - shift, railPoint = pointRail - shift;
+                Vector3D target = g.Target - (Across(g.Position - com, gridAlong) - crossMean);
                 double score = Vector3D.Dot(g.Position, reference);
                 centroid += target;
-                railCentroid += railPoint;
-                upSum += pointUp;
+                // Each rail's up as the first engine's would be: turned as its engine's block is turned from the
+                // first one's (the other way round for an engine facing it, a quarter turn round a column's corner).
+                upSum += TurnTo(g.Up, held[i].Block.WorldMatrix, firstMatrix);
+                tangentSum += Orient(g.Tangent, reference);
                 scoreSum += score;
                 weighted += target * score;
-                railWeighted += railPoint * score;
                 if (score < rear)
                 {
                     rear = score;
                     rearTarget = target;
-                    rearRail = railPoint;
                 }
                 if (score > front)
                 {
                     front = score;
                     frontTarget = target;
-                    frontRail = railPoint;
                 }
             }
             centroid /= points.Count;
-            railCentroid /= points.Count;
             Vector3D chosen = Chord(weighted - centroid * scoreSum, frontTarget - rearTarget);
             if (chosen.LengthSquared() > 0.25)
-            {
                 railForward = Orient(chosen, reference);
-                pathForward = railForward;
-                // The motion goes along the same line through the rail points, not the targets: engines at different
-                // heights tilt the targets' line, and keeping the speed along it while gravity is cancelled across the
-                // rail rolled the train down that tilt for free (a slope that is not there).
-                Vector3D rail = Chord(railWeighted - railCentroid * scoreSum, frontRail - rearRail);
-                if (rail.LengthSquared() > 0.25)
-                    pathForward = Orient(rail, reference);
-            }
+            // The motion goes along the rails' own mean direction (along a curve, that of its chord), not the
+            // targets' line: engines at different heights tilt that line, and keeping the speed along it while
+            // gravity is cancelled across the rail rolled the train down that tilt for free (a slope that is not there).
+            pathForward = Vector3D.Normalize(tangentSum);
             if (upSum.LengthSquared() > 1e-6)
                 up = Reject(upSum, railForward);
+        }
+
+        // The vector as it stands to one block, turned to stand the same way to another.
+        static Vector3D TurnTo(Vector3D v, MatrixD from, MatrixD to)
+        {
+            return to.Right * Vector3D.Dot(v, from.Right) + to.Up * Vector3D.Dot(v, from.Up)
+                + to.Backward * Vector3D.Dot(v, from.Backward);
         }
 
         // The best-fit line through the points, or the line from the rear to the front one when they bunch up.
@@ -849,6 +824,12 @@ namespace MagRail
         }
 
         // v made square to the unit axis and normalized.
+        // The part of v across the axis, its length kept (Reject gives only the direction).
+        static Vector3D Across(Vector3D v, Vector3D axis)
+        {
+            return v - axis * Vector3D.Dot(v, axis);
+        }
+
         static Vector3D Reject(Vector3D v, Vector3D axis)
         {
             Vector3D r = v - axis * Vector3D.Dot(v, axis);
