@@ -58,6 +58,9 @@ namespace MagRail
         // Space brake: seconds to rise from BrakeRiseStart to full force. The rise starts at half the force: from
         // nothing, the first moment felt like no brake at all (user, 2026-10-11).
         const double BrakeRise = 0.5, BrakeRiseStart = 0.5;
+        // The engines' brake (Space, parking) holds the place it stopped at: it pulls back a shift along the rail at
+        // this rate (1/s), at most this speed (m/s), within its force.
+        const double AnchorRate = 1.0, AnchorSpeed = 0.2;
         // Controller forward vs rail: |cos| below this counts as sideways (60 degrees).
         const double AlignMin = 0.5;
         // Cruise brake (downhill, over the target) as a share of the engine's thrust: gentle, so pushing wagons do
@@ -105,6 +108,12 @@ namespace MagRail
         // than its force: static friction, not a lock).
         bool brakeHistory;
         double brakeWrittenAlong;
+        // Where the engines' brake holds the grid: its centre of mass in the carrier's frame (world without one).
+        // A brake overpowered moves it along (static friction, not a lock): a lift with a rover on its connectors
+        // crept up by what the joint's position fix-ups added, which the speed does not show.
+        bool anchored;
+        Vector3D anchor;
+        IMyCubeGrid anchorCarrier;
 
         // Last tick's state (terminal info, /magrail log): thrust given along the rail (N, plus = pathForward),
         // brake force (N), the network's share of the thrust asked (1 = full).
@@ -409,10 +418,12 @@ namespace MagRail
         // Along-rail velocity change of the brakes this tick: the engines braking (Space, parking) or, on a grid
         // nearly standing that nothing pushes, the rest hold. carriedAlong: the along speed as it arrived this tick
         // (relative to the rail, turned with it); along: the along speed about to be written; continuous: the body
-        // wrote last tick too.
-        public double Brake(double carriedAlong, double along, double mass, double ramp, bool idle, bool continuous)
+        // wrote last tick too; com, carrier: the grid's centre of mass and the moving grid under the rail (or null).
+        public double Brake(double carriedAlong, double along, double mass, double ramp, bool idle, bool continuous,
+            Vector3D com, Vector3D pathForward, IMyCubeGrid carrier)
         {
             double force = BrakeForce;
+            bool engines = force > 0;
             bool space = force > 0 && !parked;
             brakeTicks = space ? brakeTicks + 1 : 0;
             if (space)
@@ -422,6 +433,7 @@ namespace MagRail
             if (force <= 0 || mass <= 0)
             {
                 brakeHistory = false;
+                anchored = false;
                 return 0;
             }
             force = Math.Min(force, mass * (parked ? MaxParkAccel : MaxBrakeAccel));
@@ -429,7 +441,25 @@ namespace MagRail
             double maxChange = force / mass * Step * ramp;
             double disturbance = brakeHistory && continuous
                 ? MathHelper.Clamp(carriedAlong - brakeWrittenAlong, -maxChange, maxChange) : 0;
-            double change = MathHelper.Clamp(-(along + disturbance), -maxChange, maxChange);
+            double wanted = -(along + disturbance);
+            Vector3D place = carrier != null ? Vector3D.Transform(com, carrier.WorldMatrixNormalizedInv) : com;
+            if (!engines || !brakeHistory || !continuous || !anchored || carrier != anchorCarrier)
+            {
+                anchored = engines;
+                anchor = place;
+                anchorCarrier = carrier;
+            }
+            else
+            {
+                Vector3D held = carrier != null ? Vector3D.Transform(anchor, carrier.WorldMatrix) : anchor;
+                double shift = Vector3D.Dot(com - held, pathForward);
+                double back = MathHelper.Clamp(-shift * AnchorRate, -AnchorSpeed, AnchorSpeed);
+                if (Math.Abs(wanted + back) <= maxChange)
+                    wanted += back;
+                else
+                    anchor = place;     // overpowered: the brake slides
+            }
+            double change = MathHelper.Clamp(wanted, -maxChange, maxChange);
             brakeWrittenAlong = along + change;
             brakeHistory = true;
             return change;
@@ -443,6 +473,7 @@ namespace MagRail
             cruiseMove = 0;
             autopilot = false;
             brakeHistory = false;
+            anchored = false;
             brakeTicks = 0;
             State = DriveState.Idle;
             Force = 0;

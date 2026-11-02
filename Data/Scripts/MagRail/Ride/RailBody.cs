@@ -229,7 +229,8 @@ namespace MagRail
             alongChange += thrust;
             along += thrust;
             double carriedAlong = Vector3D.Dot(carried - carrierVelocity, pathForward);
-            alongChange += Drive.Brake(carriedAlong, along, physics.Mass, ramp, thrust == 0, lastWrittenTick == tick - 1);
+            alongChange += Drive.Brake(carriedAlong, along, physics.Mass, ramp, thrust == 0, lastWrittenTick == tick - 1,
+                com, pathForward, carrier);
             if (alongChange != 0)
             {
                 Vector3D alongLinear, alongAngular;
