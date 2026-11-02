@@ -386,6 +386,17 @@ namespace MagRail
             // Engines on parallel rails (side by side across the grid): every point is moved across its rail by its
             // engine's place across the grid (from the engines' mean) before the fit, so the line runs along the
             // rails, not from one rail to the other. Engines in one line along the grid are not moved.
+            // When rails have inconsistent Up directions (e.g., two vertical rails with arbitrary rotation around their
+            // tangent), the shift logic breaks because Cross(tangent, up) gives different "side" for each rail.
+            // Check if all Up vectors are consistent (dot > 0.7) before applying shifts.
+            bool consistentUp = true;
+            Vector3D refUp = points[0].Up;
+            for (int i = 1; i < points.Count; i++)
+                if (Vector3D.Dot(points[i].Up, refUp) < 0.7) // ~45 degrees
+                {
+                    consistentUp = false;
+                    break;
+                }
             Vector3D across = Vector3D.Normalize(Vector3D.Cross(reference, points[0].Up));
             double acrossMean = 0;
             for (int i = 0; i < points.Count; i++)
@@ -399,10 +410,14 @@ namespace MagRail
             for (int i = 0; i < points.Count; i++)
             {
                 GuidePoint g = points[i];
-                Vector3D side = Reject(Vector3D.Cross(g.Tangent, g.Up), g.Tangent);
-                if (Vector3D.Dot(side, across) < 0)
-                    side = -side;
-                Vector3D shift = side * (Vector3D.Dot(g.Position - com, across) - acrossMean);
+                Vector3D shift = Vector3D.Zero;
+                if (consistentUp)
+                {
+                    Vector3D side = Reject(Vector3D.Cross(g.Tangent, g.Up), g.Tangent);
+                    if (Vector3D.Dot(side, across) < 0)
+                        side = -side;
+                    shift = side * (Vector3D.Dot(g.Position - com, across) - acrossMean);
+                }
                 Vector3D target = g.Target - shift, railPoint = g.RailPoint - shift;
                 double score = Vector3D.Dot(g.Position, reference);
                 centroid += target;
