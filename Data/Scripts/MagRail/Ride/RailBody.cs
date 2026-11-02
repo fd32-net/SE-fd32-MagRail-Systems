@@ -91,6 +91,8 @@ namespace MagRail
         int forwardAxis = -1;           // grid axis (0 Forward, 1 Left, 2 Up; sign-free) held along the rail
         Vector3D lastRailForward, lastRailUp;
         bool hasLastRail;
+        HoverEngineLogic lastFirst;     // the first holding engine last tick and its up then (the frame's up is its)
+        Vector3D lastFirstUp;
         Vector3D lastControlForward;    // rail direction of last tick's velocity (momentum carry)
         bool hasLastControl;
         Vector3D lastDesiredForward, lastDesiredUp;     // last tick's wished frame: its change is the rail's turn rate
@@ -177,7 +179,7 @@ namespace MagRail
             Vector3D railForward, up, pathForward;
             Frame(first, firstTangent, relative, com, out railForward, out up, out pathForward);
             double frameSpeed = relative.Length();
-            SmoothFrame(ref railForward, ref up, frameSpeed);
+            SmoothFrame(first, ref railForward, ref up, frameSpeed);
 
             if (!captured)
             {
@@ -399,7 +401,7 @@ namespace MagRail
             for (int i = 0; i < points.Count; i++)
                 crossMean += Across(points[i].Position - com, gridAlong);
             crossMean /= points.Count;
-            MatrixD firstMatrix = first.Block.WorldMatrix;
+            Vector3D firstUp = first.Block.WorldMatrix.Up;
             Vector3D centroid = Vector3D.Zero, upSum = Vector3D.Zero, weighted = Vector3D.Zero, tangentSum = Vector3D.Zero;
             double scoreSum = 0, rear = double.MaxValue, front = double.MinValue;
             Vector3D rearTarget = points[0].Target, frontTarget = rearTarget;
@@ -409,9 +411,10 @@ namespace MagRail
                 Vector3D target = g.Target - (Across(g.Position - com, gridAlong) - crossMean);
                 double score = Vector3D.Dot(g.Position, reference);
                 centroid += target;
-                // Each rail's up as the first engine's would be: turned as its engine's block is turned from the
-                // first one's (the other way round for an engine facing it, a quarter turn round a column's corner).
-                upSum += TurnTo(g.Up, held[i].Block.WorldMatrix, firstMatrix);
+                // Each engine's wish for the first one's up: the first engine's up turned as this engine's block has
+                // to turn to stand square to its rail (the other way round for an engine facing it, a quarter turn
+                // round a column's corner; a tilt the same way whichever way the engine is turned round its up).
+                upSum += TurnBy(firstUp, held[i].Block.WorldMatrix.Up, g.Up);
                 tangentSum += Orient(g.Tangent, reference);
                 scoreSum += score;
                 weighted += target * score;
@@ -438,11 +441,15 @@ namespace MagRail
                 up = Reject(upSum, railForward);
         }
 
-        // The vector as it stands to one block, turned to stand the same way to another.
-        static Vector3D TurnTo(Vector3D v, MatrixD from, MatrixD to)
+        // v turned by the shortest turn that takes one direction onto another (both of length 1).
+        static Vector3D TurnBy(Vector3D v, Vector3D from, Vector3D to)
         {
-            return to.Right * Vector3D.Dot(v, from.Right) + to.Up * Vector3D.Dot(v, from.Up)
-                + to.Backward * Vector3D.Dot(v, from.Backward);
+            Vector3D axis = Vector3D.Cross(from, to);
+            double sin = axis.Length(), cos = Vector3D.Dot(from, to);
+            if (sin < 1e-9)
+                return cos > 0 ? v : -v;
+            axis /= sin;
+            return v * cos + Vector3D.Cross(axis, v) * sin + axis * (Vector3D.Dot(axis, v) * (1.0 - cos));
         }
 
         // The best-fit line through the points, or the line from the rear to the front one when they bunch up.
@@ -452,8 +459,15 @@ namespace MagRail
         }
 
         // Keeps the frame continuous through tight curves and twists: a blend with last tick's, quicker at speed.
-        void SmoothFrame(ref Vector3D railForward, ref Vector3D up, double speed)
+        // The up is the first holding engine's: when another engine becomes the first (the first one let go or was
+        // taken off), last tick's up is turned to be the new one's, as it stands to the old one.
+        void SmoothFrame(HoverEngineLogic first, ref Vector3D railForward, ref Vector3D up, double speed)
         {
+            Vector3D firstUp = first.Block.WorldMatrix.Up;
+            if (hasLastRail && first != lastFirst)
+                lastRailUp = TurnBy(firstUp, lastFirstUp, lastRailUp);
+            lastFirst = first;
+            lastFirstUp = firstUp;
             double alpha = MathHelper.Clamp(0.58 + MathHelper.Clamp(speed, 0.0, 100.0) / 220.0, 0.58, 0.85);
             if (hasLastRail)
             {
